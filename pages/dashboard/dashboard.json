@@ -1,0 +1,7 @@
+{
+  "navigationBarTitleText": "Bacchus",
+  "navigationBarBackgroundColor": "#0d0e12",
+  "navigationBarTextStyle": "white",
+  "backgroundColor": "#0d0e12",
+  "enablePullDownRefresh": false
+}

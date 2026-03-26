@@ -1,0 +1,42 @@
+/* pages/unit-settings/unit-settings.wxss */
+.page-scroll { height: 100vh; background: #0d0e12; }
+
+.intro-card {
+  margin: 24rpx 32rpx 20rpx;
+  padding: 28rpx 32rpx;
+}
+.intro-text { font-size: 24rpx; color: #9a98a0; line-height: 1.7; display: block; }
+
+.section-label {
+  font-size: 22rpx; font-weight: 700; color: #5c5b65;
+  letter-spacing: 2rpx; padding: 0 32rpx 14rpx; display: block;
+}
+
+.options-card { margin: 0 32rpx 24rpx; overflow: hidden; }
+
+.option-row {
+  display: flex; flex-direction: row; align-items: center;
+  padding: 28rpx 32rpx; gap: 20rpx;
+}
+.option-row-border { border-bottom: 2rpx solid #2a2d38; }
+
+.option-left { flex: 1; display: flex; flex-direction: column; gap: 6rpx; }
+.option-name { font-size: 28rpx; font-weight: 600; color: #f0ede8; display: block; }
+.option-desc { font-size: 22rpx; color: #5c5b65; display: block; }
+
+.option-check {
+  width: 44rpx; height: 44rpx; border-radius: 50%;
+  border: 3rpx solid #2a2d38;
+  display: flex; flex-direction: row; align-items: center; justify-content: center;
+  font-size: 24rpx; color: transparent; flex-shrink: 0;
+}
+.option-check-on { background: #c9a96e; border-color: #c9a96e; color: #0d0e12; }
+
+.preview-card { margin: 0 32rpx 20rpx; padding: 28rpx 32rpx; }
+.preview-title { font-size: 24rpx; font-weight: 700; color: #9a98a0; display: block; margin-bottom: 20rpx; }
+.preview-row {
+  display: flex; flex-direction: row; justify-content: space-between;
+  padding: 12rpx 0;
+}
+.preview-label { font-size: 26rpx; color: #9a98a0; }
+.preview-val   { font-size: 26rpx; font-weight: 700; color: #c9a96e; }

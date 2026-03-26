@@ -1,0 +1,245 @@
+<!-- pages/ai-edit/ai-edit.wxml -->
+<view class="page-root">
+
+  <!-- ══ 目标标题 ══ -->
+  <view class="ae-target-bar">
+    <text class="ae-target-emoji">{{targetEmoji}}</text>
+    <text class="ae-target-name">{{targetName}}</text>
+    <text class="ae-target-type">{{mktgMode === 'recipe' ? '单品图' : (mktgType === 'cover' ? '合集封面' : mktgType === 'menu' ? '酒单图' : '合集海报')}}</text>
+  </view>
+
+  <scroll-view class="ae-scroll" scroll-y enhanced show-scrollbar="{{false}}">
+
+    <!-- ══ 当前图片展示区 ══ -->
+    <view class="ae-img-section">
+
+      <!-- 生成中 -->
+      <view wx:if="{{genState === 'loading'}}" class="ae-loading-wrap">
+        <view class="ae-loading-dots">
+          <view class="ae-dot ae-dot-1"></view>
+          <view class="ae-dot ae-dot-2"></view>
+          <view class="ae-dot ae-dot-3"></view>
+        </view>
+        <text class="ae-loading-step">{{genStep}}</text>
+        <text class="ae-loading-hint">通常需要 15–40 秒，请耐心等待</text>
+      </view>
+
+      <!-- 错误 -->
+      <view wx:elif="{{genState === 'error'}}" class="ae-error-wrap">
+        <text class="ae-error-icon">⚠️</text>
+        <text class="ae-error-msg">{{genError}}</text>
+        <view class="ae-error-retry" bindtap="onRegenerate">重试</view>
+      </view>
+
+      <!-- 有图片 -->
+      <block wx:elif="{{currentImg}}">
+
+        <!-- Canvas（仅海报/酒单模式，隐藏，用于排版导出） -->
+        <canvas
+          wx:if="{{mktgMode === 'collection' && mktgType !== 'cover'}}"
+          id="editCanvas"
+          type="2d"
+          class="ae-canvas-hidden"
+        ></canvas>
+
+        <!-- 图片预览（点击放大） -->
+        <view class="ae-img-wrap {{mktgType !== 'cover' ? 'ae-img-wrap-poster' : ''}}"
+          bindtap="onPreviewImg">
+          <image
+            wx:if="{{currentImg.localPath}}"
+            class="ae-img"
+            src="{{currentImg.localPath}}"
+            mode="widthFix"
+            show-menu-by-longpress="{{true}}"
+          ></image>
+          <image
+            wx:else
+            class="ae-img"
+            src="{{currentImg.tempUrl}}"
+            mode="widthFix"
+            show-menu-by-longpress="{{true}}"
+            binderror="onCurrentImgError"
+          ></image>
+          <view class="ae-img-zoom">
+            <text class="ae-img-zoom-icon">🔍</text>
+            <text class="ae-img-zoom-txt">点击放大</text>
+          </view>
+          <!-- 封面/海报角标 -->
+          <view wx:if="{{currentImg.isCover}}" class="ae-img-badge">封面</view>
+          <view wx:elif="{{currentImg.imageType === 'poster'}}" class="ae-img-badge ae-img-badge-poster">海报</view>
+        </view>
+
+        <!-- 操作栏 -->
+        <view class="ae-action-bar">
+          <view class="ae-action-btn" bindtap="onSaveImg">
+            <text class="ae-action-icon">⬇</text>
+            <text class="ae-action-label">保存相册</text>
+          </view>
+          <view class="ae-action-btn" bindtap="onShareImg">
+            <text class="ae-action-icon">↗</text>
+            <text class="ae-action-label">分享</text>
+          </view>
+          <view wx:if="{{currentImg.imageId}}" class="ae-action-btn" bindtap="onSetCover">
+            <text class="ae-action-icon">⭐</text>
+            <text class="ae-action-label">设封面</text>
+          </view>
+          <view class="ae-action-btn {{showEditPanel ? 'ae-action-btn-on' : ''}}" bindtap="onToggleEditPanel">
+            <text class="ae-action-icon">✏</text>
+            <text class="ae-action-label">{{showEditPanel ? '收起' : '编辑'}}</text>
+          </view>
+        </view>
+
+      </block>
+
+      <!-- 空态（无图片且无生成） -->
+      <view wx:elif="{{genState === 'idle'}}" class="ae-empty">
+        <text class="ae-empty-icon">🎨</text>
+        <text class="ae-empty-txt">从下方历史图中选择，或点「重新生成」</text>
+      </view>
+
+    </view>
+
+    <!-- ══ 编辑面板 ══ -->
+    <view wx:if="{{showEditPanel}}" class="ae-edit-panel card">
+
+      <!-- 单品图 / 合集封面图：调整风格 + 重新生成 -->
+      <block wx:if="{{mktgMode === 'recipe' || (mktgMode === 'collection' && mktgType === 'cover')}}">
+        <text class="ae-panel-title">✏ 调整生成参数</text>
+        <text class="ae-panel-hint">修改后点「重新生成」</text>
+
+        <text class="ae-section-label">图片风格</text>
+        <view class="ae-style-row">
+          <view wx:for="{{imgStyles}}" wx:key="id"
+            class="ae-style-chip {{imgStyle === item.id ? 'ae-style-chip-on' : ''}}"
+            data-id="{{item.id}}" bindtap="onImgStyleTap">
+            {{item.emoji}} {{item.label}}
+          </view>
+        </view>
+
+        <text class="ae-section-label">补充描述（可选）</text>
+        <textarea class="ae-custom-input" value="{{customPrompt}}"
+          bindinput="onCustomPromptInput"
+          placeholder="如：突出酒杯光泽、暖色调…"
+          placeholder-class="ae-custom-ph" maxlength="60" auto-height/>
+
+        <view class="ae-regen-btn {{genState === 'loading' ? 'ae-regen-disabled' : ''}}"
+          bindtap="onRegenerate">
+          <text class="ae-regen-icon">↺</text>
+          <text class="ae-regen-label">重新生成</text>
+        </view>
+      </block>
+
+      <!-- 合集海报/酒单：文字排版编辑 + 重新生成背景 -->
+      <block wx:else>
+        <text class="ae-panel-title">✏ 编辑海报文字</text>
+        <text class="ae-panel-hint">修改后自动重绘，点⬇保存最终版本</text>
+
+        <text class="ae-section-label">海报风格</text>
+        <view class="ae-style-row">
+          <view wx:for="{{posterStyles}}" wx:key="id"
+            class="ae-style-chip {{posterStyle === item.id ? 'ae-style-chip-on' : ''}}"
+            data-id="{{item.id}}" bindtap="onPosterStyleTap">
+            {{item.emoji}} {{item.label}}
+          </view>
+        </view>
+
+        <view class="ae-field-row">
+          <text class="ae-field-label">酒馆名</text>
+          <input class="ae-field-input" value="{{canvasLayout.shopName}}"
+            bindinput="onLayoutInput" data-field="shopName" placeholder="你的酒吧名称"/>
+        </view>
+        <view class="ae-field-row">
+          <text class="ae-field-label">主标题</text>
+          <input class="ae-field-input" value="{{canvasLayout.headline}}"
+            bindinput="onLayoutInput" data-field="headline" placeholder="合集名称"/>
+        </view>
+        <view class="ae-field-row">
+          <text class="ae-field-label">副标题</text>
+          <input class="ae-field-input" value="{{canvasLayout.subline}}"
+            bindinput="onLayoutInput" data-field="subline" placeholder="一句话简介（可留空）"/>
+        </view>
+
+        <text class="ae-section-label">酒款列表</text>
+        <view wx:for="{{canvasLayout.cocktails}}" wx:key="index" wx:for-item="c" class="ae-cocktail-row">
+          <text class="ae-cocktail-num">{{index + 1}}</text>
+          <input class="ae-cocktail-name" value="{{c.name}}"
+            bindinput="onLayoutInput" data-field="name" data-idx="{{index}}" placeholder="酒款名"/>
+          <input wx:if="{{mktgType === 'menu'}}"
+            class="ae-cocktail-price" value="{{c.price}}"
+            bindinput="onLayoutInput" data-field="price" data-idx="{{index}}"
+            placeholder="价格" type="digit"/>
+        </view>
+
+        <text class="ae-section-label" style="margin-top:20rpx">补充描述（可选）</text>
+        <textarea class="ae-custom-input" value="{{customPrompt}}"
+          bindinput="onCustomPromptInput"
+          placeholder="如：突出玫瑰色调、夜晚氛围…"
+          placeholder-class="ae-custom-ph" maxlength="60" auto-height/>
+
+        <view class="ae-regen-btn {{genState === 'loading' ? 'ae-regen-disabled' : ''}}"
+          bindtap="onRegenerate">
+          <text class="ae-regen-icon">↺</text>
+          <text class="ae-regen-label">重新生成背景</text>
+        </view>
+      </block>
+
+    </view>
+
+    <!-- ══ 历史图片 ══ -->
+    <view class="ae-history-section">
+      <view class="ae-history-header">
+        <text class="ae-history-title">📷 历史图片（{{historyImgs.length}}）</text>
+        <view wx:if="{{historyLoading}}" class="ae-history-loading-txt">加载中…</view>
+      </view>
+
+      <view wx:if="{{!historyLoading && historyImgs.length === 0}}" class="ae-history-empty">
+        <text>还没有历史图片</text>
+      </view>
+
+      <scroll-view wx:if="{{historyImgs.length > 0}}"
+        scroll-x class="ae-history-scroll" show-scrollbar="{{false}}">
+        <view class="ae-history-row">
+          <view wx:for="{{historyImgs}}" wx:key="fileID"
+            class="ae-history-item {{historySelectedIdx === index ? 'ae-history-item-on' : ''}} {{item.isCover ? 'ae-history-item-cover' : ''}}">
+
+            <!-- 缩略图（点击切换大图） -->
+            <view class="ae-history-img-wrap" data-idx="{{index}}" bindtap="onHistoryTap">
+              <image wx:if="{{item.tempUrl}}"
+                class="ae-history-img {{item.imageType === 'poster' ? 'ae-history-img-poster' : ''}}"
+                src="{{item.tempUrl}}" mode="widthFix" lazy-load
+                show-menu-by-longpress="{{true}}"
+                binderror="onHistoryImgError" data-idx="{{index}}"></image>
+              <view wx:else class="ae-history-img ae-history-loading">
+                <view class="ae-history-dot"></view>
+              </view>
+              <!-- 角标 -->
+              <view wx:if="{{item.isCover}}" class="ae-history-badge">封面</view>
+              <view wx:elif="{{item.imageType === 'poster'}}" class="ae-history-badge ae-history-badge-poster">海报</view>
+              <!-- 选中指示器 -->
+              <view wx:if="{{historySelectedIdx === index}}" class="ae-history-selected-mark">✓</view>
+            </view>
+
+            <!-- 风格标签 -->
+            <text class="ae-history-style">{{item.style || ''}}</text>
+
+            <!-- 操作行 -->
+            <view class="ae-history-actions">
+              <view wx:if="{{!item.isCover && item._id}}"
+                class="ae-history-act ae-history-act-cover"
+                catchtap="onHistorySetCover" data-idx="{{index}}">封面</view>
+              <view class="ae-history-act ae-history-act-save"
+                catchtap="onHistorySaveImg" data-idx="{{index}}">保存</view>
+              <view wx:if="{{item._id}}"
+                class="ae-history-act ae-history-act-del"
+                catchtap="onHistoryDeleteImg" data-idx="{{index}}">删除</view>
+            </view>
+
+          </view>
+        </view>
+      </scroll-view>
+    </view>
+
+    <view style="height:80rpx"></view>
+  </scroll-view>
+
+</view>

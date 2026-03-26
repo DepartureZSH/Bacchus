@@ -1,0 +1,1763 @@
+/* pages/my-recipes/my-recipes.wxss */
+
+/* ══ 根容器 ══ */
+.recipes-root {
+  background: #0d0e12;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ══ 顶部 Tab ══ */
+.top-tabs {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  background: #0d0e12;
+  padding: 0 20rpx;
+  border-bottom: 2rpx solid #1e2029;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.top-tab {
+  padding: 24rpx 16rpx 20rpx;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-right: 4rpx;
+}
+
+.top-tab-label {
+  font-size: 28rpx;
+  color: #5c5b65;
+  font-weight: 500;
+}
+
+.top-tab-active .top-tab-label {
+  color: #f0ede8;
+  font-weight: 700;
+}
+
+.top-tab-line {
+  position: absolute;
+  bottom: 0;
+  left: 20%;
+  width: 60%;
+  height: 4rpx;
+  background: #c9a96e;
+  border-radius: 2rpx;
+}
+
+.top-actions {
+  margin-left: auto;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8rpx;
+}
+
+.top-search-btn,
+.top-add-btn {
+  width: 60rpx;
+  height: 60rpx;
+  border-radius: 50%;
+  background: #1e2029;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  font-size: 28rpx;
+  color: #c9a96e;
+}
+
+.top-add-btn {
+  font-size: 36rpx;
+  font-weight: 300;
+  background: rgba(201,169,110,0.12);
+}
+
+/* ══ 搜索栏 ══ */
+.search-bar {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  background: #16181f;
+  margin: 12rpx 28rpx;
+  border-radius: 24rpx;
+  border: 2rpx solid #2a2d38;
+  padding: 0 20rpx;
+  gap: 10rpx;
+}
+
+.search-icon-txt { font-size: 26rpx; }
+
+.search-input {
+  flex: 1;
+  font-size: 26rpx;
+  color: #f0ede8;
+  background: none;
+}
+
+.search-ph { color: #5c5b65; }
+
+.search-clear {
+  font-size: 24rpx;
+  color: #5c5b65;
+  padding: 8rpx;
+}
+
+/* ══ 分类筛选 ══ */
+.filter-scroll { width: 100%; }
+
+.filter-row {
+  display: flex;
+  flex-direction: row;
+  gap: 12rpx;
+  padding: 14rpx 28rpx 10rpx;
+}
+
+.filter-chip {
+  flex-shrink: 0;
+  padding: 10rpx 24rpx;
+  border-radius: 40rpx;
+  font-size: 24rpx;
+  font-weight: 500;
+  border: 2rpx solid #2a2d38;
+  color: #9a98a0;
+  background: #16181f;
+  white-space: nowrap;
+}
+
+.chip-on {
+  background: rgba(201,169,110,0.12);
+  border-color: rgba(201,169,110,0.4);
+  color: #c9a96e;
+}
+
+/* ══ 滚动区 ══ */
+.tab-scroll {
+  flex: 1;
+  height: calc(100vh - 160rpx);
+}
+
+/* ══ 配方卡片 ══ */
+.card-list { padding: 12rpx 28rpx 0; display: flex; flex-direction: column; gap: 16rpx; }
+
+.recipe-card { padding: 24rpx; overflow: hidden; }
+
+.user-card-border { border-left: 6rpx solid rgba(201,169,110,0.5); }
+
+.rc-top {
+  display: flex;
+  flex-direction: row;
+  /* align-items: center; */
+  gap: 16rpx;
+  margin-top: 12rpx;
+  margin-bottom: 14rpx;
+}
+
+.rc-emoji { font-size: 52rpx; flex-shrink: 0; line-height: 1; }
+
+.rc-meta {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+  min-width: 0;
+}
+
+.rc-name {
+  font-size: 30rpx;
+  font-weight: 700;
+  color: #f0ede8;
+  display: block;
+}
+
+.rc-tags {
+  display: flex;
+  flex-direction: row;
+  gap: 8rpx;
+  flex-wrap: wrap;
+}
+
+.tag {
+  padding: 4rpx 12rpx;
+  border-radius: 8rpx;
+  font-size: 20rpx;
+  font-weight: 600;
+}
+
+.tag-base     { background: rgba(201,169,110,0.12); color: #c9a96e; }
+.tag-style    { background: rgba(154,152,160,0.12); color: #9a98a0; }
+.tag-user     { background: rgba(76,175,132,0.12);  color: #4caf84; }
+.tag-ai       { background: rgba(103,126,234,0.18); color: #8fa8f8; } /* AI生成 —— 蓝紫 */
+.tag-original { background: rgba(201,169,110,0.22); color: #e8c07a; } /* 原创 —— 金色 */
+
+.rc-right {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10rpx;
+  flex-shrink: 0;
+}
+
+.rc-abv { font-size: 22rpx; color: #5c5b65; display: block; text-align: center; }
+
+.fav-btn {
+  font-size: 36rpx;
+  color: #5c5b65;
+  line-height: 1;
+  padding: 4rpx;
+}
+.fav-on { color: #e05c5c; }
+
+.edit-btn {
+  font-size: 28rpx;
+  padding: 4rpx;
+}
+
+.rc-desc {
+  font-size: 24rpx;
+  color: #9a98a0;
+  line-height: 1.6;
+  display: block;
+  margin-bottom: 14rpx;
+}
+
+/* 原料胶囊 */
+.rc-ing-row {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 8rpx;
+}
+
+.ing-pill {
+  padding: 6rpx 16rpx;
+  border-radius: 40rpx;
+  font-size: 22rpx;
+  color: #9a98a0;
+  background: #1e2029;
+  border: 2rpx solid #2a2d38;
+}
+
+.ing-more { color: #c9a96e; border-color: rgba(201,169,110,0.3); }
+
+/* ══ 展开详情 ══ */
+.rc-detail { margin-top: 18rpx; }
+
+.detail-divider {
+  height: 2rpx;
+  background: #2a2d38;
+  margin-bottom: 18rpx;
+}
+
+.detail-sec {
+  font-size: 22rpx;
+  font-weight: 700;
+  color: #9a98a0;
+  display: block;
+  margin-bottom: 12rpx;
+  letter-spacing: 1rpx;
+}
+
+.detail-ing-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 12rpx;
+  padding: 8rpx 0;
+}
+
+.ing-dot {
+  width: 10rpx;
+  height: 10rpx;
+  border-radius: 50%;
+  background: #c9a96e;
+  flex-shrink: 0;
+}
+
+.detail-ing-name { flex: 1; font-size: 26rpx; color: #f0ede8; }
+.detail-ing-amt  { font-size: 24rpx; color: #9a98a0; flex-shrink: 0; }
+
+.step-row {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 14rpx;
+  margin-bottom: 12rpx;
+}
+
+.step-num {
+  width: 40rpx;
+  height: 40rpx;
+  border-radius: 50%;
+  background: #1e2029;
+  border: 2rpx solid #2a2d38;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  font-size: 20rpx;
+  color: #c9a96e;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.step-text {
+  font-size: 26rpx;
+  color: #f0ede8;
+  line-height: 1.6;
+  padding-top: 4rpx;
+}
+
+.notes-box {
+  background: rgba(76,175,132,0.06);
+  border: 2rpx solid rgba(76,175,132,0.2);
+  border-radius: 14rpx;
+  padding: 14rpx 18rpx;
+  margin: 14rpx 0;
+}
+.notes-text { font-size: 24rpx; color: #4caf84; line-height: 1.6; }
+
+/* 展开详情底部操作行 */
+.detail-actions {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 10rpx;
+  margin-top: 16rpx;
+}
+
+.detail-action-btn {
+  padding: 12rpx 20rpx;
+  border-radius: 14rpx;
+  background: #1e2029;
+  border: 2rpx solid #2a2d38;
+  font-size: 24rpx;
+  color: #9a98a0;
+}
+
+.danger-btn { border-color: rgba(224,92,92,0.3); color: #e05c5c; }
+
+/* 展开/收起按钮 */
+.rc-toggle {
+  margin-top: 16rpx;
+  padding-top: 14rpx;
+  border-top: 2rpx solid #2a2d38;
+  text-align: center;
+}
+.rc-toggle-txt { font-size: 24rpx; color: #c9a96e; }
+
+.arrow-btn-svg {
+  margin-left: 12rpx;
+  width: 25rpx;
+  height: 25rpx;
+}
+
+/* ══ 空状态 ══ */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 60rpx 0;
+  gap: 12rpx;
+}
+.empty-icon { font-size: 60rpx; display: block; }
+.empty-tip  { font-size: 26rpx; color: #5c5b65; display: block; }
+
+.empty-full {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 120rpx 40rpx 40rpx;
+  gap: 16rpx;
+}
+.empty-full-icon  { font-size: 80rpx; display: block; }
+.empty-full-title { font-size: 30rpx; font-weight: 700; color: #f0ede8; display: block; }
+.empty-full-sub   { font-size: 24rpx; color: #5c5b65; display: block; text-align: center; line-height: 1.7; }
+
+.empty-ai-btn {
+  margin-top: 16rpx;
+  background: linear-gradient(135deg,#c9a96e,#a67c3e);
+  color: #0d0e12;
+  font-size: 26rpx;
+  font-weight: 700;
+  padding: 20rpx 48rpx;
+  border-radius: 40rpx;
+}
+
+/* ══ AI 浮动按钮（我的 tab 非空时） ══ */
+.ai-fab {
+  position: fixed;
+  right: 40rpx;
+  bottom: 160rpx;
+  background: linear-gradient(135deg,#c9a96e,#a67c3e);
+  border-radius: 60rpx;
+  padding: 18rpx 32rpx;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 10rpx;
+  box-shadow: 0 8rpx 32rpx rgba(201,169,110,0.35);
+  z-index: 20;
+}
+.ai-fab-icon  { font-size: 28rpx; color: #0d0e12; }
+.ai-fab-label { font-size: 26rpx; font-weight: 700; color: #0d0e12; }
+
+/* ══ 合集 Tab ══ */
+.coll-list { padding: 12rpx 28rpx; display: flex; flex-direction: column; gap: 16rpx; }
+
+.coll-card { padding: 0; overflow: hidden; }
+
+.coll-header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 24rpx 28rpx;
+  gap: 16rpx;
+}
+
+.coll-emoji { font-size: 48rpx; flex-shrink: 0; line-height: 1; }
+
+.coll-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6rpx;
+  min-width: 0;
+}
+.coll-name { font-size: 28rpx; font-weight: 700; color: #f0ede8; display: block; }
+.coll-sub  { font-size: 22rpx; color: #5c5b65; display: block; }
+
+.coll-actions {
+  display: flex;
+  flex-direction: row;
+  gap: 4rpx;
+  flex-shrink: 0;
+}
+.coll-edit,
+.coll-del {
+  width: 52rpx;
+  height: 52rpx;
+  border-radius: 14rpx;
+  background: #1e2029;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  font-size: 24rpx;
+}
+
+.coll-del {
+  font-size: 32rpx;
+}
+
+.coll-recipes {
+  padding: 0 28rpx 16rpx;
+}
+
+.coll-divider {
+  height: 2rpx;
+  background: #2a2d38;
+  margin-bottom: 16rpx;
+}
+
+.coll-empty { font-size: 24rpx; color: #5c5b65; padding: 8rpx 0; }
+
+.coll-recipe-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 12rpx 0;
+  gap: 14rpx;
+  border-bottom: 2rpx solid #1e2029;
+}
+
+.coll-rc-emoji { font-size: 36rpx; flex-shrink: 0; line-height: 1; }
+
+.coll-rc-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4rpx;
+}
+.coll-rc-name { font-size: 26rpx; color: #f0ede8; font-weight: 600; display: block; }
+.coll-rc-base { font-size: 22rpx; color: #5c5b65; display: block; }
+
+.coll-rc-remove {
+  width: 40rpx;
+  height: 40rpx;
+  border-radius: 50%;
+  background: #1e2029;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  font-size: 22rpx;
+  color: #5c5b65;
+  flex-shrink: 0;
+}
+
+.coll-toggle {
+  padding: 14rpx 28rpx;
+  border-top: 2rpx solid #2a2d38;
+  text-align: center;
+}
+.coll-toggle-txt { font-size: 24rpx; color: #c9a96e; }
+
+/* ══ 底部蒙层 ══ */
+.ai-mask {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0);
+  z-index: 100;
+  pointer-events: none;
+  transition: background 0.25s ease;
+}
+.ai-mask-show {
+  background: rgba(0,0,0,0.55);
+  pointer-events: auto;
+}
+
+/* ══ AI 抽屉 ══ */
+.ai-drawer {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #16181f;
+  border-radius: 32rpx 32rpx 0 0;
+  padding: 0 32rpx 60rpx;
+  max-height: 88vh;
+  overflow-y: auto;
+  transform: translateY(100%);
+  transition: transform 0.3s cubic-bezier(0.32,0.72,0,1);
+}
+.ai-drawer-show { transform: translateY(0); }
+
+.ai-drawer-handle {
+  width: 64rpx;
+  height: 8rpx;
+  border-radius: 4rpx;
+  background: #2a2d38;
+  margin: 20rpx auto 24rpx;
+}
+
+.ai-drawer-header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 28rpx;
+}
+.ai-drawer-title { font-size: 32rpx; font-weight: 700; color: #f0ede8; }
+.ai-drawer-close {
+  width: 52rpx;
+  height: 52rpx;
+  border-radius: 50%;
+  background: #1e2029;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  font-size: 28rpx;
+  color: #9a98a0;
+}
+
+/* AI 输入区 */
+.ai-field { margin-bottom: 28rpx; }
+
+.ai-field-label {
+  font-size: 24rpx;
+  font-weight: 600;
+  color: #9a98a0;
+  display: block;
+  margin-bottom: 14rpx;
+}
+
+.ai-chips {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 10rpx;
+}
+
+.ai-chip {
+  padding: 10rpx 24rpx;
+  border-radius: 40rpx;
+  font-size: 24rpx;
+  border: 2rpx solid #2a2d38;
+  color: #9a98a0;
+  background: #1e2029;
+}
+.ai-chip-on {
+  background: rgba(201,169,110,0.12);
+  border-color: rgba(201,169,110,0.4);
+  color: #c9a96e;
+}
+
+.ai-textarea {
+  width: 100%;
+  background: #1e2029;
+  border: 2rpx solid #2a2d38;
+  border-radius: 16rpx;
+  padding: 20rpx;
+  font-size: 26rpx;
+  color: #f0ede8;
+  line-height: 1.6;
+  box-sizing: border-box;
+  min-height: 100rpx;
+}
+.ai-ph { color: #5c5b65; }
+
+.ai-submit-btn {
+  background: linear-gradient(135deg,#c9a96e,#a67c3e);
+  border-radius: 24rpx;
+  padding: 28rpx;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 12rpx;
+}
+.ai-submit-icon { font-size: 28rpx; color: #0d0e12; }
+.ai-submit-text { font-size: 30rpx; font-weight: 700; color: #0d0e12; }
+
+/* AI 加载中 */
+.ai-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 60rpx 0;
+  gap: 28rpx;
+}
+.ai-loading-dots {
+  display: flex;
+  flex-direction: row;
+  gap: 14rpx;
+  align-items: center;
+}
+.ai-dot {
+  width: 16rpx;
+  height: 16rpx;
+  border-radius: 50%;
+  background: #c9a96e;
+  animation: dotBounce 1.2s ease-in-out infinite;
+}
+.ai-dot-2 { animation-delay: 0.2s; }
+.ai-dot-3 { animation-delay: 0.4s; }
+@keyframes dotBounce {
+  0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+  40%            { transform: scale(1.2); opacity: 1;   }
+}
+.ai-loading-text { font-size: 26rpx; color: #9a98a0; }
+
+/* AI 结果 */
+.ai-result { display: flex; flex-direction: column; gap: 20rpx; }
+
+.ai-result-card {
+  background: #1e2029;
+  border: 2rpx solid #2a2d38;
+  border-radius: 24rpx;
+  padding: 28rpx;
+}
+.ai-result-emoji { font-size: 64rpx; display: block; text-align: center; margin-bottom: 12rpx; }
+.ai-result-name  { font-size: 34rpx; font-weight: 800; color: #f0ede8; display: block; text-align: center; margin-bottom: 8rpx; }
+.ai-result-desc  { font-size: 24rpx; color: #9a98a0; display: block; text-align: center; margin-bottom: 20rpx; line-height: 1.6; }
+
+.ai-result-ings { margin-bottom: 16rpx; }
+
+.ai-result-actions {
+  display: flex;
+  flex-direction: row;
+  gap: 14rpx;
+}
+
+.ai-result-save {
+  flex: 1;
+  background: linear-gradient(135deg,#c9a96e,#a67c3e);
+  color: #0d0e12;
+  font-size: 26rpx;
+  font-weight: 700;
+  padding: 24rpx;
+  border-radius: 20rpx;
+  text-align: center;
+  display: block;
+}
+.ai-result-retry {
+  background: #1e2029;
+  border: 2rpx solid #2a2d38;
+  color: #9a98a0;
+  font-size: 26rpx;
+  padding: 24rpx 32rpx;
+  border-radius: 20rpx;
+  text-align: center;
+  display: block;
+}
+
+/* AI 错误 */
+.ai-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40rpx 0;
+  gap: 20rpx;
+}
+.ai-error-text { font-size: 26rpx; color: #e05c5c; text-align: center; }
+.ai-retry-btn  {
+  padding: 18rpx 48rpx;
+  background: #1e2029;
+  border: 2rpx solid #2a2d38;
+  border-radius: 20rpx;
+  font-size: 26rpx;
+  color: #9a98a0;
+}
+
+/* ══ 配方表单抽屉 ══ */
+.form-drawer { max-height: 92vh; }
+.form-drawer-scroll { max-height: 70vh; }
+
+.form-field { margin-bottom: 24rpx; }
+
+.form-label {
+  font-size: 24rpx;
+  font-weight: 600;
+  color: #9a98a0;
+  display: block;
+  margin-bottom: 12rpx;
+}
+
+.form-label-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12rpx;
+}
+
+.form-add-sub {
+  font-size: 22rpx;
+  color: #c9a96e;
+  padding: 4rpx 0;
+}
+
+.form-input {
+  width: 100%;
+  height: auto;
+  background: #1e2029;
+  border: 2rpx solid #2a2d38;
+  border-radius: 14rpx;
+  padding: 18rpx 20rpx;
+  font-size: 26rpx;
+  color: #f0ede8;
+  box-sizing: border-box;
+}
+.form-ph { color: #5c5b65; }
+
+.form-textarea {
+  width: 100%;
+  background: #1e2029;
+  border: 2rpx solid #2a2d38;
+  border-radius: 14rpx;
+  padding: 18rpx 20rpx;
+  font-size: 26rpx;
+  color: #f0ede8;
+  box-sizing: border-box;
+  min-height: 80rpx;
+  line-height: 1.6;
+}
+
+/* 原料行 */
+.ing-form-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 10rpx;
+  margin-bottom: 10rpx;
+}
+.ing-form-input {
+  flex: 1;
+  height: auto;
+  background: #1e2029;
+  border: 2rpx solid #2a2d38;
+  border-radius: 12rpx;
+  padding: 14rpx 16rpx;
+  font-size: 24rpx;
+  color: #f0ede8;
+}
+.ing-form-amount {
+  width: 140rpx;
+  height: auto;
+  background: #1e2029;
+  border: 2rpx solid #2a2d38;
+  border-radius: 12rpx;
+  padding: 14rpx 16rpx;
+  font-size: 24rpx;
+  color: #f0ede8;
+}
+.ing-form-del {
+  width: 40rpx;
+  height: 40rpx;
+  border-radius: 50%;
+  background: rgba(224,92,92,0.1);
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  font-size: 22rpx;
+  color: #e05c5c;
+  flex-shrink: 0;
+}
+
+/* 步骤行 */
+.step-form-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 10rpx;
+  margin-bottom: 10rpx;
+}
+.step-form-num {
+  width: 40rpx;
+  height: 40rpx;
+  border-radius: 50%;
+  background: #2a2d38;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  font-size: 20rpx;
+  color: #c9a96e;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.step-form-input {
+  flex: 1;
+  height: auto;
+  background: #1e2029;
+  border: 2rpx solid #2a2d38;
+  border-radius: 12rpx;
+  padding: 14rpx 16rpx;
+  font-size: 24rpx;
+  color: #f0ede8;
+}
+
+.form-error {
+  padding: 14rpx 18rpx;
+  background: rgba(224,92,92,0.08);
+  border: 2rpx solid rgba(224,92,92,0.25);
+  border-radius: 12rpx;
+  font-size: 24rpx;
+  color: #e05c5c;
+  margin-bottom: 16rpx;
+}
+
+.form-submit-btn {
+  background: linear-gradient(135deg,#c9a96e,#a67c3e);
+  border-radius: 20rpx;
+  padding: 28rpx;
+  text-align: center;
+  font-size: 28rpx;
+  font-weight: 700;
+  color: #0d0e12;
+  margin-top: 8rpx;
+}
+
+/* ══ 合集表单底栏 ══ */
+.coll-form-sheet {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #16181f;
+  border-radius: 32rpx 32rpx 0 0;
+  padding: 0 32rpx 60rpx;
+  transform: translateY(100%);
+  transition: transform 0.3s cubic-bezier(0.32,0.72,0,1);
+}
+.coll-form-sheet-show { transform: translateY(0); }
+
+/* ── 全局 loading 进度条 ── */
+.global-loading-bar {
+  height: 4rpx;
+  background: rgba(201,169,110,0.12);
+  overflow: hidden;
+  margin: 0 0 8rpx;
+}
+.global-loading-track {
+  height: 100%;
+  width: 40%;
+  background: #c9a96e;
+  border-radius: 4rpx;
+  animation: loadingSlide 1s ease-in-out infinite;
+}
+@keyframes loadingSlide {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(350%); }
+}
+
+/* ════════════════════════════════════════
+   Step 8: AI 图片生成抽屉 & 入口按钮
+   ════════════════════════════════════════ */
+
+/* ── 合集 🖼 入口按钮 ── */
+.coll-img-btn {
+  width: 52rpx; height: 52rpx;
+  border-radius: 14rpx;
+  background: rgba(201, 169, 110, 0.1);
+  border: 2rpx solid rgba(201, 169, 110, 0.28);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28rpx;
+  margin-left: 8rpx;
+}
+
+/* ── 配方详情里的生成图片按钮 ── */
+.detail-action-img {
+  background: rgba(201, 169, 110, 0.08) !important;
+  border-color: rgba(201, 169, 110, 0.3) !important;
+  color: #c9a96e !important;
+}
+.detail-action-img text { color: #c9a96e; }
+
+/* ── 抽屉尺寸：图片抽屉需要更高 ── */
+.img-drawer { max-height: 88vh; }
+
+/* 标题副标签 */
+.img-drawer-title-wrap {
+  display: flex; flex-direction: column; gap: 4rpx;
+}
+.img-drawer-subtitle {
+  font-size: 22rpx; color: #5c5b65;
+}
+
+/* ── 配置区滚动容器 ── */
+.img-config-scroll {
+  max-height: 65vh;
+  padding: 0 32rpx;
+}
+
+/* Section 标签 */
+.img-section-label {
+  display: block;
+  font-size: 24rpx; font-weight: 700; color: #9a98a0;
+  margin-bottom: 16rpx;
+}
+
+/* ── 风格横向滚动 ── */
+.img-style-scroll { overflow: hidden; }
+.img-style-row {
+  display: flex;
+  flex-direction: row;
+  gap: 16rpx;
+  padding-bottom: 8rpx;
+  width: max-content;
+}
+
+/* 风格卡片 */
+.img-style-card {
+  width: 150rpx;
+  background: #1e2029;
+  border: 2rpx solid #2a2d38;
+  border-radius: 20rpx;
+  padding: 20rpx 16rpx 16rpx;
+  display: flex; flex-direction: column; align-items: center; gap: 8rpx;
+  position: relative;
+  flex-shrink: 0;
+}
+.img-style-card-on {
+  background: rgba(201, 169, 110, 0.10);
+  border-color: rgba(201, 169, 110, 0.55);
+}
+.img-style-emoji { font-size: 40rpx; line-height: 1; }
+.img-style-label {
+  font-size: 24rpx; font-weight: 700; color: #f0ede8;
+  text-align: center; display: block;
+}
+.img-style-desc {
+  font-size: 20rpx; color: #5c5b65; text-align: center; display: block;
+}
+.img-style-check {
+  position: absolute; top: 10rpx; right: 10rpx;
+  width: 32rpx; height: 32rpx; border-radius: 50%;
+  background: #c9a96e;
+  font-size: 20rpx; color: #0d0e12; font-weight: 900;
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* ── 自定义提示词输入 ── */
+.img-custom-input {
+  width: 100%; min-height: 80rpx;
+  background: #1e2029;
+  border: 2rpx solid #2a2d38;
+  border-radius: 16rpx;
+  padding: 20rpx 24rpx;
+  font-size: 26rpx; color: #f0ede8;
+  line-height: 1.6;
+  box-sizing: border-box;
+}
+.img-custom-ph { color: #3e3d46; font-size: 26rpx; }
+
+/* ── 生成按钮 ── */
+.img-gen-btn {
+  display: flex; flex-direction: row;
+  align-items: center; justify-content: center;
+  gap: 12rpx;
+  margin-top: 32rpx;
+  background: linear-gradient(135deg, #c9a96e 0%, #b8954e 100%);
+  border-radius: 24rpx;
+  padding: 28rpx 0;
+}
+.img-gen-btn-icon  { font-size: 30rpx; color: #0d0e12; }
+.img-gen-btn-label { font-size: 30rpx; font-weight: 700; color: #0d0e12; }
+
+/* ── 生成中 loading ── */
+.img-loading-wrap {
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 80rpx 40rpx 60rpx;
+  gap: 24rpx;
+}
+.img-loading-dots {
+  display: flex; flex-direction: row; gap: 14rpx; align-items: center;
+}
+.img-ld {
+  width: 16rpx; height: 16rpx; border-radius: 50%;
+  background: #c9a96e;
+  animation: imgBounce 1.4s ease-in-out infinite;
+}
+.img-ld-1 { animation-delay: 0s;    }
+.img-ld-2 { animation-delay: 0.2s;  }
+.img-ld-3 { animation-delay: 0.4s;  }
+@keyframes imgBounce {
+  0%, 80%, 100% { transform: scale(0.7); opacity: 0.4; }
+  40%           { transform: scale(1.2); opacity: 1;   }
+}
+.img-loading-step {
+  font-size: 28rpx; font-weight: 600; color: #f0ede8; display: block; text-align: center;
+}
+.img-loading-hint {
+  font-size: 22rpx; color: #5c5b65; display: block; text-align: center;
+}
+
+/* ── 完成预览 ── */
+.img-done-wrap {
+  display: flex; flex-direction: column;
+  align-items: center; gap: 20rpx;
+  padding: 0 32rpx;
+}
+.img-preview {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 20rpx;
+  background: #1e2029;
+  display: block;
+}
+.img-prompt-chip {
+  width: 100%;
+  background: #1e2029;
+  border: 2rpx solid #2a2d38;
+  border-radius: 14rpx;
+  padding: 14rpx 20rpx;
+  display: flex; flex-direction: row; gap: 8rpx; align-items: flex-start;
+}
+.img-prompt-label { font-size: 22rpx; color: #5c5b65; flex-shrink: 0; }
+.img-prompt-text  { font-size: 22rpx; color: #9a98a0; line-height: 1.5; flex: 1; }
+
+.img-done-actions {
+  width: 100%;
+  display: flex; flex-direction: row; gap: 16rpx;
+}
+.img-done-btn {
+  flex: 1;
+  display: flex; align-items: center; justify-content: center;
+  padding: 24rpx 0;
+  border-radius: 20rpx;
+  font-size: 26rpx; font-weight: 600;
+}
+.img-done-save {
+  background: linear-gradient(135deg, #c9a96e 0%, #b8954e 100%);
+  color: #0d0e12;
+}
+.img-done-save text { color: #0d0e12; font-weight: 700; }
+.img-done-retry {
+  background: #1e2029;
+  border: 2rpx solid #2a2d38;
+  color: #9a98a0;
+}
+.img-done-retry text { color: #9a98a0; }
+
+/* ── 错误态 ── */
+.img-error-wrap {
+  display: flex; flex-direction: column;
+  align-items: center; gap: 20rpx;
+  padding: 60rpx 40rpx 40rpx;
+}
+.img-error-icon { font-size: 64rpx; }
+.img-error-msg  { font-size: 26rpx; color: #9a98a0; text-align: center; line-height: 1.6; display: block; }
+.img-error-retry {
+  background: rgba(201,169,110,0.1);
+  border: 2rpx solid rgba(201,169,110,0.35);
+  border-radius: 16rpx;
+  padding: 18rpx 48rpx;
+  font-size: 26rpx; color: #c9a96e; font-weight: 600;
+}
+
+/* ════════════════════════════════════════
+   封面图展示：配方卡片 + 合集卡片
+   ════════════════════════════════════════ */
+
+/* ── 配方卡片封面图 ── */
+.rc-cover-wrap {
+  position: relative;
+  width: 100%;
+  height: 520rpx;
+  overflow: hidden;
+  border-radius: 20rpx 20rpx 0 0;
+  margin-bottom: -4rpx;   /* 与 rc-top 无缝衔接 */
+}
+.rc-cover {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+/* 底部渐变遮罩，防止文字被图片淹没 */
+.rc-cover-overlay {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 140rpx;
+  background: linear-gradient(to bottom, transparent, rgba(13,14,18,0.85));
+}
+/* 封面上叠加 emoji + 名称 */
+.rc-cover-meta {
+  position: absolute;
+  bottom: 16rpx; left: 20rpx; right: 20rpx;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 12rpx;
+}
+.rc-cover-emoji { font-size: 36rpx; flex-shrink: 0; }
+.rc-cover-name  {
+  font-size: 28rpx; font-weight: 700; color: #f0ede8;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+/* ── 合集封面图 ── */
+.coll-cover-wrap {
+  position: relative;
+  width: 100%;
+  height: 520rpx;
+  overflow: hidden;
+  border-radius: 20rpx 20rpx 0 0;
+}
+.coll-cover {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.coll-cover-overlay {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 100rpx;
+  background: linear-gradient(to bottom, transparent, rgba(13,14,18,0.8));
+}
+
+/* ── 图片生成抽屉：「已有封面」提示条 ── */
+.img-existing-hint {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 16rpx;
+  background: rgba(76,175,132,0.08);
+  border: 2rpx solid rgba(76,175,132,0.2);
+  border-radius: 16rpx;
+  padding: 16rpx 20rpx;
+  margin-bottom: 20rpx;
+}
+.img-existing-thumb {
+  width: 72rpx; height: 72rpx;
+  border-radius: 10rpx;
+  flex-shrink: 0;
+}
+.img-existing-tip {
+  font-size: 24rpx; color: #4caf84; line-height: 1.5; flex: 1;
+}
+
+/* ════════════════════════════════════════
+   历史图列表（图片抽屉内）
+   ════════════════════════════════════════ */
+
+.img-history-section {
+  margin-bottom: 28rpx;
+}
+.img-history-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 16rpx;
+}
+.img-history-count { font-size: 22rpx; color: #5c5b65; }
+
+.img-history-scroll { overflow: hidden; }
+.img-history-row {
+  display: flex; flex-direction: row;
+  gap: 14rpx;
+  padding-bottom: 4rpx;
+  width: max-content;
+}
+
+/* 单张缩略图容器 */
+.img-history-thumb-wrap {
+  position: relative;
+  width: 160rpx; height: 160rpx;
+  border-radius: 16rpx;
+  overflow: hidden;
+  border: 3rpx solid transparent;
+  flex-shrink: 0;
+}
+.img-history-thumb-cover {
+  border-color: #c9a96e;
+}
+.img-history-thumb {
+  width: 100%; height: 100%; display: block;
+}
+.img-history-loading {
+  background: #1e2029;
+  display: flex; align-items: center; justify-content: center;
+}
+.img-history-loading-txt { font-size: 28rpx; color: #3e3d46; }
+
+/* 封面标签 */
+.img-history-cover-badge {
+  position: absolute; top: 8rpx; left: 8rpx;
+  background: #c9a96e; color: #0d0e12;
+  font-size: 18rpx; font-weight: 700;
+  border-radius: 8rpx; padding: 3rpx 10rpx;
+}
+
+/* 操作遮罩：hover 显示（小程序里长按触发，这里做成半透明常驻底部） */
+.img-history-actions {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  display: flex; flex-direction: row;
+  background: rgba(13,14,18,0.65);
+  padding: 6rpx 0;
+}
+.img-history-act {
+  flex: 1; text-align: center;
+  font-size: 20rpx; color: #f0ede8;
+  padding: 6rpx 0;
+}
+.img-history-del { color: #e05c5c; }
+
+/* ════════════════════════════════════════
+   发现页 — 云端公开配方
+   ════════════════════════════════════════ */
+
+/* 发现页外层容器（不用 scroll-view 包裹，因为内部 scroll-view 自己管滚动）*/
+.discover-wrap,
+.mine-wrap,
+.fav-wrap {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* ── 搜索栏 ── */
+.discover-search-bar {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  margin: 0 24rpx 16rpx;
+  background: #1e2029;
+  border: 2rpx solid #2a2d38;
+  border-radius: 18rpx;
+  padding: 0 20rpx;
+  height: 84rpx;
+  flex-shrink: 0;
+}
+
+/* ── 发现页 loading 三点 ── */
+.discover-loading {
+  display: flex;
+  flex-direction: row;
+  gap: 14rpx;
+  justify-content: center;
+  align-items: center;
+  padding: 80rpx 0;
+}
+.disc-dot {
+  width: 16rpx; height: 16rpx;
+  border-radius: 50%;
+  background: #c9a96e;
+  animation: imgBounce 1.4s ease-in-out infinite;
+}
+.disc-dot-1 { animation-delay: 0s; }
+.disc-dot-2 { animation-delay: 0.2s; }
+.disc-dot-3 { animation-delay: 0.4s; }
+
+/* ── 发现卡片 ── */
+.discover-card {
+  padding: 24rpx;
+  overflow: hidden;
+  position: relative; /* 使角标的 position:absolute 以卡片为基准 */
+}
+
+/* 作者行 */
+.discover-author-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 12rpx;
+  margin-top: 6rpx;
+}
+.discover-author-name { font-size: 22rpx; color: #5c5b65; }
+.discover-time        { font-size: 20rpx; color: #3e3d46; margin-left: auto; }
+
+/* 标签行 */
+.discover-tags-row {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 10rpx;
+  margin: 10rpx 0 4rpx;
+}
+.discover-tag-chip {
+  background: rgba(92,143,214,0.1);
+  border: 2rpx solid rgba(92,143,214,0.25);
+  border-radius: 10rpx;
+  padding: 4rpx 14rpx;
+  font-size: 20rpx;
+  color: #5c8fd6;
+}
+
+/* 点赞按钮（卡片右上角） */
+.discover-like {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 4rpx;
+  min-width: 60rpx;
+  flex-shrink: 0;
+}
+.discover-like-icon  { font-size: 34rpx; color: #5c5b65; }
+.discover-like-count { font-size: 20rpx; color: #5c5b65; }
+.discover-like-on .discover-like-icon  { color: #e05c5c; }
+.discover-like-on .discover-like-count { color: #e05c5c; }
+
+/* 详情里的点赞操作按钮 */
+.discover-like-action { color: #e05c5c !important; }
+.discover-like-action text { color: #e05c5c; }
+.discover-like-on.discover-like-action {
+  background: rgba(224,92,92,0.08) !important;
+  border-color: rgba(224,92,92,0.3) !important;
+}
+
+/* 加载更多 */
+.discover-load-more {
+  display: flex;
+  justify-content: center;
+  padding: 24rpx 0 8rpx;
+}
+.discover-load-txt { font-size: 24rpx; color: #3e3d46; }
+
+/* ════════════════════════════════════════
+   「我的」Tab — 发布按钮
+   ════════════════════════════════════════ */
+
+.detail-action-publish {
+  background: rgba(92,143,214,0.08) !important;
+  border-color: rgba(92,143,214,0.28) !important;
+}
+.detail-action-publish text { color: #5c8fd6; }
+
+.detail-action-published {
+  background: rgba(76,175,132,0.08) !important;
+  border-color: rgba(76,175,132,0.28) !important;
+}
+.detail-action-published text { color: #4caf84; font-size: 22rpx; }
+
+/* ════════════════════════════════════════
+   发布抽屉
+   ════════════════════════════════════════ */
+
+.publish-drawer { max-height: 88vh; }
+
+/* 配方预览区 */
+.publish-preview {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 20rpx;
+  background: #1e2029;
+  border: 2rpx solid #2a2d38;
+  border-radius: 20rpx;
+  padding: 20rpx;
+  margin: 0 32rpx 28rpx;
+}
+.publish-cover-wrap {
+  width: 100rpx; height: 100rpx;
+  border-radius: 14rpx;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.publish-cover { width: 100%; height: 100%; display: block; }
+.publish-info  { display: flex; flex-direction: row; gap: 14rpx; align-items: center; flex: 1; min-width: 0; }
+.publish-emoji { font-size: 44rpx; flex-shrink: 0; }
+.publish-name  { font-size: 28rpx; font-weight: 700; color: #f0ede8; display: block; }
+.publish-desc  { font-size: 22rpx; color: #5c5b65; display: block; margin-top: 4rpx;
+                 white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* 标签区 */
+.publish-label {
+  display: block;
+  font-size: 24rpx; font-weight: 700; color: #9a98a0;
+  margin: 0 32rpx 16rpx;
+}
+.publish-tag-grid {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 14rpx;
+  padding: 0 32rpx;
+  margin-bottom: 20rpx;
+}
+.publish-tag-chip {
+  background: #1e2029;
+  border: 2rpx solid #2a2d38;
+  border-radius: 14rpx;
+  padding: 12rpx 24rpx;
+  font-size: 24rpx;
+  color: #9a98a0;
+}
+.publish-tag-on {
+  background: rgba(92,143,214,0.12);
+  border-color: rgba(92,143,214,0.45);
+  color: #5c8fd6;
+}
+
+/* 已选标签行 */
+.publish-selected-row {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 12rpx;
+  padding: 0 32rpx;
+  margin-bottom: 16rpx;
+  min-height: 20rpx;
+}
+.publish-selected-chip {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8rpx;
+  background: rgba(201,169,110,0.1);
+  border: 2rpx solid rgba(201,169,110,0.35);
+  border-radius: 12rpx;
+  padding: 8rpx 16rpx;
+  font-size: 24rpx;
+  color: #c9a96e;
+}
+.publish-chip-del { font-size: 22rpx; color: #9a98a0; padding-left: 4rpx; }
+
+/* 自定义标签输入行 */
+.publish-input-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 16rpx;
+  margin: 0 32rpx 28rpx;
+}
+.publish-custom-input {
+  flex: 1;
+  height: 72rpx;
+  background: #1e2029;
+  border: 2rpx solid #2a2d38;
+  border-radius: 16rpx;
+  padding: 0 20rpx;
+  font-size: 26rpx;
+  color: #f0ede8;
+}
+.publish-add-btn {
+  background: rgba(201,169,110,0.1);
+  border: 2rpx solid rgba(201,169,110,0.35);
+  border-radius: 16rpx;
+  padding: 16rpx 28rpx;
+  font-size: 26rpx;
+  color: #c9a96e;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* 禁用态 */
+.btn-disabled {
+  opacity: 0.45;
+}
+
+/* ════════════════════════════════════════
+   合集卡片重设计（Step 5a）
+   ════════════════════════════════════════ */
+
+/* 封面图叠加标题 */
+.coll-cover-title-row {
+  position: absolute;
+  bottom: 16rpx; left: 20rpx; right: 20rpx;
+  display: flex; flex-direction: row; align-items: center; gap: 12rpx;
+}
+.coll-cover-emoji      { font-size: 40rpx; flex-shrink: 0; }
+.coll-cover-name-overlay {
+  font-size: 30rpx; font-weight: 700; color: #f0ede8;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+/* 描述 */
+.coll-desc-row { padding: 4rpx 28rpx 0; }
+.coll-desc     { font-size: 24rpx; color: #9a98a0; line-height: 1.5; display: block; }
+
+/* 合集标签 */
+.coll-tags-row {
+  display: flex; flex-direction: row; flex-wrap: wrap;
+  gap: 10rpx; padding: 10rpx 28rpx 4rpx;
+}
+.coll-tag-chip {
+  background: rgba(92,143,214,0.1);
+  border: 2rpx solid rgba(92,143,214,0.25);
+  border-radius: 10rpx; padding: 4rpx 14rpx;
+  font-size: 20rpx; color: #5c8fd6;
+}
+
+/* ── 配方缩略横排 ── */
+.coll-thumbs-row {
+  display: flex; flex-direction: row; gap: 14rpx;
+  padding: 12rpx 28rpx; overflow: hidden;
+}
+.coll-thumb-item {
+  display: flex; flex-direction: column; align-items: center; gap: 6rpx;
+  width: 120rpx; flex-shrink: 0;
+}
+.coll-thumb-img {
+  width: 120rpx; height: 120rpx;
+  border-radius: 16rpx; display: block;
+}
+.coll-thumb-emoji-wrap {
+  width: 120rpx; height: 120rpx;
+  border-radius: 16rpx; background: #1e2029;
+  display: flex; align-items: center; justify-content: center;
+}
+.coll-thumb-emoji { font-size: 44rpx; }
+.coll-thumb-name  {
+  font-size: 20rpx; color: #9a98a0; text-align: center;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  width: 100%; display: block;
+}
+.coll-thumb-more {
+  width: 120rpx; height: 120rpx; border-radius: 16rpx;
+  background: #1e2029; border: 2rpx solid #2a2d38;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 26rpx; color: #5c5b65; flex-shrink: 0;
+}
+
+/* 展开区：配方缩略图 */
+.coll-rc-thumb {
+  width: 64rpx; height: 64rpx;
+  border-radius: 12rpx; flex-shrink: 0; display: block;
+}
+
+/* 发布/撤回按钮行 */
+.coll-pub-row { display: flex; padding: 0 0 16rpx; }
+.coll-pub-btn {
+  flex: 1; text-align: center;
+  background: rgba(92,143,214,0.08);
+  border: 2rpx solid rgba(92,143,214,0.28);
+  border-radius: 16rpx; padding: 16rpx 0;
+  font-size: 26rpx; color: #5c8fd6; font-weight: 600;
+}
+.coll-pub-btn-on {
+  background: rgba(76,175,132,0.08);
+  border-color: rgba(76,175,132,0.28);
+  color: #4caf84;
+}
+.coll-detail-btn {
+  background: rgba(201,169,110,0.08);
+  border-color: rgba(201,169,110,0.28);
+  color: #c9a96e;
+}
+
+/* 海报按钮 */
+.coll-poster-btn {
+  width: 52rpx; height: 52rpx; border-radius: 14rpx;
+  background: rgba(154,100,214,0.1);
+  border: 2rpx solid rgba(154,100,214,0.28);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28rpx; margin-left: 8rpx;
+}
+
+/* ════════════════════════════════════════
+   海报生成抽屉（Step 5b）
+   ════════════════════════════════════════ */
+
+.poster-drawer { max-height: 92vh; }
+
+/* 排版配置表单 */
+.poster-layout-form {
+  background: #1e2029; border: 2rpx solid #2a2d38;
+  border-radius: 18rpx; overflow: hidden; margin-bottom: 4rpx;
+}
+.poster-layout-row {
+  display: flex; flex-direction: row; align-items: center;
+  padding: 18rpx 20rpx; border-bottom: 2rpx solid #141519;
+}
+.poster-layout-row:last-child { border-bottom: none; }
+.poster-layout-label {
+  font-size: 24rpx; color: #9a98a0; width: 100rpx; flex-shrink: 0;
+}
+.poster-layout-input {
+  flex: 1; font-size: 26rpx; color: #f0ede8; background: transparent;
+}
+
+/* Canvas 容器 */
+.poster-canvas-wrap {
+  display: flex; flex-direction: column; align-items: center;
+  padding: 0 32rpx; gap: 16rpx;
+}
+.poster-canvas {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  border-radius: 16rpx;
+  background: #1e2029;
+  display: block;
+}
+.poster-canvas-loading {
+  position: absolute;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 26rpx; color: #9a98a0;
+}
+
+/* ════════════════════════════════════════
+   发现页：类型切换 + 合集角标（Step 5c）
+   ════════════════════════════════════════ */
+
+.discover-type-row {
+  display: flex; flex-direction: row;
+  margin: 0 24rpx 12rpx; gap: 12rpx;
+  flex-shrink: 0;
+}
+.discover-type-btn {
+  flex: 1; text-align: center;
+  padding: 14rpx 0;
+  background: #1e2029;
+  border: 2rpx solid #2a2d38;
+  border-radius: 14rpx;
+  font-size: 26rpx; color: #9a98a0; font-weight: 600;
+}
+.discover-type-on {
+  background: rgba(201,169,110,0.1);
+  border-color: rgba(201,169,110,0.45);
+  color: #c9a96e;
+}
+
+/* 合集角标 */
+.discover-coll-badge {
+  position: absolute; top: 12rpx; right: 12rpx; z-index: 2;
+  background: rgba(92,143,214,0.85);
+  border-radius: 10rpx; padding: 4rpx 14rpx;
+  font-size: 20rpx; color: #fff; font-weight: 700;
+}
+
+/* 配方角标（仅全部视图显示） */
+.discover-recipe-badge {
+  position: absolute; top: 12rpx; right: 12rpx; z-index: 2;
+  background: rgba(201,169,110,0.75);
+  border-radius: 10rpx; padding: 4rpx 14rpx;
+  font-size: 20rpx; color: #12141a; font-weight: 700;
+}
+
+/* 配方数量标签 */
+.discover-recipe-count {
+  font-size: 22rpx; color: #c9a96e; margin-left: auto;
+}
+
+/* ── 发现页子 Tab（配方 / 合集）─────────────────────── */
+.discover-sub-tabs {
+  display: flex;
+  flex-direction: row;
+  padding: 12rpx 24rpx 0;
+  gap: 0;
+  border-bottom: 2rpx solid #1e2029;
+}
+.discover-sub-tab {
+  flex: 1;
+  text-align: center;
+  padding: 16rpx 0 18rpx;
+  font-size: 28rpx;
+  color: #5c5b65;
+  font-weight: 500;
+  position: relative;
+}
+.discover-sub-tab-on {
+  color: #f0ede8;
+  font-weight: 700;
+}
+.discover-sub-tab-on::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 20%; right: 20%;
+  height: 4rpx;
+  background: #c9a96e;
+  border-radius: 2rpx;
+}
+
+/* ── 发现页：合集收藏按钮（★/☆）─────────────────── */
+.discover-right-actions {
+  display: flex; flex-direction: row; align-items: center; gap: 8rpx;
+}
+.discover-fav-coll {
+  font-size: 36rpx; color: #5c5b65;
+  padding: 0 4rpx;
+}
+.discover-fav-coll-on { color: #c9a96e; }
+
+/* ── 收藏 Tab：分区标题 ──────────────────────────── */
+.fav-section-header {
+  padding: 24rpx 32rpx 8rpx;
+}
+.fav-section-title {
+  font-size: 22rpx; color: #5c5b65; font-weight: 600; letter-spacing: 1rpx;
+  text-transform: uppercase;
+}
+
+/* ── 收藏合集卡片 ─────────────────────────────────── */
+.coll-fav-card { padding: 24rpx; }
+.coll-fav-header {
+  display: flex; flex-direction: row; align-items: center; gap: 16rpx;
+  margin-bottom: 10rpx;
+}
+.coll-fav-emoji { font-size: 40rpx; flex-shrink: 0; }
+.coll-fav-meta  { flex: 1; min-width: 0; }
+.coll-fav-name  { font-size: 28rpx; color: #f0ede8; font-weight: 600; }
+.coll-fav-sub   { font-size: 22rpx; color: #5c5b65; margin-top: 4rpx; }
+
+/* ── 配方编辑表单：原创/AI标注 ───────────────────── */
+.form-label-info {
+  display: flex; flex-direction: row; align-items: center;
+  gap: 14rpx;
+  padding: 0 32rpx 24rpx;
+}
+.form-label-hint {
+  font-size: 22rpx; color: #5c5b65;
+}
+.form-toggle-row {
+  display: flex; flex-direction: row; align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8rpx;
+}
+.form-toggle {
+  font-size: 24rpx; color: #5c5b65;
+  background: #1e2029; border: 2rpx solid #2a2d38;
+  border-radius: 12rpx; padding: 8rpx 20rpx;
+}
+.form-toggle-on {
+  color: #e8c07a; background: rgba(201,169,110,0.1);
+  border-color: rgba(201,169,110,0.35);
+}

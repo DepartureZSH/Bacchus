@@ -1,0 +1,140 @@
+/* pages/export/export.wxss */
+.export-scroll { height: 100vh; background: #0d0e12; }
+
+.section-label {
+  font-size: 22rpx; font-weight: 700; color: #5c5b65;
+  letter-spacing: 2rpx; padding: 16rpx 32rpx 14rpx; display: block;
+}
+
+/* ── 类型选择 ── */
+.type-list { padding: 0 32rpx; display: flex; flex-direction: column; gap: 12rpx; }
+
+.type-card {
+  display: flex; flex-direction: row; align-items: center;
+  padding: 24rpx 28rpx; gap: 20rpx;
+}
+.type-card-active {
+  border-color: rgba(201,169,110,0.5);
+  background: rgba(201,169,110,0.05);
+}
+.type-card-left {
+  flex: 1; display: flex; flex-direction: row; align-items: center; gap: 20rpx;
+}
+.type-icon  { font-size: 44rpx; flex-shrink: 0; line-height: 1; }
+.type-info  { flex: 1; display: flex; flex-direction: column; gap: 6rpx; }
+.type-name  { font-size: 28rpx; font-weight: 600; color: #f0ede8; display: block; }
+.type-desc  { font-size: 22rpx; color: #5c5b65; display: block; }
+
+.type-radio {
+  width: 36rpx; height: 36rpx; border-radius: 50%;
+  border: 3rpx solid #2a2d38; flex-shrink: 0;
+  display: flex; flex-direction: row; align-items: center; justify-content: center;
+}
+.type-radio-on  { border-color: #c9a96e; background: rgba(201,169,110,0.15); }
+.type-radio-dot { width: 18rpx; height: 18rpx; border-radius: 50%; background: #c9a96e; }
+
+/* ── 预览卡 ── */
+.preview-card { margin: 0 32rpx 24rpx; padding: 24rpx; overflow: scroll; }
+
+.preview-header {
+  display: flex; flex-direction: row; align-items: center;
+  justify-content: space-between; margin-bottom: 16rpx;
+}
+.preview-title { font-size: 26rpx; font-weight: 700; color: #f0ede8; }
+.preview-count { font-size: 22rpx; color: #9a98a0; }
+
+/* ──
+   表格核心：用 width:N% 给每列分配精确宽度
+   行内 view 不能用 flex:N（小程序 flex 对百分比支持不稳定）
+   改用 style="width:X%" + overflow:hidden + text-overflow:ellipsis
+── */
+.table-head {
+  display: flex; flex-direction: row;
+  background: #1a1c25;
+  border-radius: 12rpx 12rpx 0 0;
+  padding: 14rpx 0;
+  width: 150%;
+}
+
+.th {
+  /* width 由 style 内联注入 */
+  display: flex; flex-direction: row; align-items: center;
+  padding: 0 8rpx;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.th-text {
+  font-size: 20rpx; font-weight: 700; color: #9a98a0;
+  overflow: hidden;
+  /* 小程序 text 无法直接用 ellipsis，用 max-lines 替代 */
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+}
+
+.table-row {
+  display: flex; flex-direction: row;
+  border-bottom: 2rpx solid #2a2d38;
+  padding: 14rpx 0;
+  width: 150%;
+}
+.table-row-alt { background: rgba(42,45,56,0.25); }
+
+.td {
+  /* width 由 style 内联注入 */
+  /* display: flex; flex-direction: row; align-items: center; */
+  padding: 0 8rpx;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.td-right { justify-content: flex-end; }
+
+.td-text {
+  font-size: 22rpx; color: #f0ede8;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.table-more {
+  padding: 14rpx 8rpx 0;
+  font-size: 22rpx; color: #5c5b65;
+}
+
+/* ── 导出方式 2×2 ── */
+.action-grid {
+  display: flex; flex-direction: row; flex-wrap: wrap;
+  gap: 16rpx; padding: 0 32rpx;
+}
+
+.action-card {
+  width: calc(50% - 8rpx);
+  padding: 28rpx 24rpx; box-sizing: border-box;
+  display: flex; flex-direction: column; align-items: flex-start; gap: 8rpx;
+  position: relative; overflow: hidden;
+}
+.action-icon { font-size: 44rpx; line-height: 1; }
+.action-name { font-size: 26rpx; font-weight: 700; color: #f0ede8; display: block; }
+.action-desc { font-size: 20rpx; color: #9a98a0; display: block; line-height: 1.5; }
+
+.action-card-locked { opacity: 0.55; }
+.lock-badge {
+  position: absolute; top: 16rpx; right: 16rpx;
+  background: linear-gradient(135deg,#c9a96e,#a67c3e);
+  color: #0d0e12; border-radius: 10rpx;
+  padding: 4rpx 14rpx; font-size: 20rpx; font-weight: 700;
+}
+
+/* ── 历史记录 ── */
+.history-card { margin: 0 32rpx 20rpx; overflow: hidden; }
+.history-row {
+  display: flex; flex-direction: row; align-items: center;
+  padding: 20rpx 28rpx; gap: 16rpx;
+}
+.history-row-border { border-bottom: 2rpx solid #2a2d38; }
+.history-icon { font-size: 32rpx; flex-shrink: 0; }
+.history-info { flex: 1; display: flex; flex-direction: column; gap: 4rpx; }
+.history-name { font-size: 26rpx; font-weight: 600; color: #f0ede8; display: block; }
+.history-time { font-size: 22rpx; color: #5c5b65; display: block; }

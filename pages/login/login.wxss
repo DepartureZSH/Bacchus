@@ -1,0 +1,173 @@
+/* pages/login/login.wxss */
+
+.login-page {
+  min-height: 100vh;
+  background: #0d0e12;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 0 64rpx 80rpx;
+}
+
+/* ── Brand ── */
+.login-brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 80rpx;
+}
+
+.login-logo {
+  width: 144rpx;
+  height: 144rpx;
+  background: linear-gradient(135deg, #c9a96e 0%, #e8c98a 50%, #a67c3e 100%);
+  border-radius: 40rpx;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  font-size: 72rpx;
+  margin-bottom: 32rpx;
+}
+
+.login-title {
+  font-size: 56rpx;
+  font-weight: 700;
+  color: #f0ede8;
+  letter-spacing: 6rpx;
+  display: block;
+  text-align: center;
+}
+
+.login-subtitle {
+  font-size: 26rpx;
+  color: #9a98a0;
+  margin-top: 12rpx;
+  letter-spacing: 2rpx;
+  display: block;
+  text-align: center;
+}
+
+/* ── Form ── */
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 24rpx;
+}
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+}
+
+.input-label {
+  font-size: 22rpx;
+  color: #9a98a0;
+  letter-spacing: 2rpx;
+  font-weight: 600;
+  display: block;
+}
+
+.input-field {
+  background: #1e2029;
+  border: 2rpx solid #2a2d38;
+  border-radius: 24rpx;
+  padding: 28rpx 32rpx;
+  color: #f0ede8;
+  font-size: 30rpx;
+  width: 100%;
+}
+
+.input-placeholder {
+  color: #5c5b65;
+}
+
+.login-btn {
+  margin-top: 8rpx;
+}
+
+/* ── Divider ── */
+.divider-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 20rpx;
+  margin: 4rpx 0;
+}
+
+.divider-line {
+  flex: 1;
+  height: 2rpx;
+  background: #2a2d38;
+}
+
+.divider-text {
+  font-size: 24rpx;
+  color: #5c5b65;
+}
+
+/* ── WeChat btn ── */
+.btn-wechat {
+  background: #1aad19;
+  color: white;
+  border-radius: 28rpx;
+  padding: 30rpx;
+  font-size: 30rpx;
+  font-weight: 500;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 12rpx;
+  width: 100%;
+}
+
+.wechat-icon {
+  font-size: 34rpx;
+}
+
+/* ── Demo hint ── */
+.demo-hint {
+  background: #16181f;
+  border: 2rpx solid #2a2d38;
+  border-radius: 20rpx;
+  padding: 24rpx 32rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8rpx;
+  margin-top: 8rpx;
+}
+
+.demo-hint-text {
+  font-size: 24rpx;
+  color: #5c5b65;
+  display: block;
+  text-align: center;
+}
+
+.demo-hint-strong {
+  font-size: 24rpx;
+  color: #c9a96e;
+  font-weight: 600;
+  display: block;
+  text-align: center;
+}
+
+/* 云登录样式补充 */
+.login-desc {
+  margin-top: 48rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10rpx;
+}
+.login-desc-text {
+  font-size: 24rpx;
+  color: #5c5b65;
+  display: block;
+  text-align: center;
+  line-height: 1.6;
+}
+.btn-disabled { opacity: 0.6; }

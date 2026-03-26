@@ -1,0 +1,150 @@
+<!-- pages/recipes/recipes.wxml -->
+<view class="recipes-page">
+
+  <!-- 搜索栏 -->
+  <view class="search-bar">
+    <view class="search-wrap">
+      <text class="search-icon">🔍</text>
+      <input
+        class="search-input"
+        placeholder="搜索配方名称或基酒"
+        placeholder-class="search-placeholder"
+        value="{{searchText}}"
+        bindinput="onSearch"
+      />
+    </view>
+  </view>
+
+  <!-- 分类筛选 -->
+  <scroll-view scroll-x class="filter-scroll" show-scrollbar="{{false}}">
+    <view class="filter-row">
+      <view
+        wx:for="{{bases}}"
+        wx:key="*this"
+        class="filter-chip {{currentBase === item ? 'filter-chip-active' : ''}}"
+        data-val="{{item}}"
+        bindtap="onFilterBase"
+      >{{item}}</view>
+    </view>
+  </scroll-view>
+
+  <!-- 风格筛选 -->
+  <scroll-view scroll-x class="filter-scroll filter-scroll-2" show-scrollbar="{{false}}">
+    <view class="filter-row">
+      <view
+        wx:for="{{styles}}"
+        wx:key="*this"
+        class="filter-chip filter-chip-sm {{currentStyle === item ? 'filter-chip-active' : ''}}"
+        data-val="{{item}}"
+        bindtap="onFilterStyle"
+      >{{item}}</view>
+    </view>
+  </scroll-view>
+
+  <!-- 结果数 -->
+  <view class="result-hint">
+    <text class="result-text">{{filtered.length}} 款配方</text>
+  </view>
+
+  <!-- 配方卡片列表 -->
+  <view class="recipe-list">
+
+    <block wx:if="{{filtered.length === 0}}">
+      <view class="empty-state">
+        <text class="empty-icon">🍹</text>
+        <text class="empty-title">没有找到匹配配方</text>
+        <text class="empty-sub">换个关键词试试</text>
+      </view>
+    </block>
+
+    <view
+      wx:for="{{filtered}}"
+      wx:key="id"
+      class="recipe-card card"
+      data-id="{{item.id}}"
+      bindtap="onCardTap"
+    >
+      <!-- 头部 -->
+      <view class="card-header">
+        <text class="card-emoji">{{item.emoji}}</text>
+        <view class="card-meta">
+          <text class="card-name">{{item.name}}</text>
+          <view class="card-tags">
+            <view class="tag tag-base">{{item.base}}</view>
+            <view class="tag tag-style">{{item.style}}</view>
+            <view wx:if="{{item.abv === 0}}" class="tag tag-zero">无酒精</view>
+          </view>
+        </view>
+        <view class="card-abv">
+          <text class="abv-num">{{item.abv}}</text>
+          <text class="abv-unit">%</text>
+        </view>
+      </view>
+
+      <!-- 简介 -->
+      <text class="card-desc">{{item.desc}}</text>
+
+      <!-- 原料预览（最多3个） -->
+      <view class="card-ings">
+        <view
+          wx:for="{{item.ingredientPreview}}"
+          wx:key="name"
+          wx:for-item="ing"
+          class="ing-pill"
+        >{{ing.name}} {{ing.amount}}</view>
+        <view wx:if="{{item.moreCount > 0}}" class="ing-pill ing-pill-more">
+          +{{item.moreCount}}
+        </view>
+      </view>
+
+      <!-- 展开详情 -->
+      <view wx:if="{{expandedId === item.id}}" class="card-detail">
+        <view class="detail-divider"></view>
+
+        <!-- 完整原料 -->
+        <text class="detail-section-title">🧪 原料</text>
+        <view class="detail-ing-list">
+          <view wx:for="{{item.ingredients}}" wx:key="name" wx:for-item="ing" class="detail-ing-row">
+            <view class="detail-ing-dot"></view>
+            <text class="detail-ing-name">{{ing.name}}</text>
+            <text class="detail-ing-amount">{{ing.amount}}</text>
+          </view>
+        </view>
+
+        <!-- 步骤 -->
+        <text class="detail-section-title" style="margin-top:24rpx">📋 步骤</text>
+        <view wx:for="{{item.steps}}" wx:key="index" wx:for-item="step" class="step-row">
+          <view class="step-num"><text>{{index+1}}</text></view>
+          <text class="step-text">{{step}}</text>
+        </view>
+
+        <!-- 备注 -->
+        <view wx:if="{{item.notes}}" class="notes-box">
+          <text class="notes-text">📌 {{item.notes}}</text>
+        </view>
+
+        <!-- 难度条 -->
+        <view class="difficulty-row">
+          <text class="difficulty-label">难度</text>
+          <view class="difficulty-dots">
+            <view
+              wx:for="{{[1,2,3]}}"
+              wx:key="*this"
+              class="diff-dot {{item.difficulty >= item2 ? 'diff-dot-on' : ''}}"
+              wx:for-item="item2"
+            ></view>
+          </view>
+          <text class="difficulty-text">{{item.difficulty === 1 ? '简单' : item.difficulty === 2 ? '中等' : '进阶'}}</text>
+        </view>
+      </view>
+
+      <!-- 展开/收起 -->
+      <view class="card-toggle">
+        <text class="card-toggle-text">{{expandedId === item.id ? '收起 ∧' : '查看配方 ∨'}}</text>
+      </view>
+    </view>
+
+  </view>
+
+  <view style="height:60rpx"></view>
+</view>

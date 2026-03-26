@@ -1,0 +1,97 @@
+/* app.wxss — 全局样式（兼容微信小程序基础库 2.x+） */
+/* 注意：小程序不支持 :root，CSS变量写在 page 选择器上，
+   但部分组件内部仍不继承，故关键颜色改为直接值 */
+
+page {
+  background-color: #0d0e12;
+  color: #f0ede8;
+  font-family: -apple-system, PingFang SC, Helvetica Neue, sans-serif;
+  font-size: 28rpx;
+  line-height: 1.6;
+  height: 100%;
+}
+
+/* ── Reset ── */
+view, text, input, button, scroll-view {
+  box-sizing: border-box;
+}
+button {
+  padding: 0;
+  margin: 0;
+  background: none;
+  border: none;
+  line-height: 1;
+}
+button::after {
+  border: none;
+}
+
+/* ── 通用卡片 ── */
+.card {
+  background: #16181f;
+  border: 2rpx solid #2a2d38;
+  border-radius: 32rpx;
+}
+
+/* ── Section Header ── */
+.section-header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8rpx 32rpx 20rpx;
+}
+.section-title {
+  font-size: 22rpx;
+  font-weight: 600;
+  color: #9a98a0;
+  letter-spacing: 2rpx;
+}
+.section-link {
+  font-size: 24rpx;
+  color: #c9a96e;
+}
+
+/* ── 通用按钮 ── */
+.btn-primary {
+  background: linear-gradient(135deg, #c9a96e, #a67c3e);
+  color: #0d0e12;
+  border-radius: 28rpx;
+  padding: 32rpx;
+  font-size: 32rpx;
+  font-weight: 600;
+  text-align: center;
+  letter-spacing: 4rpx;
+  display: block;
+  width: 100%;
+}
+.btn-ghost {
+  background: #1e2029;
+  color: #9a98a0;
+  border: 2rpx solid #2a2d38;
+  border-radius: 28rpx;
+  padding: 28rpx;
+  font-size: 28rpx;
+  font-weight: 500;
+  text-align: center;
+  display: block;
+  width: 100%;
+}
+
+/* ── 状态徽章 ── */
+.badge {
+  display: inline-block;
+  border-radius: 40rpx;
+  padding: 4rpx 16rpx;
+  font-size: 22rpx;
+  font-weight: 600;
+}
+.badge-danger { background: rgba(224,92,92,0.15); color: #e05c5c; }
+.badge-warn   { background: rgba(224,154,58,0.15); color: #e09a3a; }
+.badge-ok     { background: rgba(76,175,132,0.15); color: #4caf84; }
+.badge-accent {
+  background: rgba(201,169,110,0.15);
+  color: #c9a96e;
+  border: 1rpx solid rgba(201,169,110,0.3);
+}
+

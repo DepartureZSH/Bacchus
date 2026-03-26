@@ -1,0 +1,313 @@
+<!-- pages/collection-detail/collection-detail.wxml -->
+<view class="cd-root">
+
+  <!-- ── 顶部导航栏 ── -->
+  <view class="cd-nav">
+    <view class="cd-back" bindtap="onBack">
+      <text class="cd-back-arrow">‹</text>
+    </view>
+    <text class="cd-nav-title">{{collection.name || '合集详情'}}</text>
+    <view wx:if="{{mode === 'preview'}}" class="cd-preview-badge">预览</view>
+    <view wx:else class="cd-nav-placeholder"></view>
+  </view>
+
+  <!-- ── 主滚动区 ── -->
+  <scroll-view class="cd-scroll" scroll-y enhanced show-scrollbar="{{false}}">
+
+    <!-- 全局加载 -->
+    <view wx:if="{{isLoading}}" class="cd-loading">
+      <view class="cd-dot cd-dot-1"></view>
+      <view class="cd-dot cd-dot-2"></view>
+      <view class="cd-dot cd-dot-3"></view>
+    </view>
+
+    <block wx:if="{{!isLoading && collection}}">
+
+      <!-- ① 图片轮播 -->
+      <view wx:if="{{images.length > 0}}" class="cd-hero">
+        <swiper class="cd-swiper" bindchange="onSwiperChange" circular autoplay="{{false}}">
+          <swiper-item wx:for="{{images}}" wx:key="fileID">
+            <image class="cd-hero-img" src="{{item.tempUrl}}" mode="aspectFill" />
+          </swiper-item>
+        </swiper>
+        <view wx:if="{{images.length > 1}}" class="cd-swiper-dots">
+          <view wx:for="{{images}}" wx:key="index"
+            class="cd-dot-indicator {{imageIdx === index ? 'cd-dot-on' : ''}}"></view>
+        </view>
+        <view class="cd-hero-gradient"></view>
+      </view>
+
+      <!-- ② Emoji 占位（无配图时） -->
+      <view wx:else class="cd-emoji-hero">
+        <text class="cd-hero-emoji">{{collection.emoji || '📂'}}</text>
+      </view>
+
+      <!-- ③ 合集信息卡片 -->
+      <view class="cd-card">
+
+        <!-- 标题行 -->
+        <view class="cd-title-row">
+          <text class="cd-title">{{collection.name}}</text>
+          <view wx:if="{{ratingCount > 0}}" class="cd-rating-badge">
+            <text class="cd-rating-star">★</text>
+            <text class="cd-rating-num">{{ratingAvg}}</text>
+          </view>
+        </view>
+
+        <!-- 作者 + 点赞数（公开模式） -->
+        <view wx:if="{{type === 'public'}}" class="cd-author-row">
+          <text class="cd-author">🏪 {{authorName}}</text>
+          <text class="cd-likes">♥ {{likeCount}}</text>
+        </view>
+
+        <!-- 标签行 -->
+        <view wx:if="{{collection.tags && collection.tags.length}}" class="cd-tags-row">
+          <view wx:for="{{collection.tags}}" wx:key="*this" wx:for-item="tag" class="cd-tag-chip">{{tag}}</view>
+        </view>
+
+        <!-- 简介 -->
+        <text wx:if="{{collection.desc}}" class="cd-desc">{{collection.desc}}</text>
+
+        <!-- 分割线 -->
+        <view class="cd-divider"></view>
+
+        <!-- 配方数统计 -->
+        <view class="cd-count-row">
+          <text class="cd-section-title">📂 包含配方</text>
+          <text class="cd-recipe-count">共 {{collection.recipeCount || (collection.recipes && collection.recipes.length) || collection.count || 0}} 款</text>
+        </view>
+
+      </view>
+
+      <!-- ④ 配方列表卡片 -->
+      <view wx:if="{{collection.recipes && collection.recipes.length}}" class="cd-recipes-section">
+        <view wx:for="{{collection.recipes}}" wx:key="id" wx:for-item="r" class="cd-recipe-card">
+
+          <!-- 配方头：封面图或 Emoji + 名称 + 展开按钮 -->
+          <view class="cd-rc-header" data-id="{{r.id || r._id}}" catchtap="onToggleRecipe">
+            <view class="cd-rc-cover-wrap">
+              <image wx:if="{{r.coverTempUrl}}" class="cd-rc-cover" src="{{r.coverTempUrl}}" mode="aspectFill" />
+              <view wx:else class="cd-rc-emoji-wrap">
+                <text class="cd-rc-emoji">{{r.emoji || '🍹'}}</text>
+              </view>
+            </view>
+            <view class="cd-rc-meta">
+              <text class="cd-rc-name">{{r.name}}</text>
+              <view class="cd-rc-pills">
+                <view wx:if="{{r.base}}" class="cd-rc-pill">{{r.base}}</view>
+                <view wx:if="{{r.ingredients && r.ingredients.length}}" class="cd-rc-pill cd-rc-pill-dim">{{r.ingredients.length}} 种原料</view>
+              </view>
+            </view>
+            <view class="cd-rc-toggle-btn">
+              <image class="cd-arrow-svg"
+                src="{{expandedRecipeId === (r.id || r._id) ? '/assets/icons/up.svg' : '/assets/icons/down.svg'}}"
+                mode="aspectFit" />
+            </view>
+          </view>
+
+          <!-- 配方展开详情 -->
+          <view wx:if="{{expandedRecipeId === (r.id || r._id)}}" class="cd-rc-detail">
+            <view class="cd-rc-divider"></view>
+
+            <!-- 描述 -->
+            <text wx:if="{{r.desc}}" class="cd-rc-desc">{{r.desc}}</text>
+
+            <!-- 原料 -->
+            <text class="cd-rc-sec">🧪 原料</text>
+            <view wx:for="{{r.ingredients}}" wx:key="name" wx:for-item="ing" class="cd-ing-row">
+              <view class="cd-ing-dot"></view>
+              <text class="cd-ing-name">{{ing.name}}</text>
+              <text class="cd-ing-amt">{{ing.amount}}</text>
+            </view>
+
+            <!-- 步骤 -->
+            <text class="cd-rc-sec" style="margin-top:28rpx">📋 步骤</text>
+            <view wx:for="{{r.steps}}" wx:key="*this" wx:for-item="step" wx:for-index="si" class="cd-step-row">
+              <view class="cd-step-num"><text>{{si+1}}</text></view>
+              <text class="cd-step-txt">{{step}}</text>
+            </view>
+
+            <!-- 备注 -->
+            <view wx:if="{{r.notes}}" class="cd-notes">
+              <text class="cd-notes-icon">📌</text>
+              <text class="cd-notes-txt">{{r.notes}}</text>
+            </view>
+          </view>
+
+        </view>
+      </view>
+
+      <!-- ⑤ 评分分布图（≥ 5 人评分后显示） -->
+      <view wx:if="{{showRatingChart}}" class="cd-section-card">
+        <text class="cd-section-title">⭐ 评分</text>
+        <view class="cd-rating-summary">
+          <view class="cd-rating-big">
+            <text class="cd-rating-big-num">{{ratingAvg}}</text>
+            <text class="cd-rating-big-outof">/ 5</text>
+          </view>
+          <text class="cd-rating-cnt-label">{{ratingCount}} 人评分</text>
+        </view>
+        <view wx:for="{{ratingBars}}" wx:key="star" wx:for-item="bar" class="cd-bar-row">
+          <text class="cd-bar-star">{{bar.star}}★</text>
+          <view class="cd-bar-track">
+            <view class="cd-bar-fill" style="width:{{bar.pct}}%"></view>
+          </view>
+          <text class="cd-bar-pct">{{bar.pct}}%</text>
+        </view>
+        <view wx:if="{{myRating > 0}}" class="cd-my-rating-row">
+          <text class="cd-my-rating-label">我的评分：</text>
+          <view class="cd-my-rating-stars">
+            <text wx:for="{{[1,2,3,4,5]}}" wx:key="*this"
+              class="cd-my-star {{myRating >= item ? 'cd-my-star-on' : ''}}">★</text>
+          </view>
+          <text class="cd-my-rating-label">{{ratingLabels[myRating-1]}}</text>
+        </view>
+      </view>
+
+      <!-- ⑥ 标签云（≥ 3 个标签后显示） -->
+      <view wx:if="{{showTagCloud}}" class="cd-section-card">
+        <text class="cd-section-title">🏷️ 大家觉得</text>
+        <view class="cd-tag-cloud">
+          <view wx:for="{{tagCloudItems}}" wx:key="tag" wx:for-item="tc"
+            class="cd-cloud-item {{myTags.indexOf(tc.tag) >= 0 ? 'cd-cloud-on' : ''}}"
+            data-tag="{{tc.tag}}" catchtap="onTagCloudTap">
+            <text class="cd-cloud-name">{{tc.tag}}</text>
+            <text class="cd-cloud-cnt">{{tc.count}}</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- ⑦ 评论区 -->
+      <view wx:if="{{type === 'public'}}" class="cd-section-card">
+        <view class="cd-comments-header">
+          <text class="cd-section-title">💬 评论</text>
+          <text class="cd-comment-cnt">{{commentCount}} 条</text>
+        </view>
+
+        <view wx:if="{{comments.length === 0}}" class="cd-comments-empty">
+          <text class="cd-comments-empty-txt">还没有评论，快来说第一句吧</text>
+        </view>
+
+        <view wx:for="{{comments}}" wx:key="_id" wx:for-item="c" class="cd-comment-item">
+          <view class="cd-comment-avatar">
+            <text class="cd-comment-avatar-txt">{{c.authorName.substring(0,1)}}</text>
+          </view>
+          <view class="cd-comment-body">
+            <text class="cd-comment-author">{{c.authorName}}</text>
+            <text class="cd-comment-content">{{c.content}}</text>
+            <text class="cd-comment-time">{{c.createdAtStr}}</text>
+          </view>
+        </view>
+
+        <view wx:if="{{commentLoading}}" class="cd-comment-loading">
+          <text class="cd-comment-loading-txt">加载中…</text>
+        </view>
+        <view wx:elif="{{commentHasMore}}" class="cd-load-more" bindtap="onLoadMoreComments">
+          <text class="cd-load-more-txt">查看更多评论</text>
+        </view>
+      </view>
+
+    </block>
+
+    <view style="height:180rpx"></view>
+  </scroll-view>
+
+  <!-- ── 底部操作栏 ── -->
+  <view wx:if="{{!isLoading && collection}}" class="cd-action-bar">
+    <view wx:if="{{mode === 'preview'}}" class="cd-preview-tip">
+      <text class="cd-preview-tip-txt">预览模式 · 互动功能不可用</text>
+    </view>
+
+    <view wx:else class="cd-action-row">
+      <!-- 点赞 -->
+      <view class="cd-action-item {{isLiked ? 'cd-action-on' : ''}}" catchtap="onLike">
+        <text class="cd-action-icon">{{isLiked ? '♥' : '♡'}}</text>
+        <text class="cd-action-label">{{likeCount}}</text>
+      </view>
+      <!-- 收藏 -->
+      <view class="cd-action-item {{isFav ? 'cd-action-on' : ''}}" catchtap="onToggleFav">
+        <text class="cd-action-icon">{{isFav ? '★' : '☆'}}</text>
+        <text class="cd-action-label">收藏</text>
+      </view>
+      <!-- 复制合集 -->
+      <view class="cd-action-item" catchtap="onClone">
+        <text class="cd-action-icon">📂</text>
+        <text class="cd-action-label">复制</text>
+      </view>
+      <!-- 打分 -->
+      <view class="cd-action-item {{myRating > 0 ? 'cd-action-on' : ''}}" catchtap="onShowRatingPicker">
+        <text class="cd-action-icon">⭐</text>
+        <text class="cd-action-label">{{myRating > 0 ? myRating + '★' : '打分'}}</text>
+      </view>
+      <!-- 贴标签 -->
+      <view class="cd-action-item {{myTags.length > 0 ? 'cd-action-on' : ''}}" catchtap="onShowTagPicker">
+        <text class="cd-action-icon">🏷️</text>
+        <text class="cd-action-label">标签</text>
+      </view>
+      <!-- 评论 -->
+      <view class="cd-action-item" catchtap="onShowCommentInput">
+        <text class="cd-action-icon">💬</text>
+        <text class="cd-action-label">评论</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- ── 打分弹窗 ── -->
+  <view wx:if="{{showRatingInput}}" class="cd-popup-mask" catchtap="onCloseRating">
+    <view class="cd-popup" catchtap="stopProp">
+      <view class="cd-popup-handle"></view>
+      <text class="cd-popup-title">给这款合集打分</text>
+      <view class="cd-star-row">
+        <view wx:for="{{[1,2,3,4,5]}}" wx:key="*this"
+          class="cd-star-btn {{pendingRating >= item ? 'cd-star-on' : ''}}"
+          data-score="{{item}}" catchtap="onRateStar">★</view>
+      </view>
+      <text wx:if="{{pendingRating > 0}}" class="cd-rating-hint">{{ratingLabels[pendingRating-1]}}</text>
+      <view class="cd-popup-confirm" catchtap="onSubmitRating">
+        <text>确认评分</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- ── 贴标签弹窗 ── -->
+  <view wx:if="{{showTagInput}}" class="cd-popup-mask" catchtap="onCloseTagPicker">
+    <view class="cd-popup" catchtap="stopProp">
+      <view class="cd-popup-handle"></view>
+      <text class="cd-popup-title">贴标签（最多 5 个）</text>
+      <text class="cd-popup-sub">帮助其他人了解这款合集的风格</text>
+      <view class="cd-tag-options">
+        <view wx:for="{{tagOptions}}" wx:key="*this"
+          class="cd-tag-opt {{pendingTags.indexOf(item) >= 0 ? 'cd-tag-opt-on' : ''}}"
+          data-tag="{{item}}" catchtap="onToggleTagOption">{{item}}</view>
+      </view>
+      <view class="cd-popup-confirm" catchtap="onSubmitTags">
+        <text>确认（已选 {{pendingTags.length}}/5）</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- ── 评论输入弹窗 ── -->
+  <view wx:if="{{showCommentInput}}" class="cd-popup-mask" catchtap="onCloseCommentInput">
+    <view class="cd-popup cd-comment-popup" catchtap="stopProp">
+      <view class="cd-popup-handle"></view>
+      <text class="cd-popup-title">写评论</text>
+      <textarea
+        class="cd-comment-textarea"
+        placeholder="说说你对这款合集的感受…"
+        placeholder-class="cd-comment-ph"
+        value="{{newComment}}"
+        bindinput="onCommentInput"
+        maxlength="200"
+        auto-height
+        focus="{{showCommentInput}}"
+      />
+      <view class="cd-comment-footer">
+        <text class="cd-comment-len">{{newComment.length}}/200</text>
+        <view class="cd-comment-send" catchtap="onSubmitComment">
+          <text>发送</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+</view>

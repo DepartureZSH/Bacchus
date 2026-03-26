@@ -1,0 +1,176 @@
+<!-- pages/ingredient-form/ingredient-form.wxml -->
+<scroll-view class="form-scroll" scroll-y enhanced show-scrollbar="{{false}}">
+
+  <!-- 扫码区（新增时显示） -->
+  <view wx:if="{{!isEdit}}" class="scan-card card">
+    <view class="scan-card-left">
+      <text class="scan-card-title">📷 扫码快速录入</text>
+      <text class="scan-card-sub">扫描酒瓶条形码自动填写信息</text>
+    </view>
+    <view class="scan-card-btn {{scanState}}" bindtap="onScan">
+      <text wx:if="{{scanState === 'idle'}}">扫码</text>
+      <text wx:if="{{scanState === 'loading'}}">查询中…</text>
+      <text wx:if="{{scanState === 'ok'}}">✓ 已识别</text>
+      <text wx:if="{{scanState === 'fail'}}">重试</text>
+    </view>
+  </view>
+
+  <!-- 扫码结果提示 -->
+  <view wx:if="{{scanHint}}" class="scan-hint-bar scan-hint-{{scanHintType}}">
+    <text>{{scanHint}}</text>
+  </view>
+
+  <!-- 表单 -->
+  <view class="form-section card">
+
+    <!-- 名称 -->
+    <view class="form-row">
+      <text class="form-label form-label-required">原料名称</text>
+      <input
+        class="form-input"
+        placeholder="如：金酒、青柠汁"
+        placeholder-class="form-placeholder"
+        value="{{form.name}}"
+        bindinput="onInput"
+        data-field="name"
+      />
+    </view>
+    <view class="form-divider"></view>
+
+    <!-- 品牌 -->
+    <view class="form-row">
+      <text class="form-label">品牌</text>
+      <input
+        class="form-input"
+        placeholder="如：Tanqueray（可留空）"
+        placeholder-class="form-placeholder"
+        value="{{form.brand}}"
+        bindinput="onInput"
+        data-field="brand"
+      />
+    </view>
+    <view class="form-divider"></view>
+
+    <!-- 品类 -->
+    <view class="form-row form-row-col">
+      <text class="form-label form-label-required">品类</text>
+      <view class="option-row">
+        <view
+          wx:for="{{cats}}"
+          wx:key="*this"
+          class="option-chip {{form.cat === item ? 'option-chip-active' : ''}}"
+          data-val="{{item}}"
+          bindtap="onSelectCat"
+        >{{item}}</view>
+      </view>
+    </view>
+    <view class="form-divider"></view>
+
+    <!-- 单位 -->
+    <view class="form-row form-row-col">
+      <text class="form-label form-label-required">计量单位</text>
+      <view class="option-row">
+        <view
+          wx:for="{{units}}"
+          wx:key="*this"
+          class="option-chip {{form.unit === item ? 'option-chip-active' : ''}}"
+          data-val="{{item}}"
+          bindtap="onSelectUnit"
+        >{{item}}</view>
+      </view>
+    </view>
+    <view class="form-divider"></view>
+
+    <!-- 当前库存 -->
+    <view class="form-row">
+      <text class="form-label form-label-required">当前库存</text>
+      <view class="form-input-right">
+        <input
+          class="form-input form-input-num"
+          type="digit"
+          placeholder="0"
+          placeholder-class="form-placeholder"
+          value="{{form.stockStr}}"
+          bindinput="onInput"
+          data-field="stockStr"
+        />
+        <text class="form-unit-label">{{form.unit}}</text>
+      </view>
+    </view>
+    <view class="form-divider"></view>
+
+    <!-- 低库存阈值 -->
+    <view class="form-row">
+      <view class="form-label-wrap">
+        <text class="form-label form-label-required">低库存阈值</text>
+        <text class="form-label-hint">低于此值时系统提醒</text>
+      </view>
+      <view class="form-input-right">
+        <input
+          class="form-input form-input-num"
+          type="digit"
+          placeholder="200"
+          placeholder-class="form-placeholder"
+          value="{{form.thresholdStr}}"
+          bindinput="onInput"
+          data-field="thresholdStr"
+        />
+        <text class="form-unit-label">{{form.unit}}</text>
+      </view>
+    </view>
+    <view class="form-divider"></view>
+
+    <!-- 成本单价 -->
+    <view class="form-row">
+      <view class="form-label-wrap">
+        <text class="form-label">成本单价</text>
+        <text class="form-label-hint">用于计算毛利率</text>
+      </view>
+      <view class="form-input-right">
+        <text class="form-unit-label">¥</text>
+        <input
+          class="form-input form-input-num"
+          type="digit"
+          placeholder="0.00"
+          placeholder-class="form-placeholder"
+          value="{{form.costStr}}"
+          bindinput="onInput"
+          data-field="costStr"
+        />
+        <text class="form-unit-label">/ {{form.unit}}</text>
+      </view>
+    </view>
+    <view class="form-divider"></view>
+
+    <!-- 条形码 -->
+    <view class="form-row">
+      <text class="form-label">条形码</text>
+      <view class="form-input-right">
+        <input
+          class="form-input"
+          placeholder="可选，扫码后自动填入"
+          placeholder-class="form-placeholder"
+          value="{{form.barcode}}"
+          bindinput="onInput"
+          data-field="barcode"
+        />
+        <view class="inline-scan-btn" bindtap="onScan">📷</view>
+      </view>
+    </view>
+
+  </view>
+
+  <!-- 错误提示 -->
+  <view wx:if="{{errorMsg}}" class="error-bar">
+    <text>⚠ {{errorMsg}}</text>
+  </view>
+
+  <!-- 提交 -->
+  <view class="submit-area">
+    <button class="btn-primary" bindtap="onSubmit">
+      {{isEdit ? '保存修改' : '添加原料'}}
+    </button>
+  </view>
+
+  <view style="height: 60rpx"></view>
+</scroll-view>

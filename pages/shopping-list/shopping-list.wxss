@@ -1,0 +1,70 @@
+/* pages/shopping-list/shopping-list.wxss */
+page { background:#12141a; }
+
+.sl-scroll { height:100vh; }
+
+/* 汇总卡 */
+.sl-header { margin:24rpx 28rpx 16rpx;padding:28rpx; }
+.sl-stat-row { display:flex;flex-direction:row;align-items:center;justify-content:space-around; }
+.sl-stat { display:flex;flex-direction:column;align-items:center;gap:6rpx; }
+.sl-stat-num { font-size:44rpx;font-weight:800;color:#f0ede8;line-height:1; }
+.sl-stat-label { font-size:22rpx;color:#9a98a0; }
+.sl-stat-div { width:2rpx;height:48rpx;background:#2a2d38; }
+.sl-accent { color:#c9a96e; }
+.sl-green  { color:#4caf84; }
+
+/* 操作栏 */
+.sl-action-bar { display:flex;flex-direction:row;gap:12rpx;padding:0 28rpx 16rpx; }
+.sl-btn-primary { flex:2;text-align:center;padding:20rpx 0;border-radius:20rpx;font-size:26rpx;font-weight:700;background:#4caf84;color:#fff; }
+.sl-btn-secondary { flex:1;text-align:center;padding:20rpx 0;border-radius:20rpx;font-size:24rpx;font-weight:600;background:#16181f;border:2rpx solid #2a2d38;color:#9a98a0; }
+.sl-btn-danger { flex:1;text-align:center;padding:20rpx 0;border-radius:20rpx;font-size:24rpx;font-weight:600;background:#16181f;border:2rpx solid rgba(224,92,92,0.3);color:#e05c5c; }
+.sl-btn-disabled { opacity:0.5; }
+
+/* 供货商占位卡 */
+.sl-supplier-card { margin:0 28rpx 20rpx;padding:24rpx;background:#16181f;border-radius:20rpx;border:1rpx dashed #2a2d38; }
+.sl-supplier-inner { display:flex;flex-direction:row;align-items:center;justify-content:space-between; }
+.sl-supplier-left { display:flex;flex-direction:row;align-items:center;gap:16rpx; }
+.sl-supplier-icon { font-size:36rpx; }
+.sl-supplier-title { font-size:26rpx;font-weight:600;color:#9a98a0;display:block; }
+.sl-supplier-desc { font-size:20rpx;color:#3e3d46;display:block;margin-top:4rpx; }
+.sl-supplier-badge { padding:6rpx 16rpx;border-radius:20rpx;font-size:20rpx;font-weight:600;background:rgba(201,169,110,0.08);color:#c9a96e;border:1rpx solid rgba(201,169,110,0.2); }
+
+/* 空状态 */
+.sl-empty { display:flex;flex-direction:column;align-items:center;gap:16rpx;padding:80rpx 40rpx; }
+.sl-empty-icon { font-size:80rpx; }
+.sl-empty-title { font-size:32rpx;font-weight:700;color:#f0ede8; }
+.sl-empty-sub { font-size:24rpx;color:#5c5b65;text-align:center; }
+
+/* 列表 */
+.sl-list { padding:0 28rpx; }
+.sl-item { margin-bottom:16rpx;padding:0; }
+.sl-item-done { opacity:0.6; }
+.sl-item-main { display:flex;flex-direction:row;align-items:center;padding:24rpx;gap:16rpx; }
+
+/* 左：信息 */
+.sl-item-left { display:flex;flex-direction:row;align-items:flex-start;gap:16rpx;flex:1;min-width:0; }
+.sl-emoji { font-size:44rpx;flex-shrink:0; }
+.sl-info { flex:1;min-width:0; }
+.sl-name-row { display:flex;flex-direction:row;align-items:center;gap:10rpx;flex-wrap:wrap; }
+.sl-name { font-size:28rpx;font-weight:700;color:#f0ede8; }
+.sl-name-done { text-decoration:line-through;color:#5c5b65; }
+.sl-brand { font-size:22rpx;color:#5c5b65;display:block;margin-top:4rpx; }
+.sl-stock-hint { font-size:20rpx;color:#3e3d46;display:block;margin-top:6rpx; }
+.sl-badge { padding:3rpx 12rpx;border-radius:8rpx;font-size:19rpx;font-weight:600; }
+.sl-badge-done { background:rgba(76,175,132,0.1);color:#4caf84; }
+.sl-badge-new  { background:rgba(201,169,110,0.1);color:#c9a96e; }
+
+/* 右：数量 + 动作 */
+.sl-item-right { display:flex;flex-direction:row;align-items:center;gap:16rpx;flex-shrink:0; }
+.sl-qty-col { display:flex;flex-direction:column;align-items:center;gap:4rpx; }
+.sl-qty-row { display:flex;flex-direction:row;align-items:center;gap:8rpx; }
+.sl-minus,.sl-plus { width:44rpx;height:44rpx;background:#1e2029;border:2rpx solid #2a2d38;border-radius:12rpx;display:flex;align-items:center;justify-content:center;font-size:28rpx;color:#9a98a0; }
+.sl-qty-wrap { text-align:center;min-width:60rpx; }
+.sl-qty { font-size:28rpx;font-weight:700;color:#f0ede8;display:block; }
+.sl-unit { font-size:18rpx;color:#5c5b65;display:block; }
+.sl-cost { font-size:20rpx;color:#c9a96e;display:block; }
+.sl-actions { display:flex;flex-direction:column;gap:10rpx;align-items:center; }
+.sl-btn-stock  { padding:10rpx 16rpx;border-radius:12rpx;font-size:22rpx;font-weight:700;background:#4caf84;color:#fff;text-align:center; }
+.sl-btn-add-ing { padding:10rpx 16rpx;border-radius:12rpx;font-size:22rpx;font-weight:700;background:rgba(201,169,110,0.12);color:#c9a96e;border:1rpx solid rgba(201,169,110,0.3);text-align:center; }
+.sl-btn-stocked { padding:10rpx 16rpx;border-radius:12rpx;font-size:22rpx;color:#4caf84;text-align:center; }
+.sl-btn-remove  { width:40rpx;height:40rpx;display:flex;align-items:center;justify-content:center;font-size:24rpx;color:#3e3d46; }

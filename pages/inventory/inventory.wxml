@@ -1,0 +1,255 @@
+<!-- pages/inventory/inventory.wxml -->
+<view class="inv-page">
+
+<!-- 搜索栏 -->
+<view class="inv-search-bar">
+  <view class="inv-search-wrap">
+    <text class="inv-search-icon">🔍</text>
+    <input
+      class="inv-search-input"
+      placeholder="搜索原料名 / 品牌…"
+      placeholder-class="search-placeholder"
+      value="{{searchText}}"
+      bindinput="onSearch"
+      confirm-type="search"
+    />
+  </view>
+  <view class="scan-btn" bindtap="onScanBtn">
+    <image class="scan-btn-svg" src="/assets/icons/scan.svg" mode="aspectFit" />
+  </view>
+</view>
+
+<!-- 品类筛选 -->
+<scroll-view class="filter-scroll" scroll-x enhanced show-scrollbar="{{false}}">
+  <view class="filter-row">
+    <view
+      wx:for="{{categories}}"
+      wx:key="*this"
+      class="filter-chip {{currentCat === item ? 'filter-chip-active' : ''}}"
+      data-cat="{{item}}"
+      bindtap="onFilterCat"
+    >{{item}}</view>
+  </view>
+</scroll-view>
+
+<!-- 统计条 -->
+<view class="inv-stats">
+  <view class="inv-stat">
+    <text class="inv-stat-num">{{stats.total}}</text>
+    <text class="inv-stat-label">总原料</text>
+  </view>
+  <view class="inv-stat-divider"></view>
+  <view class="inv-stat">
+    <text class="inv-stat-num ok">{{stats.ok}}</text>
+    <text class="inv-stat-label">库存正常</text>
+  </view>
+  <view class="inv-stat-divider"></view>
+  <view class="inv-stat">
+    <text class="inv-stat-num warn">{{stats.warn}}</text>
+    <text class="inv-stat-label">偏低</text>
+  </view>
+  <view class="inv-stat-divider"></view>
+  <view class="inv-stat">
+    <text class="inv-stat-num danger">{{stats.danger}}</text>
+    <text class="inv-stat-label">告急</text>
+  </view>
+</view>
+
+<!-- 原料列表 -->
+<scroll-view class="inv-scroll" scroll-y enhanced show-scrollbar="{{false}}">
+  <view class="ing-list">
+
+    <block wx:if="{{filteredGroups.length === 0}}">
+      <view class="empty-state">
+        <text class="empty-icon">🔍</text>
+        <text class="empty-text">没有找到匹配的原料</text>
+      </view>
+    </block>
+
+    <block wx:for="{{filteredGroups}}" wx:key="cat" wx:for-item="group">
+      <view wx:if="{{currentCat === '全部'}}" class="cat-label">{{group.cat}}</view>
+
+      <block wx:for="{{group.items}}" wx:key="id" wx:for-item="ing">
+        <view class="ing-item ing-item-{{ing.status}}">
+          <!-- 左侧：点击跳详情 -->
+          <view class="ing-main" data-id="{{ing.id}}" bindtap="onIngTap">
+            <text class="ing-emoji">{{ing.emoji}}</text>
+            <view class="ing-info">
+              <text class="ing-name">{{ing.name}}</text>
+              <text class="ing-brand">{{ing.brand}}</text>
+              <view class="ing-bar-bg">
+                <view class="ing-bar ing-bar-{{ing.status}}" style="width:{{ing.stockPct}}"></view>
+              </view>
+              <text class="ing-threshold">阈值 {{ing.threshold}}{{ing.unit}}</text>
+            </view>
+            <view class="ing-right">
+              <text class="ing-stock ing-stock-{{ing.status}}">{{ing.stock}}</text>
+              <text class="ing-unit">{{ing.unit}}</text>
+            </view>
+          </view>
+          <!-- 右侧：快捷出库按钮 -->
+          <view
+            class="quick-out-btn"
+            data-id="{{ing.id}}"
+            data-name="{{ing.name}}"
+            data-unit="{{ing.unit}}"
+            data-stock="{{ing.stock}}"
+            catchtap="onQuickOut"
+          >
+            <text class="quick-out-icon">−</text>
+          </view>
+        </view>
+      </block>
+    </block>
+
+    <view style="height: 120rpx"></view>
+  </view>
+</scroll-view>
+
+<!-- FAB 新增按钮 -->
+<view class="fab" bindtap="onAddIngredient">＋</view>
+
+</view>
+
+<!-- ══ 扫码选择弹出栏 ══ -->
+<view class="drawer-mask {{showScanSheet ? 'drawer-mask-show' : ''}}" bindtap="onCloseScanSheet">
+  <view class="scan-sheet {{showScanSheet ? 'scan-sheet-show' : ''}}" catchtap="stopProp">
+    <view class="drawer-handle"></view>
+    <view class="scan-sheet-title">扫码操作</view>
+    <view class="scan-sheet-options">
+      <view class="scan-option-btn" bindtap="onScanSheetIn">
+        <text class="scan-option-icon">📥</text>
+        <view class="scan-option-info">
+          <text class="scan-option-name">扫码入库</text>
+          <text class="scan-option-desc">扫描条码新增或跳转原料详情</text>
+        </view>
+      </view>
+      <view class="scan-option-btn scan-option-btn-out" bindtap="onScanSheetOut">
+        <text class="scan-option-icon">📤</text>
+        <view class="scan-option-info">
+          <text class="scan-option-name">扫码出库</text>
+          <text class="scan-option-desc">扫描条码快捷登记出库</text>
+        </view>
+      </view>
+    </view>
+    <view class="scan-sheet-cancel" bindtap="onCloseScanSheet">取消</view>
+  </view>
+</view>
+
+<!-- ══ 出库抽屉 ══ -->
+<view class="drawer-mask {{showOutDrawer ? 'drawer-mask-show' : ''}}" bindtap="onCloseOutDrawer">
+<view class="out-drawer {{showOutDrawer ? 'out-drawer-show' : ''}}" catchtap="stopProp">
+
+  <view class="drawer-handle"></view>
+
+  <!-- 标题行 -->
+  <view class="drawer-header">
+    <text class="drawer-title">📤 出库登记</text>
+    <view class="drawer-close" bindtap="onCloseOutDrawer">✕</view>
+  </view>
+
+  <!-- 当前选中原料 / 搜索切换原料 -->
+  <view wx:if="{{outForm.ingredient}}" class="selected-ing-card">
+    <text class="selected-ing-emoji">{{outForm.ingredient.emoji}}</text>
+    <view class="selected-ing-info">
+      <text class="selected-ing-name">{{outForm.ingredient.name}}</text>
+      <text class="selected-ing-stock">当前库存：{{outForm.ingredient.stock}} {{outForm.ingredient.unit}}</text>
+    </view>
+    <view class="selected-ing-change" bindtap="onChangeIngredient">
+      <text>切换</text>
+    </view>
+  </view>
+
+  <!-- 未选中时显示搜索选择 -->
+  <view wx:else class="ing-picker">
+    <view class="ing-picker-search">
+      <text class="search-icon-sm">🔍</text>
+      <input
+        class="ing-picker-input"
+        placeholder="搜索原料名称…"
+        placeholder-class="picker-ph"
+        value="{{outSearch}}"
+        bindinput="onOutSearch"
+        focus="true"
+      />
+    </view>
+    <scroll-view class="ing-picker-list" scroll-y>
+      <view
+        wx:for="{{outSearchList}}"
+        wx:key="id"
+        class="picker-item"
+        data-id="{{item.id}}"
+        bindtap="onPickIngredient"
+      >
+        <text class="picker-item-emoji">{{item.emoji}}</text>
+        <view class="picker-item-info">
+          <text class="picker-item-name">{{item.name}}</text>
+          <text class="picker-item-stock {{item.status !== 'ok' ? 'stock-warn' : ''}}">
+            {{item.stock}} {{item.unit}}
+            {{item.status === 'danger' ? ' · 告急' : item.status === 'warn' ? ' · 偏低' : ''}}
+          </text>
+        </view>
+      </view>
+    </scroll-view>
+  </view>
+
+  <!-- 数量输入 -->
+  <view wx:if="{{outForm.ingredient}}" class="qty-section">
+    <text class="field-label">出库数量</text>
+    <view class="qty-row">
+      <view class="qty-btn qty-minus" bindtap="onQtyMinus">−</view>
+      <input
+        class="qty-input"
+        type="digit"
+        value="{{outForm.qty}}"
+        bindinput="onQtyInput"
+      />
+      <text class="qty-unit">{{outForm.ingredient.unit}}</text>
+      <view class="qty-btn qty-plus" bindtap="onQtyPlus">＋</view>
+    </view>
+    <!-- 预览扣减后余量 -->
+    <view class="qty-preview {{outForm.resultStatus}}">
+      <text class="qty-preview-label">扣减后余量：</text>
+      <text class="qty-preview-val">{{outForm.resultStock}} {{outForm.ingredient.unit}}</text>
+      <text wx:if="{{outForm.resultStatus === 'danger'}}" class="qty-preview-warn"> ⚠ 将触发告急</text>
+      <text wx:elif="{{outForm.resultStatus === 'warn'}}" class="qty-preview-warn warn"> ⚠ 将触发预警</text>
+      <text wx:elif="{{outForm.resultStock < 0}}" class="qty-preview-warn">  库存不足</text>
+    </view>
+  </view>
+
+  <!-- 出库原因 -->
+  <view wx:if="{{outForm.ingredient}}" class="reason-section">
+    <text class="field-label">出库原因</text>
+    <view class="reason-chips">
+      <view
+        wx:for="{{outReasons}}"
+        wx:key="*this"
+        class="reason-chip {{outForm.reason === item ? 'reason-chip-on' : ''}}"
+        data-val="{{item}}"
+        bindtap="onSelectReason"
+      >{{item}}</view>
+    </view>
+    <input
+      wx:if="{{outForm.reason === '其他'}}"
+      class="reason-custom-input"
+      placeholder="请填写具体原因"
+      placeholder-class="picker-ph"
+      value="{{outForm.customReason}}"
+      bindinput="onCustomReason"
+    />
+  </view>
+
+  <!-- 错误提示 -->
+  <view wx:if="{{outError}}" class="out-error">⚠ {{outError}}</view>
+
+  <!-- 确认按钮 -->
+  <view
+    wx:if="{{outForm.ingredient}}"
+    class="out-confirm-btn {{outForm.resultStock < 0 ? 'out-confirm-disabled' : ''}}"
+    bindtap="onConfirmOut"
+  >
+    <text>确认出库 −{{outForm.qty}} {{outForm.ingredient ? outForm.ingredient.unit : ''}}</text>
+  </view>
+
+</view>
+</view>

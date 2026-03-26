@@ -1,0 +1,127 @@
+<!-- pages/inventory-detail/inventory-detail.wxml -->
+<scroll-view class="detail-scroll" scroll-y enhanced show-scrollbar="{{false}}">
+
+  <!-- Hero 卡片 -->
+  <view class="detail-hero card">
+    <text class="detail-hero-emoji">{{ing.emoji}}</text>
+    <view class="detail-hero-info">
+      <text class="detail-hero-name">{{ing.name}}</text>
+      <text class="detail-hero-brand">{{ing.brand}}</text>
+      <view class="badge badge-accent">{{ing.cat}}</view>
+    </view>
+  </view>
+
+  <!-- 库存状态卡片 -->
+  <view class="stock-card card">
+    <view class="stock-top-row">
+      <view class="stock-num-wrap">
+        <text class="stock-num stock-num-{{ing.status}}">{{ing.stock}}</text>
+        <text class="stock-unit-large">{{ing.unit}}</text>
+      </view>
+      <view class="stock-status-badge">
+        <view class="status-dot status-dot-{{ing.status}}"></view>
+        <text class="status-label status-label-{{ing.status}}">{{ing.statusText}}</text>
+      </view>
+    </view>
+    <!-- 进度条 -->
+    <view class="stock-bar-bg">
+      <view class="stock-bar stock-bar-{{ing.status}}" style="width:{{ing.stockPct}}"></view>
+    </view>
+    <text class="stock-threshold-info">安全阈值：{{ing.threshold}} {{ing.unit}}（当前 {{ing.stockPct}}）</text>
+  </view>
+
+  <!-- 入库 / 出库 按钮 -->
+  <view class="adjust-row">
+    <view class="adjust-btn adjust-btn-in" bindtap="onOpenAdjust" data-mode="in">
+      <text>＋ 入库</text>
+    </view>
+    <view class="adjust-btn adjust-btn-out" bindtap="onOpenAdjust" data-mode="out">
+      <text>－ 出库</text>
+    </view>
+  </view>
+
+  <!-- 基本信息 -->
+  <view class="meta-card card">
+    <view class="meta-row">
+      <text class="meta-key">单位</text>
+      <text class="meta-val">{{ing.unit}}</text>
+    </view>
+    <view class="meta-divider"></view>
+    <view class="meta-row">
+      <text class="meta-key">品类</text>
+      <text class="meta-val">{{ing.cat}}</text>
+    </view>
+    <view class="meta-divider"></view>
+    <view class="meta-row">
+      <text class="meta-key">成本单价</text>
+      <text class="meta-val">¥{{ing.costPerUnit}} / {{ing.unit}}</text>
+    </view>
+    <view class="meta-divider"></view>
+    <view class="meta-row">
+      <text class="meta-key">当前库存价值</text>
+      <text class="meta-val">≈ ¥{{ing.stockValue}}</text>
+    </view>
+    <view class="meta-divider"></view>
+    <view class="meta-row">
+      <text class="meta-key">低库存阈值</text>
+      <text class="meta-val">{{ing.threshold}} {{ing.unit}}</text>
+    </view>
+  </view>
+
+  <!-- 操作记录 -->
+  <view class="log-section">
+    <text class="log-title">操作记录</text>
+    <view class="log-card card">
+
+      <block wx:if="{{logs.length === 0}}">
+        <view class="log-empty">暂无操作记录</view>
+      </block>
+
+      <block wx:for="{{logs}}" wx:key="index">
+        <view class="log-item {{index < logs.length - 1 ? 'log-item-border' : ''}}">
+          <view class="log-left">
+            <text class="log-reason">{{item.reason}}</text>
+            <text class="log-time">{{item.time}}</text>
+          </view>
+          <view class="log-right">
+            <text class="log-delta {{item.delta > 0 ? 'delta-plus' : 'delta-minus'}}">
+              {{item.delta > 0 ? '+' : ''}}{{item.delta}} {{ing.unit}}
+            </text>
+            <text class="log-balance">余 {{item.balance}}</text>
+          </view>
+        </view>
+      </block>
+
+    </view>
+  </view>
+
+  <view style="height: 60rpx"></view>
+</scroll-view>
+
+<!-- 调整弹窗（半屏） -->
+<view class="modal-mask {{showModal ? 'modal-mask-show' : ''}}" bindtap="onCloseModal">
+  <view class="modal-sheet {{showModal ? 'modal-sheet-show' : ''}}" catchtap="stopProp">
+    <view class="modal-handle"></view>
+    <text class="modal-title">{{modalMode === 'in' ? '入库' : '出库'}} · {{ing.name}}</text>
+
+    <!-- 数量调整 -->
+    <view class="modal-amount-row">
+      <view class="amount-ctrl-btn" bindtap="onAmountStep" data-delta="-50">−</view>
+      <text class="amount-display">{{modalAmount}}</text>
+      <view class="amount-ctrl-btn" bindtap="onAmountStep" data-delta="50">＋</view>
+    </view>
+    <view class="amount-row-small">
+      <view class="amount-preset" bindtap="onAmountSet" data-v="50">50</view>
+      <view class="amount-preset" bindtap="onAmountSet" data-v="100">100</view>
+      <view class="amount-preset" bindtap="onAmountSet" data-v="200">200</view>
+      <view class="amount-preset" bindtap="onAmountSet" data-v="500">500</view>
+    </view>
+    <text class="modal-unit">{{ing.unit}}</text>
+
+    <button
+      class="btn-primary"
+      style="margin-top: 32rpx;"
+      bindtap="onConfirmAdjust"
+    >确认{{modalMode === 'in' ? '入库' : '出库'}}</button>
+  </view>
+</view>

@@ -1,0 +1,195 @@
+<!-- pages/analytics/analytics.wxml -->
+<!--
+  修复方案：
+  1. 去掉 scroll-view，改用 page 自身滚动（原生组件在 page 级滚动中可正常跟随）
+  2. 去掉 bindready，改在 onReady / onPeriod 里主动调用绘图
+  3. canvas 使用固定 px 尺寸（width/height style），避免 rpx 在 canvas 上的精度问题
+-->
+<view class="analytics-page">
+
+  <!-- 时间切换 -->
+  <view class="period-row">
+    <view
+      wx:for="{{periods}}"
+      wx:key="val"
+      class="period-chip {{currentPeriod === item.val ? 'period-chip-active' : ''}}"
+      data-val="{{item.val}}"
+      bindtap="onPeriod"
+    >{{item.label}}</view>
+  </view>
+
+  <!-- loading 全局提示 -->
+  <view wx:if="{{isLoading}}" class="loading-bar">
+    <text class="loading-bar-text">数据加载中…</text>
+  </view>
+
+  <!-- 核心指标 -->
+  <view class="metric-grid">
+    <view class="metric-card card {{isLoading ? 'skeleton-pulse' : ''}}">
+      <text class="metric-label">营业额</text>
+      <text class="metric-value">{{kpi.revenue}}<text class="metric-unit">元</text></text>
+      <text class="metric-trend {{kpi.revenueTrendUp ? 'trend-up' : 'trend-down'}}">{{kpi.revenueTrend}}</text>
+    </view>
+    <view class="metric-card card {{isLoading ? 'skeleton-pulse' : ''}}">
+      <text class="metric-label">毛利润</text>
+      <text class="metric-value">{{kpi.profit}}<text class="metric-unit">元</text></text>
+      <text class="metric-trend trend-up">毛利率 {{kpi.margin}}%</text>
+    </view>
+    <view class="metric-card card {{isLoading ? 'skeleton-pulse' : ''}}">
+      <text class="metric-label">出杯数</text>
+      <text class="metric-value">{{kpi.cups}}<text class="metric-unit">杯</text></text>
+      <text class="metric-trend trend-up">客单 ¥{{kpi.avgOrder}}</text>
+    </view>
+    <view class="metric-card card {{isLoading ? 'skeleton-pulse' : ''}}">
+      <text class="metric-label">原料消耗</text>
+      <text class="metric-value">¥{{kpi.materialCost}}</text>
+      <text class="metric-trend trend-down">成本率 {{kpi.costRate}}%</text>
+    </view>
+  </view>
+
+  <!-- 折线图：用 style 传入精确像素尺寸 -->
+  <view class="section-header">
+    <text class="section-title">📈 销售趋势</text>
+  </view>
+  <view class="chart-card card">
+    <canvas
+      type="2d"
+      id="lineChart"
+      style="z-index: 1; width:{{chartW}}px;height:{{lineH}}px;display:block;"
+    ></canvas>
+    <view class="chart-legend">
+      <view class="legend-item">
+        <view class="legend-dot" style="background:#c9a96e"></view>
+        <text class="legend-label">营业额</text>
+      </view>
+      <view class="legend-item">
+        <view class="legend-dot" style="background:#4caf84"></view>
+        <text class="legend-label">毛利润</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 原料消耗排行 -->
+  <view class="section-header">
+    <text class="section-title">🧪 原料消耗 Top5</text>
+  </view>
+  <view class="rank-card card">
+    <!-- 有数据 -->
+    <block wx:if="{{topIngredients.length > 0}}">
+      <view wx:for="{{topIngredients}}" wx:key="name"
+        class="rank-item {{index < topIngredients.length-1 ? 'rank-item-border' : ''}}">
+        <view class="rank-num rank-num-{{index+1}}">{{index+1}}</view>
+        <view class="rank-info">
+          <text class="rank-name">{{item.name}}</text>
+          <text class="rank-sub">消耗 {{item.used}} · 成本 ¥{{item.cost}}</text>
+        </view>
+        <view class="rank-bar-wrap">
+          <view class="rank-bar" style="width:{{item.pct}}%;background:{{item.color}}"></view>
+        </view>
+      </view>
+    </block>
+    <!-- 空态 -->
+    <view wx:elif="{{!isLoading}}" class="empty-hint">
+      <text>暂无出库记录</text>
+      <text class="empty-sub">在原料页面手动出库后，数据将展示在这里</text>
+    </view>
+    <!-- loading 占位 -->
+    <view wx:else class="skeleton-list">
+      <view wx:for="{{[1,2,3]}}" wx:key="*this" class="skeleton-row"></view>
+    </view>
+  </view>
+
+  <!-- 库存状态分布柱状图 -->
+  <view class="section-header">
+    <text class="section-title">📦 库存健康度</text>
+  </view>
+  <view class="chart-card card">
+    <canvas
+      type="2d"
+      id="barChart"
+      style="width:{{chartW}}px;height:{{barH}}px;display:block;"
+    ></canvas>
+    <view wx:if="{{isEmpty && !isLoading}}" class="chart-empty-overlay">
+      <text class="chart-empty-text">添加原料后查看库存分布</text>
+    </view>
+  </view>
+
+  <!-- AI 经营建议（Pro 专属）-->
+  <view class="section-header advice-header">
+    <text class="section-title">✨ AI 经营建议</text>
+    <view wx:if="{{isPro}}" class="advice-refresh-btn {{aiAdviceLoading ? 'advice-refresh-loading' : ''}}" bindtap="onRefreshAdvice">
+      <text>↻</text>
+    </view>
+    <view wx:if="{{!isPro}}" class="pro-lock-badge">Pro</view>
+  </view>
+
+  <!-- Pro 用户：未加载 -->
+  <view wx:if="{{isPro && aiAdvice.length === 0 && !aiAdviceLoading && !aiAdviceError}}" class="advice-trigger card" bindtap="onAIAdvice">
+    <text class="advice-trigger-icon">✦</text>
+    <view class="advice-trigger-body">
+      <text class="advice-trigger-title">生成本期经营建议</text>
+      <text class="advice-trigger-sub">基于你的真实数据，AI 给出具体可行的建议（每天 3 次）</text>
+    </view>
+    <text class="advice-trigger-arrow">›</text>
+  </view>
+
+  <!-- Pro 用户：加载中 -->
+  <view wx:elif="{{isPro && aiAdviceLoading}}" class="advice-trigger card">
+    <text class="advice-trigger-icon">✦</text>
+    <view class="advice-trigger-body">
+      <text class="advice-trigger-title">AI 正在分析数据…</text>
+      <view class="advice-skeleton-list">
+        <view wx:for="{{[1,2,3]}}" wx:key="*this" class="advice-skeleton-row"></view>
+      </view>
+    </view>
+  </view>
+
+  <!-- Pro 用户：有建议 -->
+  <view wx:elif="{{isPro && aiAdvice.length > 0}}" class="advice-list">
+    <view wx:for="{{aiAdvice}}" wx:key="title" class="advice-card card">
+      <text class="advice-icon">{{item.icon}}</text>
+      <view class="advice-body">
+        <text class="advice-title">{{item.title}}</text>
+        <text class="advice-text">{{item.text}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- Pro 用户：错误 -->
+  <view wx:elif="{{isPro && aiAdviceError}}" class="advice-error card">
+    <text class="advice-error-text">{{aiAdviceError}}</text>
+    <view class="advice-retry-btn" bindtap="onAIAdvice">重试</view>
+  </view>
+
+  <!-- Free 用户：升级引导 -->
+  <view wx:if="{{!isPro}}" class="advice-upsell card" bindtap="onAIAdvice">
+    <view class="upsell-left">
+      <text class="upsell-icon">🔒</text>
+      <view class="upsell-body">
+        <text class="upsell-title">AI 经营建议（Pro 专属）</text>
+        <text class="upsell-sub">每天 3 次智能分析 · 基于真实经营数据</text>
+      </view>
+    </view>
+    <view class="upsell-cta">升级</view>
+  </view>
+
+  <!-- 静态提示：始终显示 -->
+  <view class="advice-list">
+    <view wx:if="{{isEmpty && !isLoading}}" class="advice-card card">
+      <text class="advice-icon">📊</text>
+      <view class="advice-body">
+        <text class="advice-title">开始记录，获取分析</text>
+        <text class="advice-text">在原料页面进行出库操作后，经营数据将自动聚合展示。</text>
+      </view>
+    </view>
+    <view wx:if="{{stockDist && stockDist.raw && stockDist.raw.danger > 0}}" class="advice-card card advice-warn">
+      <text class="advice-icon">⚠️</text>
+      <view class="advice-body">
+        <text class="advice-title">库存告急提醒</text>
+        <text class="advice-text">有 {{stockDist.raw.danger}} 种原料库存告急，建议尽快补货。</text>
+      </view>
+    </view>
+  </view>
+
+  <view style="height:60rpx"></view>
+</view>

@@ -1,0 +1,63 @@
+<!-- pages/shop-info/shop-info.wxml -->
+<scroll-view class="page-scroll" scroll-y enhanced show-scrollbar="{{false}}">
+
+  <!-- 店铺头像 -->
+  <view class="shop-avatar-area">
+    <view class="shop-avatar">🏮</view>
+    <text class="shop-avatar-hint">点击更换头像（即将支持）</text>
+  </view>
+
+  <!-- 表单 -->
+  <view class="form-section card">
+    <view class="form-row">
+      <text class="form-label form-label-required">店铺名称</text>
+      <input class="form-input" value="{{form.name}}" placeholder="请输入店铺名称"
+        placeholder-class="form-placeholder" bindinput="onInput" data-field="name"/>
+    </view>
+    <view class="form-divider"></view>
+    <view class="form-row">
+      <text class="form-label form-label-required">所在城市</text>
+      <input class="form-input" value="{{form.city}}" placeholder="如：北京"
+        placeholder-class="form-placeholder" bindinput="onInput" data-field="city"/>
+    </view>
+    <view class="form-divider"></view>
+    <view class="form-row">
+      <text class="form-label">详细地址</text>
+      <input class="form-input" value="{{form.address}}" placeholder="街道 / 商场 / 门牌号"
+        placeholder-class="form-placeholder" bindinput="onInput" data-field="address"/>
+    </view>
+    <view class="form-divider"></view>
+    <view class="form-row">
+      <text class="form-label">联系电话</text>
+      <input class="form-input" type="number" value="{{form.phone}}" placeholder="店铺电话"
+        placeholder-class="form-placeholder" bindinput="onInput" data-field="phone"/>
+    </view>
+  </view>
+
+  <!-- 订阅信息（只读展示） -->
+  <view class="section-label">订阅信息</view>
+  <view class="info-section card">
+    <view class="info-row">
+      <text class="info-key">当前版本</text>
+      <view class="badge badge-accent">✦ {{shopInfo.plan}} 版</view>
+    </view>
+    <view class="info-divider"></view>
+    <view class="info-row">
+      <text class="info-key">有效期至</text>
+      <text class="info-val">{{shopInfo.planExpiry}}</text>
+    </view>
+    <view class="info-divider"></view>
+    <view class="info-row" bindtap="onUpgrade">
+      <text class="info-key">升级 / 续费</text>
+      <text class="info-link">查看方案 →</text>
+    </view>
+  </view>
+
+  <view wx:if="{{errorMsg}}" class="error-bar"><text>⚠ {{errorMsg}}</text></view>
+
+  <view class="submit-area">
+    <button class="btn-primary" bindtap="onSave">保存</button>
+  </view>
+
+  <view style="height:60rpx"></view>
+</scroll-view>

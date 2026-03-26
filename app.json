@@ -1,0 +1,47 @@
+{
+  "pages": [
+    "pages/login/login",
+    "pages/dashboard/dashboard",
+    "pages/inventory/inventory",
+    "pages/inventory-detail/inventory-detail",
+    "pages/ingredient-form/ingredient-form",
+    "pages/ai-menu/ai-menu",
+    "pages/ai-edit/ai-edit",
+    "pages/my-recipes/my-recipes",
+    "pages/recipe-detail/recipe-detail",
+    "pages/collection-detail/collection-detail",
+    "pages/purchase/purchase",
+    "pages/shopping-list/shopping-list",
+    "pages/analytics/analytics",
+    "pages/shop-info/shop-info",
+    "pages/unit-settings/unit-settings",
+    "pages/recipes/recipes",
+    "pages/help/help",
+    "pages/subscription/subscription",
+    "pages/export/export",
+    "pages/profile/profile",
+    "pages/sales-records/sales-records"
+  ],
+  "window": {
+    "backgroundTextStyle": "dark",
+    "navigationBarBackgroundColor": "#0d0e12",
+    "navigationBarTitleText": "Bacchus",
+    "navigationBarTextStyle": "white",
+    "backgroundColor": "#0d0e12"
+  },
+  "tabBar": {
+    "color": "#5c5b65",
+    "selectedColor": "#c9a96e",
+    "backgroundColor": "#16181f",
+    "borderStyle": "black",
+    "list": [
+      { "pagePath":"pages/dashboard/dashboard",  "text":"首页",  "iconPath":"assets/tab/home.png",   "selectedIconPath":"assets/tab/home-active.png"   },
+      { "pagePath":"pages/inventory/inventory",  "text":"库存",  "iconPath":"assets/tab/box.png",    "selectedIconPath":"assets/tab/box-active.png"    },
+      { "pagePath":"pages/ai-menu/ai-menu",      "text":"AI运营","iconPath":"assets/tab/ai.png",     "selectedIconPath":"assets/tab/ai-active.png"     },
+      { "pagePath":"pages/my-recipes/my-recipes","text":"配方",  "iconPath":"assets/tab/recipe.png", "selectedIconPath":"assets/tab/recipe-active.png" },
+      { "pagePath":"pages/profile/profile",      "text":"我的",  "iconPath":"assets/tab/user.png",   "selectedIconPath":"assets/tab/user-active.png"   }
+    ]
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json"
+}

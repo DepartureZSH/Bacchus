@@ -1,0 +1,70 @@
+<!-- pages/unit-settings/unit-settings.wxml -->
+<scroll-view class="page-scroll" scroll-y enhanced show-scrollbar="{{false}}">
+
+  <view class="intro-card card">
+    <text class="intro-text">设置后，所有原料录入和 AI 酒单的计量单位将统一使用所选单位。已有数据不会自动换算，建议在使用初期设定好。</text>
+  </view>
+
+  <!-- 液体容量 -->
+  <view class="section-label">液体容量</view>
+  <view class="options-card card">
+    <view wx:for="{{volumeOpts}}" wx:key="val"
+      class="option-row {{index < volumeOpts.length-1 ? 'option-row-border' : ''}}"
+      data-group="volume" data-val="{{item.val}}" bindtap="onSelect">
+      <view class="option-left">
+        <text class="option-name">{{item.label}}</text>
+        <text class="option-desc">{{item.desc}}</text>
+      </view>
+      <view class="option-check {{settings.volume === item.val ? 'option-check-on' : ''}}">
+        <text wx:if="{{settings.volume === item.val}}">✓</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 重量 -->
+  <view class="section-label">重量</view>
+  <view class="options-card card">
+    <view wx:for="{{weightOpts}}" wx:key="val"
+      class="option-row {{index < weightOpts.length-1 ? 'option-row-border' : ''}}"
+      data-group="weight" data-val="{{item.val}}" bindtap="onSelect">
+      <view class="option-left">
+        <text class="option-name">{{item.label}}</text>
+        <text class="option-desc">{{item.desc}}</text>
+      </view>
+      <view class="option-check {{settings.weight === item.val ? 'option-check-on' : ''}}">
+        <text wx:if="{{settings.weight === item.val}}">✓</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 货币 -->
+  <view class="section-label">货币符号</view>
+  <view class="options-card card">
+    <view wx:for="{{currencyOpts}}" wx:key="val"
+      class="option-row {{index < currencyOpts.length-1 ? 'option-row-border' : ''}}"
+      data-group="currency" data-val="{{item.val}}" bindtap="onSelect">
+      <view class="option-left">
+        <text class="option-name">{{item.label}}</text>
+        <text class="option-desc">{{item.desc}}</text>
+      </view>
+      <view class="option-check {{settings.currency === item.val ? 'option-check-on' : ''}}">
+        <text wx:if="{{settings.currency === item.val}}">✓</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 预览 -->
+  <view class="preview-card card">
+    <text class="preview-title">当前设置预览</text>
+    <view class="preview-row">
+      <text class="preview-label">一瓶金酒</text>
+      <text class="preview-val">750 {{settings.volume}}</text>
+    </view>
+    <view class="preview-row">
+      <text class="preview-label">参考售价</text>
+      <text class="preview-val">{{settings.currency}}65.00</text>
+    </view>
+  </view>
+
+  <view style="height:60rpx"></view>
+</scroll-view>

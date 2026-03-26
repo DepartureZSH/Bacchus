@@ -1,0 +1,113 @@
+<!-- pages/export/export.wxml -->
+<scroll-view class="export-scroll" scroll-y enhanced show-scrollbar="{{false}}">
+
+  <!-- 导出类型选择 -->
+  <view class="section-label">选择导出内容</view>
+  <view class="type-list">
+    <view
+      wx:for="{{exportTypes}}"
+      wx:key="id"
+      class="type-card card {{currentType === item.id ? 'type-card-active' : ''}}"
+      data-id="{{item.id}}"
+      bindtap="onSelectType"
+    >
+      <view class="type-card-left">
+        <text class="type-icon">{{item.icon}}</text>
+        <view class="type-info">
+          <text class="type-name">{{item.name}}</text>
+          <text class="type-desc">{{item.desc}}</text>
+        </view>
+      </view>
+      <view class="type-radio {{currentType === item.id ? 'type-radio-on' : ''}}">
+        <view wx:if="{{currentType === item.id}}" class="type-radio-dot"></view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 数据预览 -->
+  <view class="section-label">数据预览</view>
+  <view class="preview-card card">
+    <view class="preview-header">
+      <text class="preview-title">{{previewTitle}}</text>
+      <text class="preview-count">共 {{previewTotal}} 条</text>
+    </view>
+
+    <!-- 表头 —— 每列宽度由 style="width:X%" 控制，绝对对齐 -->
+    <view class="table-head">
+      <view
+        wx:for="{{previewCols}}"
+        wx:key="label"
+        class="th"
+        style="width:{{item.pct}}"
+      >
+        <text class="th-text">{{item.label}}</text>
+      </view>
+    </view>
+
+    <!-- 数据行 -->
+    <view
+      wx:for="{{previewRows}}"
+      wx:key="index"
+      wx:for-item="row"
+      class="table-row {{index % 2 === 1 ? 'table-row-alt' : ''}}"
+    >
+      <view
+        wx:for="{{row}}"
+        wx:key="index"
+        wx:for-item="cell"
+        class="td {{cell.right ? 'td-right' : ''}}"
+        style="width:{{cell.pct}}"
+      >
+        <text class="td-text">{{cell.text}}</text>
+      </view>
+    </view>
+
+    <view wx:if="{{previewTotal > 5}}" class="table-more">
+      <text>… 还有 {{previewTotal - 5}} 行未显示</text>
+    </view>
+  </view>
+
+  <!-- 导出方式 -->
+  <view class="section-label">导出方式</view>
+  <view class="action-grid">
+    <view class="action-card card" bindtap="onCopyCSV">
+      <text class="action-icon">📋</text>
+      <text class="action-name">复制 CSV</text>
+      <text class="action-desc">粘贴到 Excel / 飞书</text>
+    </view>
+    <view class="action-card card" bindtap="onCopyMarkdown">
+      <text class="action-icon">📝</text>
+      <text class="action-name">复制 Markdown</text>
+      <text class="action-desc">用于文档 / 笔记</text>
+    </view>
+    <view class="action-card card" bindtap="onCopyText">
+      <text class="action-icon">💬</text>
+      <text class="action-name">复制文本</text>
+      <text class="action-desc">发送微信 / 钉钉</text>
+    </view>
+    <view class="action-card card {{isPro ? '' : 'action-card-locked'}}" bindtap="onExportImage">
+      <text class="action-icon">🖼</text>
+      <text class="action-name">生成图片</text>
+      <text class="action-desc">{{isPro ? '保存到相册' : 'Pro 版可用'}}</text>
+      <view wx:if="{{!isPro}}" class="lock-badge">Pro</view>
+    </view>
+  </view>
+
+  <!-- 导出历史 -->
+  <view wx:if="{{exportHistory.length > 0}}" class="section-label">导出记录</view>
+  <view wx:if="{{exportHistory.length > 0}}" class="history-card card">
+    <view
+      wx:for="{{exportHistory}}"
+      wx:key="time"
+      class="history-row {{index < exportHistory.length-1 ? 'history-row-border' : ''}}"
+    >
+      <text class="history-icon">{{item.icon}}</text>
+      <view class="history-info">
+        <text class="history-name">{{item.name}}</text>
+        <text class="history-time">{{item.time}} · {{item.format}}</text>
+      </view>
+    </view>
+  </view>
+
+  <view style="height:60rpx"></view>
+</scroll-view>

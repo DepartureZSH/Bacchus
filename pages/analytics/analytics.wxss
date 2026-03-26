@@ -1,0 +1,274 @@
+/* pages/analytics/analytics.wxss */
+
+/* 关键：页面根容器用普通 view + padding-bottom，让 page 自身滚动 */
+/* 原生 canvas 组件在 page 级滚动时可正常跟随，不会漂浮 */
+.analytics-page {
+  background: #0d0e12;
+  padding-bottom: 60rpx;
+}
+
+/* ── 时间切换 ── */
+.period-row {
+  display: flex;
+  flex-direction: row;
+  gap: 16rpx;
+  padding: 20rpx 32rpx 16rpx;
+}
+
+.period-chip {
+  padding: 12rpx 36rpx;
+  border-radius: 40rpx;
+  font-size: 26rpx;
+  font-weight: 600;
+  border: 2rpx solid #2a2d38;
+  color: #9a98a0;
+  background: #16181f;
+}
+
+.period-chip-active {
+  background: rgba(201,169,110,0.12);
+  border-color: rgba(201,169,110,0.4);
+  color: #c9a96e;
+}
+
+/* ── 指标 2×2 ── */
+.metric-grid {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 12rpx;
+  margin: 0 32rpx 24rpx;
+}
+
+.metric-card {
+  width: calc(50% - 8rpx);
+  padding: 24rpx;
+  box-sizing: border-box;
+}
+
+.metric-label  { font-size: 22rpx; color: #9a98a0; display: block; margin-bottom: 10rpx; }
+.metric-value  { font-size: 44rpx; font-weight: 800; color: #f0ede8; line-height: 1; display: block; }
+.metric-unit   { font-size: 22rpx; font-weight: 400; color: #9a98a0; margin-left: 4rpx; }
+.metric-trend  { font-size: 22rpx; margin-top: 10rpx; display: block; }
+.trend-up      { color: #4caf84; }
+.trend-down    { color: #e05c5c; }
+
+/* ── 图表卡片 ── */
+.chart-card {
+  margin: 0 32rpx 24rpx;
+  /* padding 左右各 24rpx，与 JS 里的 chartW 计算保持一致 */
+  padding: 24rpx;
+  overflow: hidden;
+}
+
+/* canvas 本身不设 rpx，尺寸由 JS 通过 style 属性注入精确 px 值 */
+/* display:block 消除 inline 元素底部空白间距 */
+
+/* 图例 */
+.chart-legend {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  gap: 32rpx;
+  padding-top: 16rpx;
+}
+
+.legend-item {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8rpx;
+}
+
+.legend-dot   { width: 16rpx; height: 16rpx; border-radius: 50%; }
+.legend-label { font-size: 22rpx; color: #9a98a0; }
+
+/* ── Section Header ── */
+.section-header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8rpx 32rpx 20rpx;
+}
+
+.section-title { font-size: 22rpx; font-weight: 600; color: #9a98a0; letter-spacing: 2rpx; }
+
+/* ── 排行榜 ── */
+.rank-card { margin: 0 32rpx 24rpx; padding: 0 32rpx; }
+
+.rank-item {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 24rpx 0;
+  gap: 16rpx;
+}
+
+.rank-item-border { border-bottom: 2rpx solid #2a2d38; }
+
+.rank-num {
+  width: 44rpx; height: 44rpx;
+  border-radius: 12rpx;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  font-size: 22rpx;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+.rank-num-1 { background: rgba(201,169,110,0.2); color: #c9a96e; }
+.rank-num-2 { background: rgba(76,175,132,0.15);  color: #4caf84; }
+.rank-num-3 { background: rgba(154,152,160,0.12); color: #9a98a0; }
+
+.rank-emoji { font-size: 36rpx; flex-shrink: 0; line-height: 1; }
+
+.rank-info  { flex: 1; display: flex; flex-direction: column; gap: 4rpx; min-width: 0; }
+.rank-name  { font-size: 26rpx; font-weight: 700; color: #f0ede8; display: block; }
+.rank-sub   { font-size: 22rpx; color: #5c5b65; display: block; }
+
+.rank-bar-wrap {
+  width: 80rpx; height: 8rpx;
+  background: #2a2d38;
+  border-radius: 4rpx;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.rank-bar { height: 8rpx; border-radius: 4rpx; }
+
+/* ── AI 建议 ── */
+.advice-list {
+  padding: 0 32rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.advice-card {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 20rpx;
+  padding: 28rpx;
+}
+
+.advice-icon  { font-size: 40rpx; flex-shrink: 0; line-height: 1.2; }
+.advice-body  { flex: 1; display: flex; flex-direction: column; gap: 8rpx; }
+.advice-title { font-size: 26rpx; font-weight: 700; color: #f0ede8; display: block; }
+.advice-text  { font-size: 24rpx; color: #9a98a0; line-height: 1.7; display: block; }
+
+/* ── 新增：loading / 空态 / 骨架屏 ── */
+.loading-bar {
+  margin: 0 32rpx 16rpx;
+  background: rgba(201,169,110,0.12);
+  border-radius: 12rpx;
+  padding: 14rpx 24rpx;
+  text-align: center;
+}
+.loading-bar-text { font-size: 24rpx; color: #c9a96e; }
+
+.skeleton-pulse {
+  animation: skPulse 1.4s ease-in-out infinite;
+}
+@keyframes skPulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.45; }
+}
+
+.skeleton-list { padding: 16rpx 0; display: flex; flex-direction: column; gap: 20rpx; }
+.skeleton-row  {
+  height: 40rpx; border-radius: 8rpx;
+  background: linear-gradient(90deg, #22242e 25%, #2a2d3a 50%, #22242e 75%);
+  background-size: 200% 100%;
+  animation: skShimmer 1.4s infinite;
+}
+@keyframes skShimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.empty-hint {
+  padding: 36rpx 0;
+  display: flex; flex-direction: column; align-items: center; gap: 12rpx;
+  color: #5c5b65; font-size: 26rpx;
+}
+.empty-sub { font-size: 22rpx; color: #3e3d46; text-align: center; line-height: 1.6; }
+
+.chart-empty-overlay {
+  margin-top: -20rpx;
+  text-align: center; padding-bottom: 16rpx;
+}
+.chart-empty-text { font-size: 22rpx; color: #3e3d46; }
+
+.advice-warn { border-left: 4rpx solid #e05c5c; }
+
+/* ── AI 经营建议区 ── */
+.advice-header {
+  display: flex; align-items: center; justify-content: space-between;
+}
+.advice-refresh-btn {
+  width: 52rpx; height: 52rpx; border-radius: 50%;
+  background: rgba(201,169,110,0.12);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 30rpx; color: #c9a96e;
+}
+.advice-refresh-loading { animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.pro-lock-badge {
+  font-size: 20rpx; font-weight: 700; color: #c9a96e;
+  background: rgba(201,169,110,0.15);
+  border: 1rpx solid rgba(201,169,110,0.4);
+  border-radius: 8rpx; padding: 4rpx 10rpx;
+}
+
+.advice-trigger {
+  margin: 0 32rpx 24rpx;
+  display: flex; align-items: center; gap: 20rpx;
+  padding: 28rpx;
+}
+.advice-trigger-icon  { font-size: 36rpx; flex-shrink: 0; color: #c9a96e; }
+.advice-trigger-body  { flex: 1; }
+.advice-trigger-title { font-size: 26rpx; font-weight: 700; color: #f0ede8; display: block; }
+.advice-trigger-sub   { font-size: 22rpx; color: #9a98a0; display: block; margin-top: 6rpx; }
+.advice-trigger-arrow { font-size: 32rpx; color: #5c5b65; }
+
+.advice-skeleton-list { margin-top: 12rpx; display: flex; flex-direction: column; gap: 12rpx; }
+.advice-skeleton-row  {
+  height: 28rpx; border-radius: 6rpx;
+  background: linear-gradient(90deg, #22242e 25%, #2a2d3a 50%, #22242e 75%);
+  background-size: 200% 100%;
+  animation: skShimmer 1.4s infinite;
+}
+
+.advice-error {
+  margin: 0 32rpx 24rpx;
+  padding: 24rpx 28rpx;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.advice-error-text  { font-size: 24rpx; color: #9a98a0; }
+.advice-retry-btn   {
+  font-size: 24rpx; color: #c9a96e;
+  background: rgba(201,169,110,0.12); border-radius: 12rpx;
+  padding: 8rpx 20rpx;
+}
+
+.advice-upsell {
+  margin: 0 32rpx 24rpx;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 24rpx 28rpx;
+  border: 1rpx solid rgba(201,169,110,0.2);
+}
+.upsell-left  { display: flex; align-items: center; gap: 16rpx; flex: 1; }
+.upsell-icon  { font-size: 36rpx; flex-shrink: 0; }
+.upsell-body  { flex: 1; display: flex; flex-direction: column; gap: 6rpx; }
+.upsell-title { font-size: 26rpx; font-weight: 700; color: #f0ede8; display: block; }
+.upsell-sub   { font-size: 22rpx; color: #9a98a0; display: block; }
+.upsell-cta   {
+  font-size: 24rpx; font-weight: 700; color: #16181f;
+  background: #c9a96e; border-radius: 16rpx;
+  padding: 10rpx 24rpx; flex-shrink: 0;
+}

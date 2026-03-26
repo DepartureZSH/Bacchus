@@ -1,0 +1,95 @@
+<!-- pages/help/help.wxml -->
+<scroll-view class="page-scroll" scroll-y enhanced show-scrollbar="{{false}}">
+
+  <!-- 快速入口 -->
+  <view class="quick-row">
+    <view class="quick-btn" bindtap="onFeedback">
+      <text class="quick-icon">✉️</text>
+      <text class="quick-label">意见反馈</text>
+    </view>
+    <view class="quick-btn" bindtap="onWechat">
+      <text class="quick-icon">💬</text>
+      <text class="quick-label">联系客服</text>
+    </view>
+    <view class="quick-btn" bindtap="onCommunity">
+      <text class="quick-icon">🌐</text>
+      <text class="quick-label">用户社区</text>
+    </view>
+  </view>
+
+  <!-- FAQ -->
+  <view class="section-label">常见问题</view>
+  <view class="faq-list">
+    <view
+      wx:for="{{faqs}}"
+      wx:key="id"
+      class="faq-card card"
+      data-id="{{item.id}}"
+      bindtap="onFaqTap"
+    >
+      <view class="faq-header">
+        <text class="faq-q">{{item.q}}</text>
+        <text class="faq-arrow {{expandedFaq === item.id ? 'faq-arrow-open' : ''}}">›</text>
+      </view>
+      <view wx:if="{{expandedFaq === item.id}}" class="faq-body">
+        <text class="faq-a">{{item.a}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 反馈表单 -->
+  <view class="section-label" style="margin-top:8rpx">提交反馈</view>
+  <view class="feedback-card card">
+    <view class="feedback-type-row">
+      <view
+        wx:for="{{feedbackTypes}}"
+        wx:key="*this"
+        class="fb-type-chip {{feedbackType === item ? 'fb-type-active' : ''}}"
+        data-val="{{item}}"
+        bindtap="onSelectType"
+      >{{item}}</view>
+    </view>
+    <textarea
+      class="feedback-input"
+      placeholder="描述您遇到的问题或建议，我们会认真看每一条 🙏"
+      placeholder-class="feedback-placeholder"
+      value="{{feedbackText}}"
+      bindinput="onFeedbackInput"
+      maxlength="500"
+      auto-height
+    ></textarea>
+    <view class="feedback-footer">
+      <text class="feedback-count">{{feedbackText.length}}/500</text>
+      <view class="feedback-submit {{feedbackText.length > 0 ? '' : 'feedback-submit-disabled'}}"
+        bindtap="onSubmitFeedback">
+        <text>提交</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 关于 -->
+  <view class="section-label">关于 Bacchus</view>
+  <view class="about-card card">
+    <view class="about-row">
+      <text class="about-key">当前版本</text>
+      <text class="about-val">v0.1.0 MVP Demo</text>
+    </view>
+    <view class="about-divider"></view>
+    <view class="about-row">
+      <text class="about-key">开发团队</text>
+      <text class="about-val">Bacchus Labs</text>
+    </view>
+    <view class="about-divider"></view>
+    <view class="about-row" bindtap="onPrivacy">
+      <text class="about-key">隐私政策</text>
+      <text class="about-link">查看 →</text>
+    </view>
+    <view class="about-divider"></view>
+    <view class="about-row" bindtap="onTerms">
+      <text class="about-key">用户协议</text>
+      <text class="about-link">查看 →</text>
+    </view>
+  </view>
+
+  <view style="height:80rpx"></view>
+</scroll-view>

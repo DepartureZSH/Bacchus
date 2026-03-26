@@ -1,0 +1,107 @@
+<!-- pages/shopping-list/shopping-list.wxml -->
+<scroll-view class="sl-scroll" scroll-y enhanced show-scrollbar="{{false}}">
+
+  <!-- 汇总 -->
+  <view class="sl-header card">
+    <view class="sl-stat-row">
+      <view class="sl-stat">
+        <text class="sl-stat-num">{{items.length}}</text>
+        <text class="sl-stat-label">待采购</text>
+      </view>
+      <view class="sl-stat-div"></view>
+      <view class="sl-stat">
+        <text class="sl-stat-num sl-accent">¥{{totalCost}}</text>
+        <text class="sl-stat-label">预计花费</text>
+      </view>
+      <view class="sl-stat-div"></view>
+      <view class="sl-stat">
+        <text class="sl-stat-num sl-green">{{eligibleCount}}</text>
+        <text class="sl-stat-label">可入库</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 操作栏 -->
+  <view class="sl-action-bar">
+    <view class="sl-btn-primary {{stockingAll ? 'sl-btn-disabled' : ''}}" bindtap="onStockInAll">
+      📥 一键入库（{{eligibleCount}} 项）
+    </view>
+    <view class="sl-btn-secondary" bindtap="onClearDone">清除已入库</view>
+    <view class="sl-btn-danger" bindtap="onClearAll">清空</view>
+  </view>
+
+  <!-- 供货商直购占位 -->
+  <view class="sl-supplier-card">
+    <view class="sl-supplier-inner">
+      <view class="sl-supplier-left">
+        <text class="sl-supplier-icon">🏪</text>
+        <view>
+          <text class="sl-supplier-title">供货商直购</text>
+          <text class="sl-supplier-desc">供货商入驻后，可在此直接下单采购</text>
+        </view>
+      </view>
+      <view class="sl-supplier-badge">即将上线</view>
+    </view>
+  </view>
+
+  <!-- 空状态 -->
+  <view wx:if="{{items.length === 0}}" class="sl-empty">
+    <text class="sl-empty-icon">🛍</text>
+    <text class="sl-empty-title">采购清单为空</text>
+    <text class="sl-empty-sub">在 AI采购 中点击 ＋ 将原料加入清单</text>
+  </view>
+
+  <!-- 采购项列表 -->
+  <view wx:else class="sl-list">
+    <view wx:for="{{items}}" wx:key="_id"
+      class="sl-item card {{item.stockedIn ? 'sl-item-done' : ''}}">
+
+      <view class="sl-item-main">
+        <!-- 左：信息 -->
+        <view class="sl-item-left">
+          <text class="sl-emoji">{{item.emoji}}</text>
+          <view class="sl-info">
+            <view class="sl-name-row">
+              <text class="sl-name {{item.stockedIn ? 'sl-name-done' : ''}}">{{item.name}}</text>
+              <view wx:if="{{item.stockedIn}}"    class="sl-badge sl-badge-done">已入库</view>
+              <view wx:elif="{{!item.inInventory}}" class="sl-badge sl-badge-new">新原料</view>
+            </view>
+            <text class="sl-brand">{{item.brand}}</text>
+            <text class="sl-stock-hint">
+              库存 {{item.inInventory ? item.currentStock + item.unit : '无库存记录'}}
+            </text>
+          </view>
+        </view>
+
+        <!-- 右：数量 + 动作 -->
+        <view class="sl-item-right">
+          <!-- 数量调节 -->
+          <view class="sl-qty-col">
+            <view class="sl-qty-row">
+              <view class="sl-minus" bindtap="onAdjust" data-id="{{item._id}}" data-delta="-1">−</view>
+              <view class="sl-qty-wrap">
+                <text class="sl-qty">{{item.suggestQty}}</text>
+                <text class="sl-unit">{{item.unit}}</text>
+              </view>
+              <view class="sl-plus" bindtap="onAdjust" data-id="{{item._id}}" data-delta="1">＋</view>
+            </view>
+            <text class="sl-cost">≈ ¥{{item.estimateCost}}</text>
+          </view>
+
+          <!-- 动作按钮 -->
+          <view class="sl-actions">
+            <view wx:if="{{item.inInventory && !item.stockedIn}}"
+              class="sl-btn-stock" bindtap="onStockIn" data-id="{{item._id}}">入库</view>
+            <view wx:elif="{{!item.inInventory}}"
+              class="sl-btn-add-ing" bindtap="onGoAddIngredient">录入</view>
+            <view wx:else class="sl-btn-stocked">✓</view>
+            <view class="sl-btn-remove" bindtap="onRemove" data-id="{{item._id}}">✕</view>
+          </view>
+        </view>
+      </view>
+
+    </view>
+  </view>
+
+  <view style="height:80rpx"></view>
+</scroll-view>

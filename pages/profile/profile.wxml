@@ -1,0 +1,108 @@
+<!-- pages/profile/profile.wxml -->
+<scroll-view class="profile-scroll" scroll-y enhanced show-scrollbar="{{false}}">
+
+  <!-- 用户卡片 -->
+  <view class="user-card card">
+    <view class="user-avatar">🍸</view>
+    <view class="user-info">
+      <text class="user-name">{{shopInfo.name}}</text>
+      <text class="user-email">{{shopInfo.address}}</text>
+      <view class="badge badge-accent user-plan">{{isPro ? '✦ Pro 版' : '○ Free 版'}}</view>
+    </view>
+  </view>
+
+  <!-- 工具 -->
+  <view class="section-label">工具</view>
+  <view class="settings-card card">
+    <view class="settings-row" bindtap="goInventory">
+      <text class="settings-icon">📦</text>
+      <text class="settings-label">库存管理</text>
+      <view class="settings-right">
+        <text class="settings-value">录入 · 出入库 · 预警</text>
+        <text class="settings-arrow">›</text>
+      </view>
+    </view>
+    <view class="settings-divider"></view>
+    <view class="settings-row" bindtap="goAiMenu">
+      <text class="settings-icon">🤖</text>
+      <text class="settings-label">AI 运营</text>
+      <view class="settings-right">
+        <text class="settings-value">酒单 · 营销 · 采购</text>
+        <text class="settings-arrow">›</text>
+      </view>
+    </view>
+    <view class="settings-divider"></view>
+    <view class="settings-row" bindtap="goMyRecipes">
+      <text class="settings-icon">📖</text>
+      <text class="settings-label">配方 · 合集</text>
+      <view class="settings-right">
+        <text class="settings-value">创作 · 发布 · 发现</text>
+        <text class="settings-arrow">›</text>
+      </view>
+    </view>
+    <view class="settings-divider"></view>
+    <view class="settings-row" bindtap="goShoppingList">
+      <text class="settings-icon">🛍</text>
+      <text class="settings-label">采购清单</text>
+      <view class="settings-right">
+        <text class="settings-value">选品 · 调量 · 一键入库</text>
+        <text class="settings-arrow">›</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 设置 -->
+  <view class="section-label">设置</view>
+  <view class="settings-card card">
+    <view class="settings-row" bindtap="goShopInfo">
+      <text class="settings-icon">🏮</text>
+      <text class="settings-label">店铺信息</text>
+      <view class="settings-right">
+        <text class="settings-value">{{shopInfo.city}}</text>
+        <text class="settings-arrow">›</text>
+      </view>
+    </view>
+    <view class="settings-divider"></view>
+    <view class="settings-row" bindtap="goSubscription">
+      <text class="settings-icon">⭐</text>
+      <text class="settings-label">订阅管理</text>
+      <view class="settings-right">
+        <view wx:if="{{isPro}}" class="settings-pro-badge">Pro</view>
+        <text wx:else class="settings-value accent-text">升级 Pro →</text>
+        <text class="settings-arrow">›</text>
+      </view>
+    </view>
+    <view class="settings-divider"></view>
+    <view class="settings-row" bindtap="goUnitSettings">
+      <text class="settings-icon">⚙️</text>
+      <text class="settings-label">单位 / 货币</text>
+      <view class="settings-right">
+        <text class="settings-value">{{unitLabel}}</text>
+        <text class="settings-arrow">›</text>
+      </view>
+    </view>
+    <view class="settings-divider"></view>
+    <view class="settings-row" bindtap="goExport">
+      <text class="settings-icon">📤</text>
+      <text class="settings-label">数据导出</text>
+      <view class="settings-right">
+        <text class="settings-value">CSV · Markdown · 文本</text>
+        <text class="settings-arrow">›</text>
+      </view>
+    </view>
+    <view class="settings-divider"></view>
+    <view class="settings-row" bindtap="goHelp">
+      <text class="settings-icon">💬</text>
+      <text class="settings-label">帮助与反馈</text>
+      <view class="settings-right">
+        <text class="settings-arrow">›</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="version-hint">Bacchus Demo v0.1.0 · MVP 演示版</view>
+
+  <button class="btn-ghost logout-btn" bindtap="onLogout">退出登录</button>
+
+  <view style="height:60rpx"></view>
+</scroll-view>

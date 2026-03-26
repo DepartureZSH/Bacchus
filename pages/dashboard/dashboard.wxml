@@ -1,0 +1,152 @@
+<!-- pages/dashboard/dashboard.wxml -->
+<scroll-view class="dash-scroll" scroll-y enhanced show-scrollbar="{{false}}">
+
+  <!-- 店铺横幅 -->
+  <view class="shop-banner">
+    <view class="shop-banner-inner">
+      <view class="shop-name">🏮 {{shopInfo.name}}</view>
+      <view class="shop-address">{{shopInfo.address}} · 营业中</view>
+      <view class="badge badge-accent shop-plan-tag">✦ {{shopInfo.plan}} 版 · 有效期至 {{shopInfo.planExpiry}}</view>
+    </view>
+  </view>
+
+  <!-- 指标卡 -->
+  <view class="metric-row">
+    <view class="metric-card metric-card-tap" bindtap="onTapTodayCard">
+      <view class="metric-label">今日营业额
+        <text class="metric-edit-hint">{{todayRevenue === '--' ? '＋记录' : '✎'}}</text>
+      </view>
+      <view class="metric-value">
+        <text wx:if="{{todayRevenue === '--'}}" class="metric-empty">未记录</text>
+        <block wx:else>{{todayRevenue}}<text class="metric-unit">元</text></block>
+      </view>
+      <view wx:if="{{todayTrend}}" class="metric-sub {{todayTrend.up ? 'ok' : 'warn'}}">{{todayTrend.text}}</view>
+      <view wx:else class="metric-sub muted">点击记录今日营业</view>
+    </view>
+    <view class="metric-card" bindtap="goSalesRecords">
+      <view class="metric-label">本周营业额</view>
+      <view class="metric-value">
+        <text wx:if="{{!weekRevenue}}" class="metric-empty">未记录</text>
+        <block wx:else>{{weekRevenue}}<text class="metric-unit">元</text></block>
+      </view>
+      <view wx:if="{{weekRevenue && weekProfit !== '--'}}" class="metric-sub ok">毛利润约 {{weekProfit}} · {{weekMargin}}%</view>
+      <view wx:elif="{{weekRevenue}}" class="metric-sub muted">暂无利润估算</view>
+      <view wx:else class="metric-sub muted">点击查看营业记录</view>
+    </view>
+  </view>
+
+  <!-- 近期营业记录 -->
+  <view wx:if="{{recentSales.length > 0}}" class="section-header">
+    <text class="section-title">📅 近期记录</text>
+    <text class="section-link" bindtap="goSalesRecords">全部 →</text>
+  </view>
+  <view wx:if="{{recentSales.length > 0}}" class="sales-mini-list">
+    <view wx:for="{{recentSales}}" wx:key="date" wx:if="{{index < 3}}"
+      class="sales-mini-row {{index < recentSales.length - 1 && index < 2 ? 'sales-mini-row-border' : ''}}">
+      <text class="sales-mini-date">{{item.date}}</text>
+      <text class="sales-mini-cups">{{item.cups ? item.cups + '杯' : ''}}</text>
+      <text class="sales-mini-revenue">¥{{item.revenue}}</text>
+      <view class="sales-mini-actions">
+        <view class="sales-mini-btn" bindtap="onEditSale" data-date="{{item.date}}">编辑</view>
+        <view class="sales-mini-btn sales-mini-del" bindtap="onDeleteSale" data-date="{{item.date}}">删</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 库存预警 -->
+  <view class="section-header">
+    <text class="section-title">⚠ 库存预警</text>
+    <text class="section-link" bindtap="goInventory">查看全部 →</text>
+  </view>
+
+  <view wx:if="{{alertIngredients.length > 0}}" class="alert-card">
+    <view class="alert-card-title">🔴 {{alertIngredients.length}} 项原料需要关注</view>
+    <block wx:for="{{alertIngredients}}" wx:key="id">
+      <view class="alert-item {{index < alertIngredients.length - 1 ? 'alert-item-border' : ''}}">
+        <view class="alert-dot {{item.status}}"></view>
+        <view class="alert-info">
+          <text class="alert-name">{{item.name}}</text>
+          <text class="alert-detail">剩余 {{item.stock}}{{item.unit}} · 阈值 {{item.threshold}}{{item.unit}}</text>
+        </view>
+        <view class="badge badge-{{item.status}}">{{item.statusText}}</view>
+      </view>
+    </block>
+  </view>
+  <view wx:else class="alert-ok-card">
+    <text class="alert-ok-icon">✓</text>
+    <text class="alert-ok-text">库存充足，暂无预警</text>
+  </view>
+
+  <!-- AI 推荐预览 -->
+  <view class="section-header">
+    <text class="section-title">✨ AI 今日推荐</text>
+  </view>
+  <view class="ai-preview-card" bindtap="goAiMenu">
+    <view class="ai-preview-tag">AI 酒单 · 高利润模式</view>
+    <view class="ai-preview-title">前往 AI 运营生成今日酒单</view>
+    <view class="ai-preview-cta">立即生成 →</view>
+  </view>
+
+  <!-- 快捷入口 -->
+  <view class="section-header">
+    <text class="section-title">快捷入口</text>
+  </view>
+  <view class="quick-grid">
+    <view class="quick-item" bindtap="goInventory">
+      <text class="quick-icon">📦</text>
+      <text class="quick-name">库存管理</text>
+      <text class="quick-desc">录入 · 出入库 · 预警</text>
+    </view>
+    <view class="quick-item" bindtap="goAiMenu">
+      <text class="quick-icon">🤖</text>
+      <text class="quick-name">AI 运营</text>
+      <text class="quick-desc">酒单 · 营销 · 采购</text>
+    </view>
+    <view class="quick-item" bindtap="goMyRecipes">
+      <text class="quick-icon">📖</text>
+      <text class="quick-name">配方 · 合集</text>
+      <text class="quick-desc">创作 · 发布 · 发现</text>
+    </view>
+    <view class="quick-item" bindtap="goProfile">
+      <text class="quick-icon">👤</text>
+      <text class="quick-name">我的</text>
+      <text class="quick-desc">店铺 · 订阅 · 设置</text>
+    </view>
+    <view class="quick-item quick-item-wide" bindtap="goShoppingList">
+      <text class="quick-icon">🛍</text>
+      <text class="quick-name">采购清单</text>
+      <text class="quick-desc">选品 · 调量 · 一键入库</text>
+    </view>
+  </view>
+
+  <view style="height: 32rpx"></view>
+</scroll-view>
+
+<!-- 记录营业弹窗 -->
+<view wx:if="{{showRecordModal}}" class="record-mask" bindtap="onCloseModal">
+  <view class="record-sheet" catchtap="">
+    <view class="record-sheet-title">{{recordIsEdit ? '编辑营业记录' : '记录今日营业'}}</view>
+    <view class="record-date-hint">{{recordDate}}</view>
+    <view class="record-field">
+      <text class="record-label">营业额（元）*</text>
+      <input class="record-input" type="digit" value="{{recordForm.revenue}}"
+        bindinput="onRecordInput" data-key="revenue" placeholder="请输入今日实收" />
+    </view>
+    <view class="record-field">
+      <text class="record-label">出杯数（可选）</text>
+      <input class="record-input" type="number" value="{{recordForm.cups}}"
+        bindinput="onRecordInput" data-key="cups" placeholder="0" />
+    </view>
+    <view class="record-field">
+      <text class="record-label">备注（可选）</text>
+      <input class="record-input" value="{{recordForm.note}}"
+        bindinput="onRecordInput" data-key="note" placeholder="如：节假日 / 包场" />
+    </view>
+    <view class="record-actions">
+      <view class="record-btn-cancel" bindtap="onCloseModal">取消</view>
+      <view class="record-btn-save {{recordLoading ? 'record-btn-disabled' : ''}}" bindtap="onRecordSubmit">
+        {{recordLoading ? '保存中…' : '保存'}}
+      </view>
+    </view>
+  </view>
+</view>

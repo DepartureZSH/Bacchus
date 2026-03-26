@@ -1,0 +1,85 @@
+/* pages/profile/profile.wxss */
+
+.profile-scroll { height: 100vh; background: #0d0e12; }
+
+/* ── User card ── */
+.user-card {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 28rpx;
+  margin: 24rpx 32rpx 20rpx;
+  padding: 32rpx;
+}
+
+.user-avatar {
+  width: 112rpx; height: 112rpx;
+  background: linear-gradient(135deg, #c9a96e, #a67c3e);
+  border-radius: 32rpx;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  font-size: 56rpx;
+  flex-shrink: 0;
+}
+
+.user-info { display: flex; flex-direction: column; gap: 8rpx; }
+
+.user-name  { font-size: 32rpx; font-weight: 700; color: #f0ede8; display: block; }
+.user-email { font-size: 24rpx; color: #9a98a0; display: block; }
+.user-plan  { margin-top: 4rpx; display: inline-block; }
+
+/* ── Settings ── */
+.settings-card { margin: 0 32rpx 20rpx; overflow: hidden; }
+
+.settings-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 28rpx 32rpx;
+  gap: 20rpx;
+}
+
+.settings-divider { height: 2rpx; background: #2a2d38; margin: 0 32rpx; }
+
+.settings-icon  { font-size: 32rpx; flex-shrink: 0; }
+.settings-label { font-size: 28rpx; color: #f0ede8; flex: 1; }
+
+.settings-right {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 10rpx;
+}
+
+.settings-value { font-size: 24rpx; color: #9a98a0; }
+.settings-arrow { font-size: 32rpx; color: #5c5b65; }
+
+/* ── Version ── */
+.version-hint {
+  text-align: center;
+  font-size: 22rpx;
+  color: #5c5b65;
+  padding: 0 32rpx 28rpx;
+  display: block;
+}
+
+/* ── Logout ── */
+.logout-btn { margin: 0 32rpx; }
+
+/* ── 补充样式 ── */
+.section-label {
+  font-size: 22rpx; font-weight: 700; color: #5c5b65;
+  letter-spacing: 2rpx; padding: 16rpx 32rpx 12rpx; display: block;
+}
+
+.warn-text { color: #e09a3a; }
+
+/* ── 补充 ── */
+.settings-pro-badge {
+  background: linear-gradient(135deg,#c9a96e,#a67c3e);
+  color: #0d0e12; border-radius: 10rpx;
+  padding: 4rpx 16rpx; font-size: 20rpx; font-weight: 700;
+}
+.accent-text { color: #c9a96e; font-size: 24rpx; }

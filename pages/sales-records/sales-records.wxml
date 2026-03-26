@@ -1,0 +1,91 @@
+<!-- pages/sales-records/sales-records.wxml -->
+<scroll-view class="sr-scroll" scroll-y enhanced show-scrollbar="{{false}}">
+
+  <!-- 汇总 -->
+  <view class="sr-summary card">
+    <view class="sr-stat-row">
+      <view class="sr-stat">
+        <text class="sr-stat-num">{{records.length}}</text>
+        <text class="sr-stat-label">记录天数</text>
+      </view>
+      <view class="sr-stat-div"></view>
+      <view class="sr-stat">
+        <text class="sr-stat-num sr-accent">¥{{totalRevenue}}</text>
+        <text class="sr-stat-label">累计营业额</text>
+      </view>
+      <view class="sr-stat-div"></view>
+      <view class="sr-stat">
+        <text class="sr-stat-num">{{totalCups}}</text>
+        <text class="sr-stat-label">累计出杯</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 操作 -->
+  <view class="sr-action-bar">
+    <view class="sr-btn-add" bindtap="onAddRecord">＋ 记录今日营业</view>
+  </view>
+
+  <!-- loading -->
+  <view wx:if="{{loading}}" class="sr-loading">
+    <text class="sr-loading-txt">加载中…</text>
+  </view>
+
+  <!-- 空状态 -->
+  <view wx:elif="{{records.length === 0}}" class="sr-empty">
+    <text class="sr-empty-icon">📅</text>
+    <text class="sr-empty-title">暂无营业记录</text>
+    <text class="sr-empty-sub">点击上方按钮开始记录每日营业额</text>
+  </view>
+
+  <!-- 记录列表 -->
+  <view wx:else class="sr-list">
+    <view wx:for="{{records}}" wx:key="date" class="sr-item card">
+      <view class="sr-item-left">
+        <text class="sr-date">{{item.date}}</text>
+        <view class="sr-meta-row">
+          <text wx:if="{{item.cups}}" class="sr-meta">{{item.cups}} 杯</text>
+          <text wx:if="{{item.note}}" class="sr-note">{{item.note}}</text>
+        </view>
+      </view>
+      <view class="sr-item-right">
+        <text class="sr-revenue">¥{{item.revenue}}</text>
+        <view class="sr-btns">
+          <view class="sr-btn-edit" bindtap="onEdit" data-date="{{item.date}}">编辑</view>
+          <view class="sr-btn-del"  bindtap="onDelete" data-date="{{item.date}}">删除</view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view style="height:60rpx"></view>
+</scroll-view>
+
+<!-- 记录/编辑弹窗 -->
+<view wx:if="{{showModal}}" class="sr-mask" bindtap="onCloseModal">
+  <view class="sr-sheet" catchtap="">
+    <view class="sr-sheet-title">{{isEdit ? '编辑记录' : '记录营业额'}}</view>
+    <view class="sr-sheet-date">{{editDate}}</view>
+    <view class="sr-field">
+      <text class="sr-label">营业额（元）*</text>
+      <input class="sr-input" type="digit" value="{{form.revenue}}"
+        bindinput="onInput" data-key="revenue" placeholder="请输入实收营业额" />
+    </view>
+    <view class="sr-field">
+      <text class="sr-label">出杯数（可选）</text>
+      <input class="sr-input" type="number" value="{{form.cups}}"
+        bindinput="onInput" data-key="cups" placeholder="0" />
+    </view>
+    <view class="sr-field">
+      <text class="sr-label">备注（可选）</text>
+      <input class="sr-input" value="{{form.note}}"
+        bindinput="onInput" data-key="note" placeholder="如：节假日 / 包场 / 主题夜" />
+    </view>
+    <view class="sr-modal-actions">
+      <view class="sr-btn-cancel" bindtap="onCloseModal">取消</view>
+      <view class="sr-btn-save {{formLoading ? 'sr-btn-disabled' : ''}}" bindtap="onSubmit">
+        {{formLoading ? '保存中…' : '保存'}}
+      </view>
+    </view>
+  </view>
+</view>

@@ -1,0 +1,27 @@
+<!-- pages/login/login.wxml -->
+<view class="page-container login-page">
+  <view style="height: {{statusBarHeight}}px"></view>
+
+  <!-- Logo + 品牌 -->
+  <view class="login-brand">
+    <view class="login-logo">🍸</view>
+    <text class="login-title">Bacchus</text>
+    <text class="login-subtitle">鸡尾酒 AI 仓管助手</text>
+  </view>
+
+  <view class="login-form">
+    <button
+      class="btn-wechat {{loading ? 'btn-disabled' : ''}}"
+      bindtap="onWechatLogin"
+      disabled="{{loading}}"
+    >
+      <text class="wechat-icon">💬</text>
+      <text>{{loading ? '登录中…' : '微信一键登录'}}</text>
+    </button>
+
+    <view class="login-desc">
+      <text class="login-desc-text">使用微信身份登录，数据自动云端同步</text>
+      <text class="login-desc-text">换设备无需重新录入库存</text>
+    </view>
+  </view>
+</view>

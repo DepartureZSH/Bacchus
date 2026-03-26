@@ -1,0 +1,776 @@
+<!-- pages/ai-menu/ai-menu.wxml -->
+<view class="page-root">
+
+  <!-- ══ 顶部 Tab 切换 ══ -->
+  <view class="top-tab-bar">
+    <view class="top-tab-item {{activeTab === 'menu' ? 'top-tab-active' : ''}}"
+      data-tab="menu" bindtap="onTabSwitch">
+      <text class="top-tab-icon">🍸</text>
+      <text class="top-tab-label">AI 酒单</text>
+      <view wx:if="{{activeTab === 'menu'}}" class="top-tab-line"></view>
+    </view>
+    <view class="top-tab-item {{activeTab === 'mktg' ? 'top-tab-active' : ''}}"
+      data-tab="mktg" bindtap="onTabSwitch">
+      <text class="top-tab-icon">🎨</text>
+      <text class="top-tab-label">AI 营销</text>
+      <view wx:if="{{activeTab === 'mktg'}}" class="top-tab-line"></view>
+    </view>
+    <view class="top-tab-item {{activeTab === 'purchase' ? 'top-tab-active' : ''}}"
+      data-tab="purchase" bindtap="onTabSwitch">
+      <text class="top-tab-icon">🛒</text>
+      <text class="top-tab-label">AI 采购</text>
+      <view wx:if="{{activeTab === 'purchase'}}" class="top-tab-line"></view>
+    </view>
+    <view class="top-tab-item {{activeTab === 'analytics' ? 'top-tab-active' : ''}}"
+      data-tab="analytics" bindtap="onTabSwitch">
+      <text class="top-tab-icon">📊</text>
+      <text class="top-tab-label">经营分析</text>
+      <view wx:if="{{activeTab === 'analytics'}}" class="top-tab-line"></view>
+    </view>
+  </view>
+
+  <!-- ══════════════════════════════════════
+       Tab 1: AI 酒单
+  ══════════════════════════════════════ -->
+  <scroll-view wx:if="{{activeTab === 'menu'}}" class="tab-scroll" scroll-y enhanced show-scrollbar="{{false}}">
+
+    <!-- 表单 -->
+    <view class="ai-form-card card">
+      <view class="ai-form-title">✨ 配置酒单参数</view>
+      <view class="form-group">
+        <text class="form-label">酒单目标</text>
+        <view class="option-row">
+          <view wx:for="{{menuGoals}}" wx:key="*this"
+            class="option-chip {{selectedGoal === item ? 'option-chip-active' : ''}}"
+            data-val="{{item}}" bindtap="onSelectGoal">{{item}}</view>
+        </view>
+      </view>
+      <view class="form-group">
+        <text class="form-label">风格偏好</text>
+        <view class="option-row">
+          <view wx:for="{{flavors}}" wx:key="*this"
+            class="option-chip {{selectedFlavor === item ? 'option-chip-active' : ''}}"
+            data-val="{{item}}" bindtap="onSelectFlavor">{{item}}</view>
+        </view>
+      </view>
+      <button class="btn-primary ai-gen-btn {{isLoading ? 'btn-loading' : ''}}"
+        bindtap="onGenerate" disabled="{{isLoading}}">
+        <text wx:if="{{isLoading}}">{{loadingMsg}}{{loadingDots}}</text>
+        <text wx:else>✨ 生成酒单</text>
+      </button>
+      <!-- 配额 -->
+      <view class="quota-bar" wx:if="{{!isPro}}">
+        <view class="quota-bar-top">
+          <text class="quota-label">本月 AI 次数</text>
+          <text class="quota-num {{quotaRemaining <= 2 ? 'quota-num-warn' : ''}}">{{quotaRemaining}} / {{quotaLimit}}</text>
+        </view>
+        <view class="quota-track">
+          <view class="quota-fill {{quotaRemaining <= 2 ? 'quota-fill-warn' : ''}}"
+            style="width: {{quotaLimit > 0 ? (quotaUsed / quotaLimit * 100) : 0}}%"></view>
+        </view>
+      </view>
+      <view class="quota-bar quota-pro" wx:else>
+        <text class="quota-pro-text">✦ Pro · AI 次数无限制</text>
+      </view>
+    </view>
+
+    <!-- 骨架屏 -->
+    <view wx:if="{{isLoading}}" class="skeleton-wrap">
+      <view wx:for="{{[1,2,3]}}" wx:key="*this" class="skeleton-card card">
+        <view class="sk-line sk-line-title"></view>
+        <view class="sk-line sk-line-tags"></view>
+        <view class="sk-price-row">
+          <view class="sk-price-block"></view>
+          <view class="sk-price-block"></view>
+          <view class="sk-price-block"></view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 结果区 -->
+    <view wx:if="{{!isLoading && menuItems.length > 0}}">
+      <view class="section-header">
+        <text class="section-title">📋 推荐酒单</text>
+        <view class="section-header-right">
+          <text wx:if="{{fromCache}}" class="cache-badge">缓存</text>
+          <text class="section-link" bindtap="onPurchase">采购清单 →</text>
+        </view>
+      </view>
+      <view wx:for="{{menuItems}}" wx:key="name" class="cocktail-card card">
+        <view class="cocktail-header" bindtap="onToggleCard" data-index="{{index}}">
+          <view class="cocktail-header-left">
+            <text class="cocktail-emoji">{{item.emoji}}</text>
+            <view>
+              <text class="cocktail-name">{{item.name}}</text>
+              <view class="cocktail-tags">
+                <view class="badge badge-accent">毛利 {{item.grossMargin}}%</view>
+                <view class="badge badge-{{item.matchLevel}}">匹配 {{item.matchScore}}分</view>
+              </view>
+            </view>
+          </view>
+          <text class="expand-arrow">{{item.expanded ? '∧' : '∨'}}</text>
+        </view>
+        <view class="price-row">
+          <view class="price-item">
+            <text class="price-label">成本</text>
+            <text class="price-val">¥{{item.costEstimate}}</text>
+          </view>
+          <view class="price-divider"></view>
+          <view class="price-item">
+            <text class="price-label">建议售价</text>
+            <text class="price-val price-val-accent">¥{{item.suggestedPrice}}</text>
+          </view>
+          <view class="price-divider"></view>
+          <view class="price-item">
+            <text class="price-label">毛利率</text>
+            <text class="price-val price-val-ok">{{item.grossMargin}}%</text>
+          </view>
+        </view>
+        <view wx:if="{{item.expanded}}" class="cocktail-detail">
+          <view class="detail-block">
+            <text class="detail-block-title">🧪 配方</text>
+            <view wx:for="{{item.ingredients}}" wx:key="name" wx:for-item="ing" class="ing-row">
+              <view class="ing-row-left">
+                <view class="ing-status-dot {{ing.isMissing ? 'dot-missing' : 'dot-ok'}}"></view>
+                <text class="ing-row-name">{{ing.name}}</text>
+              </view>
+              <text class="ing-row-amount">{{ing.amount}} {{ing.unit}}</text>
+            </view>
+            <view wx:if="{{item.substitute}}" class="substitute-hint">
+              <text class="sub-icon">💡</text>
+              <text class="sub-text">{{item.substitute}}</text>
+            </view>
+          </view>
+          <view class="detail-block">
+            <text class="detail-block-title">📝 制作步骤</text>
+            <view wx:for="{{item.steps}}" wx:key="index" wx:for-item="step" class="step-row">
+              <view class="step-num">{{index + 1}}</view>
+              <text class="step-text">{{step}}</text>
+            </view>
+          </view>
+          <view wx:if="{{item.notes}}" class="notes-row">
+            <text class="notes-text">📌 {{item.notes}}</text>
+          </view>
+          <view class="card-action-row">
+            <view class="card-action-btn card-action-save {{item.saved ? 'card-action-done' : ''}} {{item.saving ? 'card-action-loading' : ''}}"
+              catchtap="onSaveToMyRecipe" data-index="{{index}}">
+              <text class="card-action-icon">{{item.saved ? '✓' : '＋'}}</text>
+              <text class="card-action-label">{{item.saved ? '已存入配方' : '存入我的配方'}}</text>
+            </view>
+            <view class="card-action-btn card-action-coll"
+              catchtap="onAddToMyCollection" data-index="{{index}}">
+              <text class="card-action-icon">📂</text>
+              <text class="card-action-label">加入合集</text>
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 空态 -->
+    <view wx:if="{{!isLoading && menuItems.length === 0}}" class="ai-empty">
+      <text class="ai-empty-icon">🍸</text>
+      <text class="ai-empty-title">配置参数，一键生成酒单</text>
+      <text class="ai-empty-sub">AI 实时分析库存，推荐最优酒款\n含成本、售价、毛利率全分析</text>
+    </view>
+    <view style="height:60rpx"></view>
+  </scroll-view>
+
+  <!-- ══════════════════════════════════════
+       Tab 2: AI 营销
+  ══════════════════════════════════════ -->
+  <view wx:if="{{activeTab === 'mktg'}}" class="tab-scroll mktg-root">
+
+    <!-- ── 模式切换：单品 / 合集 ── -->
+    <view class="mktg-mode-bar">
+      <view class="mktg-mode-btn {{mktgMode === 'recipe' ? 'mktg-mode-on' : ''}}"
+        data-mode="recipe" bindtap="onMktgModeSwitch">🍸 单品营销图</view>
+      <view class="mktg-mode-btn {{mktgMode === 'collection' ? 'mktg-mode-on' : ''}}"
+        data-mode="collection" bindtap="onMktgModeSwitch">📂 合集营销图</view>
+    </view>
+
+    <scroll-view class="mktg-scroll" scroll-y enhanced show-scrollbar="{{false}}">
+
+      <!-- ════ 单品模式 ════ -->
+      <block wx:if="{{mktgMode === 'recipe'}}">
+
+        <!-- 选择配方 -->
+        <view class="mktg-section">
+          <text class="mktg-section-title">① 选择配方</text>
+          <view wx:if="{{listLoading}}" class="mktg-list-loading">
+            <text class="mktg-list-loading-txt">加载中…</text>
+          </view>
+          <view wx:elif="{{recipeList.length === 0}}" class="mktg-empty-hint">
+            <text>还没有自创配方，请先在「配方」页面创建</text>
+          </view>
+          <block wx:else>
+            <!-- 搜索栏 -->
+            <view class="mktg-search-bar">
+              <text class="mktg-search-icon">🔍</text>
+              <input class="mktg-search-input"
+                placeholder="搜索配方名称…"
+                placeholder-class="mktg-search-ph"
+                value="{{recipeSearch}}"
+                bindinput="onRecipeSearchInput"/>
+            </view>
+            <!-- 快速筛选 -->
+            <scroll-view scroll-x class="mktg-filter-scroll" show-scrollbar="{{false}}">
+              <view class="mktg-filter-row">
+                <view wx:for="{{recipeFilters}}" wx:key="id"
+                  class="mktg-filter-chip {{recipeFilter === item.id ? 'mktg-filter-chip-on' : ''}}"
+                  data-id="{{item.id}}" bindtap="onRecipeFilterTap">{{item.label}}</view>
+              </view>
+            </scroll-view>
+            <!-- 列表 -->
+            <view wx:if="{{recipeListFiltered.length === 0}}" class="mktg-empty-hint mktg-filter-empty">
+              <text>没有匹配的配方</text>
+            </view>
+            <scroll-view wx:else scroll-x class="mktg-pick-scroll" show-scrollbar="{{false}}">
+              <view class="mktg-pick-row">
+                <view wx:for="{{recipeListFiltered}}" wx:key="id"
+                  class="mktg-pick-card {{selectedRecipe && selectedRecipe.id === item.id ? 'mktg-pick-on' : ''}}"
+                  data-id="{{item.id}}" bindtap="onSelectRecipe">
+                  <view wx:if="{{item.coverTempUrl}}" class="mktg-pick-img-wrap">
+                    <image class="mktg-pick-img" src="{{item.coverTempUrl}}" mode="widthFix" lazy-load></image>
+                  </view>
+                  <view wx:else class="mktg-pick-emoji-wrap">
+                    <text class="mktg-pick-emoji">{{item.emoji}}</text>
+                  </view>
+                  <text class="mktg-pick-name">{{item.name}}</text>
+                  <view wx:if="{{selectedRecipe && selectedRecipe.id === item.id}}" class="mktg-pick-check">✓</view>
+                </view>
+              </view>
+            </scroll-view>
+          </block>
+        </view>
+
+        <!-- 已选配方简介 -->
+        <view wx:if="{{selectedRecipe}}" class="mktg-target-preview card">
+          <text class="mktg-target-emoji">{{selectedRecipe.emoji}}</text>
+          <view class="mktg-target-info">
+            <text class="mktg-target-name">{{selectedRecipe.name}}</text>
+            <text class="mktg-target-desc">{{selectedRecipe.desc || selectedRecipe.base || ''}}</text>
+          </view>
+        </view>
+
+        <!-- 风格选择 -->
+        <view wx:if="{{selectedRecipe}}" class="mktg-section">
+          <text class="mktg-section-title">② 图片风格</text>
+          <scroll-view scroll-x class="mktg-style-scroll" show-scrollbar="{{false}}">
+            <view class="mktg-style-row">
+              <view wx:for="{{imgStyles}}" wx:key="id"
+                class="mktg-style-card {{imgStyle === item.id ? 'mktg-style-on' : ''}}"
+                data-id="{{item.id}}" bindtap="onImgStyleTap">
+                <text class="mktg-style-emoji">{{item.emoji}}</text>
+                <text class="mktg-style-label">{{item.label}}</text>
+                <text class="mktg-style-desc">{{item.desc}}</text>
+                <view wx:if="{{imgStyle === item.id}}" class="mktg-style-check">✓</view>
+              </view>
+            </view>
+          </scroll-view>
+        </view>
+
+        <!-- 补充描述 + 生成 -->
+        <view wx:if="{{selectedRecipe}}" class="mktg-section">
+          <text class="mktg-section-title">③ 补充描述（可选）</text>
+          <textarea class="mktg-custom-input"
+            placeholder="如：突出樱花装饰、背景暖调…"
+            placeholder-class="mktg-custom-ph"
+            value="{{customPrompt}}"
+            bindinput="onCustomPromptInput"
+            maxlength="60" auto-height/>
+          <view class="mktg-gen-btn {{mktgState === 'loading' ? 'mktg-gen-disabled' : ''}}"
+            bindtap="onGenRecipeImg">
+            <text class="mktg-gen-icon">✦</text>
+            <text class="mktg-gen-label">{{mktgState === 'loading' ? mktgLoadStep + '…' : '生成营销图'}}</text>
+          </view>
+          <!-- 查看历史图入口 -->
+          <view class="mktg-view-edit-btn" bindtap="onViewHistoryImgs">
+            <text class="mktg-view-edit-icon">📷</text>
+            <text class="mktg-view-edit-label">查看 / 编辑已生成图片</text>
+          </view>
+        </view>
+      </block>
+
+      <!-- ════ 合集模式 ════ -->
+      <block wx:if="{{mktgMode === 'collection'}}">
+
+        <!-- 选择合集 -->
+        <view class="mktg-section">
+          <text class="mktg-section-title">① 选择合集</text>
+          <view wx:if="{{listLoading}}" class="mktg-list-loading">
+            <text class="mktg-list-loading-txt">加载中…</text>
+          </view>
+          <view wx:elif="{{collList.length === 0}}" class="mktg-empty-hint">
+            <text>还没有合集，请先在「配方」页面创建</text>
+          </view>
+          <block wx:else>
+            <!-- 搜索栏 -->
+            <view class="mktg-search-bar">
+              <text class="mktg-search-icon">🔍</text>
+              <input class="mktg-search-input"
+                placeholder="搜索合集名称…"
+                placeholder-class="mktg-search-ph"
+                value="{{collSearch}}"
+                bindinput="onCollSearchInput"/>
+            </view>
+            <!-- 快速筛选 -->
+            <scroll-view scroll-x class="mktg-filter-scroll" show-scrollbar="{{false}}">
+              <view class="mktg-filter-row">
+                <view wx:for="{{collFilters}}" wx:key="id"
+                  class="mktg-filter-chip {{collFilter === item.id ? 'mktg-filter-chip-on' : ''}}"
+                  data-id="{{item.id}}" bindtap="onCollFilterTap">{{item.label}}</view>
+              </view>
+            </scroll-view>
+            <!-- 列表 -->
+            <view wx:if="{{collListFiltered.length === 0}}" class="mktg-empty-hint mktg-filter-empty">
+              <text>没有匹配的合集</text>
+            </view>
+            <scroll-view wx:else scroll-x class="mktg-pick-scroll" show-scrollbar="{{false}}">
+              <view class="mktg-pick-row">
+                <view wx:for="{{collListFiltered}}" wx:key="id"
+                  class="mktg-pick-card {{selectedColl && selectedColl.id === item.id ? 'mktg-pick-on' : ''}}"
+                  data-id="{{item.id}}" bindtap="onSelectColl">
+                  <view wx:if="{{item.coverTempUrl}}" class="mktg-pick-img-wrap">
+                    <image class="mktg-pick-img" src="{{item.coverTempUrl}}" mode="widthFix" lazy-load></image>
+                  </view>
+                  <view wx:else class="mktg-pick-emoji-wrap">
+                    <text class="mktg-pick-emoji">{{item.emoji}}</text>
+                  </view>
+                  <text class="mktg-pick-name">{{item.name}}</text>
+                  <text class="mktg-pick-sub">{{item.count}} 款</text>
+                  <view wx:if="{{selectedColl && selectedColl.id === item.id}}" class="mktg-pick-check">✓</view>
+                </view>
+              </view>
+            </scroll-view>
+          </block>
+        </view>
+
+        <!-- 已选合集简介 -->
+        <view wx:if="{{selectedColl}}" class="mktg-target-preview card">
+          <text class="mktg-target-emoji">{{selectedColl.emoji}}</text>
+          <view class="mktg-target-info">
+            <text class="mktg-target-name">{{selectedColl.name}}</text>
+            <text class="mktg-target-desc">{{selectedColl.count}} 款配方{{selectedColl.desc ? ' · ' + selectedColl.desc : ''}}</text>
+          </view>
+        </view>
+
+        <!-- 营销图类型 -->
+        <view wx:if="{{selectedColl}}" class="mktg-section">
+          <text class="mktg-section-title">② 图片类型</text>
+          <view class="mktg-type-row">
+            <view wx:for="{{mktgTypes}}" wx:key="id"
+              class="mktg-type-card {{mktgType === item.id ? 'mktg-type-on' : ''}}"
+              data-type="{{item.id}}" bindtap="onMktgTypeSwitch">
+              <text class="mktg-type-emoji">{{item.emoji}}</text>
+              <text class="mktg-type-label">{{item.label}}</text>
+              <text class="mktg-type-desc">{{item.desc}}</text>
+            </view>
+          </view>
+        </view>
+
+        <!-- 风格选择（单品图用 imgStyles，海报/酒单用 posterStyles） -->
+        <view wx:if="{{selectedColl}}" class="mktg-section">
+          <text class="mktg-section-title">③ {{mktgType === 'cover' ? '图片' : '海报'}}风格</text>
+          <scroll-view scroll-x class="mktg-style-scroll" show-scrollbar="{{false}}">
+            <view class="mktg-style-row">
+              <block wx:if="{{mktgType === 'cover'}}">
+                <view wx:for="{{imgStyles}}" wx:key="id"
+                  class="mktg-style-card {{imgStyle === item.id ? 'mktg-style-on' : ''}}"
+                  data-id="{{item.id}}" bindtap="onImgStyleTap">
+                  <text class="mktg-style-emoji">{{item.emoji}}</text>
+                  <text class="mktg-style-label">{{item.label}}</text>
+                  <text class="mktg-style-desc">{{item.desc}}</text>
+                  <view wx:if="{{imgStyle === item.id}}" class="mktg-style-check">✓</view>
+                </view>
+              </block>
+              <block wx:else>
+                <view wx:for="{{posterStyles}}" wx:key="id"
+                  class="mktg-style-card {{posterStyle === item.id ? 'mktg-style-on' : ''}}"
+                  data-id="{{item.id}}" bindtap="onPosterStyleTap">
+                  <text class="mktg-style-emoji">{{item.emoji}}</text>
+                  <text class="mktg-style-label">{{item.label}}</text>
+                  <text class="mktg-style-desc">{{item.desc}}</text>
+                  <view wx:if="{{posterStyle === item.id}}" class="mktg-style-check">✓</view>
+                </view>
+              </block>
+            </view>
+          </scroll-view>
+        </view>
+
+        <!-- 补充描述 + 生成 -->
+        <view wx:if="{{selectedColl}}" class="mktg-section">
+          <text class="mktg-section-title">④ 补充描述（可选）</text>
+          <textarea class="mktg-custom-input"
+            placeholder="如：突出夏日清凉感、玫瑰色调…"
+            placeholder-class="mktg-custom-ph"
+            value="{{customPrompt}}"
+            bindinput="onCustomPromptInput"
+            maxlength="60" auto-height/>
+          <view class="mktg-gen-btn {{mktgState === 'loading' ? 'mktg-gen-disabled' : ''}}"
+            bindtap="onGenCollImg">
+            <text class="mktg-gen-icon">✦</text>
+            <text class="mktg-gen-label">{{mktgState === 'loading' ? mktgLoadStep + '…' : '生成营销图'}}</text>
+          </view>
+          <!-- 查看历史图入口 -->
+          <view class="mktg-view-edit-btn" bindtap="onViewHistoryImgs">
+            <text class="mktg-view-edit-icon">📷</text>
+            <text class="mktg-view-edit-label">查看 / 编辑已生成图片</text>
+          </view>
+        </view>
+      </block>
+
+      <!-- 生成中 loading -->
+      <view wx:if="{{mktgState === 'loading'}}" class="mktg-loading-wrap">
+        <view class="mktg-loading-dots">
+          <view class="ml-dot ml-dot-1"></view>
+          <view class="ml-dot ml-dot-2"></view>
+          <view class="ml-dot ml-dot-3"></view>
+        </view>
+        <text class="mktg-loading-step">{{mktgLoadStep}}</text>
+        <text class="mktg-loading-hint">通常需要 15–40 秒，请耐心等待</text>
+      </view>
+
+      <!-- 错误态 -->
+      <view wx:if="{{mktgState === 'error'}}" class="mktg-error-wrap">
+        <text class="mktg-error-icon">⚠️</text>
+        <text class="mktg-error-msg">{{mktgError}}</text>
+        <view class="mktg-error-retry" bindtap="onGenRecipeImg">重试</view>
+      </view>
+
+      <view style="height:80rpx"></view>
+    </scroll-view>
+  </view>
+
+<!-- ══════════════════════════════════════
+     Tab 3: AI 采购
+══════════════════════════════════════ -->
+<scroll-view wx:if="{{activeTab === 'purchase'}}" class="tab-scroll" scroll-y enhanced show-scrollbar="{{false}}">
+
+  <!-- 模式切换 -->
+  <view class="purch-mode-bar">
+    <view class="purch-mode-chip {{purchMode === 'stock' ? 'purch-mode-chip-on' : ''}}"
+      data-mode="stock" bindtap="onPurchModeSwitch">📦 低库存补货</view>
+    <view class="purch-mode-chip {{purchMode === 'coll' ? 'purch-mode-chip-on' : ''}}"
+      data-mode="coll" bindtap="onPurchModeSwitch">📋 按酒单采购</view>
+  </view>
+
+  <!-- 按酒单模式：合集选择 -->
+  <block wx:if="{{purchMode === 'coll'}}">
+    <view class="purch-coll-label">选择酒单合集</view>
+    <view wx:if="{{purchCollList.length === 0}}" class="purch-coll-empty">
+      <text class="purch-coll-empty-txt">暂无合集，请先在「配方」页面创建合集</text>
+    </view>
+    <scroll-view wx:else scroll-x class="purch-coll-scroll" show-scrollbar="{{false}}">
+      <view class="purch-coll-row">
+        <view wx:for="{{purchCollList}}" wx:key="id"
+          class="purch-coll-card {{purchSelectedCollId === item.id ? 'purch-coll-card-on' : ''}}"
+          data-id="{{item.id}}" data-name="{{item.name}}" bindtap="onPurchCollSelect">
+          <text class="purch-coll-emoji">{{item.emoji}}</text>
+          <text class="purch-coll-name">{{item.name}}</text>
+          <text class="purch-coll-count">{{item.count}}款</text>
+        </view>
+      </view>
+    </scroll-view>
+    <!-- 未选合集时的提示 -->
+    <view wx:if="{{!purchSelectedCollId && !purchLoading}}" class="purch-coll-hint">
+      <text class="purch-coll-hint-txt">👆 选择一个合集，自动汇总所需原料</text>
+    </view>
+  </block>
+
+  <!-- 汇总卡（选了合集或库存模式时显示） -->
+  <view wx:if="{{purchTotalItems > 0 || purchLoading}}"
+    class="purch-summary card" style="margin:16rpx 28rpx;padding:28rpx">
+    <view class="purch-summary-row">
+      <view class="purch-summary-item">
+        <text class="purch-summary-num">{{purchTotalItems}}</text>
+        <text class="purch-summary-label">采购品种</text>
+      </view>
+      <view class="purch-summary-divider"></view>
+      <view class="purch-summary-item">
+        <text class="purch-summary-num purch-num-warn">{{purchUrgentItems}}</text>
+        <text class="purch-summary-label">{{purchMode === 'coll' ? '无记录' : '紧急'}}</text>
+      </view>
+      <view class="purch-summary-divider"></view>
+      <view class="purch-summary-item">
+        <text class="purch-summary-num purch-num-accent">¥{{purchTotalCost}}</text>
+        <text class="purch-summary-label">预计花费</text>
+      </view>
+    </view>
+    <view class="purch-summary-meta">
+      <text wx:if="{{purchMode === 'coll'}}" class="purch-summary-meta-txt">
+        酒单：{{purchSelectedCollName}} · {{purchGenTime}}</text>
+      <text wx:else class="purch-summary-meta-txt">
+        低库存阈值{{purchHasMenuGaps ? ' + AI酒单缺口' : ''}} · {{purchGenTime}}</text>
+    </view>
+  </view>
+
+  <!-- 操作按钮 -->
+  <view wx:if="{{purchTotalItems > 0}}" class="purch-action-bar">
+    <view class="purch-btn purch-btn-copy" bindtap="onPurchCopy">📋 复制</view>
+    <view class="purch-btn purch-btn-refresh" bindtap="onPurchRefresh">🔄 刷新</view>
+    <view class="purch-btn purch-btn-list" bindtap="onPurchGoShoppingList">
+      🛍 清单<text wx:if="{{purchShoppingListCount > 0}}" class="purch-list-badge"> {{purchShoppingListCount}}</text>
+    </view>
+  </view>
+  <view wx:elif="{{purchMode === 'stock'}}" class="purch-action-bar">
+    <view class="purch-btn purch-btn-refresh" bindtap="onPurchRefresh">🔄 重新生成</view>
+    <view class="purch-btn purch-btn-list" bindtap="onPurchGoShoppingList">
+      🛍 清单<text wx:if="{{purchShoppingListCount > 0}}" class="purch-list-badge"> {{purchShoppingListCount}}</text>
+    </view>
+  </view>
+
+  <!-- 来源筛选 -->
+  <view wx:if="{{purchSourceFilters.length > 0}}" class="purch-filter-row">
+    <view wx:for="{{purchSourceFilters}}" wx:key="val"
+      class="purch-filter-chip {{purchCurrentSource === item.val ? 'purch-filter-chip-on' : ''}}"
+      data-val="{{item.val}}" bindtap="onPurchFilterSource">
+      {{item.label}}{{item.count > 0 ? '(' + item.count + ')' : ''}}
+    </view>
+  </view>
+
+  <!-- loading -->
+  <view wx:if="{{purchLoading}}" class="purch-loading">
+    <text class="purch-loading-txt">{{purchMode === 'coll' ? '正在分析配方原料…' : '加载库存数据…'}}</text>
+  </view>
+
+  <!-- 采购列表 -->
+  <view wx:elif="{{purchFilteredItems.length === 0 && (purchMode === 'stock' || purchSelectedCollId)}}" class="purch-empty">
+    <text class="purch-empty-icon">✅</text>
+    <text class="purch-empty-title">{{purchMode === 'coll' ? '所有原料均已足备' : '库存充足，暂无需采购'}}</text>
+    <text class="purch-empty-sub">{{purchMode === 'coll' ? '该酒单所需原料库存均可满足' : '所有原料均高于安全阈值'}}</text>
+  </view>
+  <view wx:elif="{{purchFilteredItems.length > 0}}" class="purch-list">
+    <view wx:for="{{purchFilteredItems}}" wx:key="id"
+      class="purch-item card {{item.urgent ? 'purch-item-urgent' : ''}}">
+      <view class="purch-item-left">
+        <view class="purch-item-top">
+          <text class="purch-emoji">{{item.emoji}}</text>
+          <view class="purch-info">
+            <view class="purch-name-row">
+              <text class="purch-name">{{item.name}}</text>
+              <view wx:if="{{item.urgent && purchMode === 'stock'}}" class="purch-urgent-badge">紧急</view>
+              <view wx:if="{{!item.inInventory && purchMode === 'coll'}}" class="purch-new-badge">新原料</view>
+            </view>
+            <text class="purch-brand">{{item.brand}}</text>
+          </view>
+        </view>
+        <!-- 低库存模式：显示库存 vs 阈值 -->
+        <view wx:if="{{purchMode === 'stock'}}" class="purch-stock-hint">
+          <text class="purch-stock-txt">库存 {{item.currentStock}}{{item.unit}} · 阈值 {{item.threshold}}{{item.unit}}</text>
+        </view>
+        <!-- 酒单模式：显示配方需求 vs 当前库存 -->
+        <view wx:else class="purch-stock-hint">
+          <text class="purch-stock-txt">配方需 {{item.neededQty}}{{item.unit}} · 库存 {{item.inInventory ? item.currentStock + item.unit : '无记录'}}</text>
+        </view>
+        <view wx:if="{{purchMode === 'stock' && (item.sourceThreshold || item.sourceMenu)}}" class="purch-source-tags">
+          <view wx:if="{{item.sourceThreshold}}" class="purch-source-tag purch-source-warn">低库存</view>
+          <view wx:if="{{item.sourceMenu}}"      class="purch-source-tag purch-source-ai">✨ 酒单缺口</view>
+        </view>
+        <view wx:if="{{purchMode === 'coll'}}" class="purch-source-tags">
+          <view wx:if="{{!item.inInventory}}" class="purch-source-tag purch-source-new">🆕 无库存记录</view>
+          <view wx:else                       class="purch-source-tag purch-source-warn">📦 需补货</view>
+        </view>
+      </view>
+      <view class="purch-item-right">
+        <view class="purch-amount-col">
+          <view class="purch-amount-row">
+            <view class="purch-minus" bindtap="onPurchAdjust" data-id="{{item.id}}" data-delta="-1">−</view>
+            <view class="purch-amount-wrap">
+              <text class="purch-amount">{{item.suggestQty}}</text>
+              <text class="purch-unit">{{item.unit}}</text>
+            </view>
+            <view class="purch-plus" bindtap="onPurchAdjust" data-id="{{item.id}}" data-delta="1">＋</view>
+          </view>
+          <text class="purch-cost">≈ ¥{{item.estimateCost}}</text>
+        </view>
+        <view bindtap="onPurchAddToList" data-name="{{item.name}}">
+          <!-- <text>{{purchItemsInList[item.name] ? '✓' : '＋'}}</text> -->
+          <image class="cart-btn-svg" src="{{purchItemsInList[item.name] ? '/assets/icons/Clear-Cart.svg' : '/assets/icons/Add-Cart.svg' }}" mode="aspectFit" />
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 已勾选 -->
+  <view wx:if="{{purchCheckedItems.length > 0}}" class="purch-checked-section">
+    <view class="purch-checked-header" bindtap="onPurchToggleChecked">
+      <text class="purch-checked-title">已采购 ({{purchCheckedItems.length}})</text>
+      <text class="purch-checked-arrow">{{purchShowChecked ? '∧' : '∨'}}</text>
+    </view>
+    <block wx:if="{{purchShowChecked}}">
+      <view wx:for="{{purchCheckedItems}}" wx:key="id" class="purch-item card purch-item-done">
+        <text class="purch-emoji">{{item.emoji}}</text>
+        <text class="purch-name purch-name-done">{{item.name}}</text>
+        <text class="purch-amount-done">{{item.suggestQty}} {{item.unit}}</text>
+        <view class="purch-check purch-check-done" bindtap="onPurchToggle" data-id="{{item.id}}"><text>✓</text></view>
+      </view>
+    </block>
+  </view>
+
+  <view style="height:60rpx"></view>
+</scroll-view>
+
+<!-- ══════════════════════════════════════
+     Tab 4: 经营分析
+══════════════════════════════════════ -->
+<scroll-view wx:if="{{activeTab === 'analytics'}}" class="tab-scroll" scroll-y enhanced show-scrollbar="{{false}}">
+
+  <!-- 时间切换 -->
+  <view class="anal-period-row">
+    <view wx:for="{{analPeriods}}" wx:key="val"
+      class="anal-period-chip {{analCurrentPeriod === item.val ? 'anal-period-chip-on' : ''}}"
+      data-val="{{item.val}}" bindtap="onAnalPeriod">{{item.label}}</view>
+  </view>
+
+  <!-- loading 提示 -->
+  <view wx:if="{{analIsLoading}}" class="anal-loading-bar">
+    <text class="anal-loading-bar-txt">数据加载中…</text>
+  </view>
+
+  <!-- 核心指标 -->
+  <view class="anal-metric-grid">
+    <view class="anal-metric-card card {{analIsLoading ? 'anal-skeleton-pulse' : ''}}">
+      <text class="anal-metric-label">营业额</text>
+      <text class="anal-metric-value">{{analKpi.revenue}}<text class="anal-metric-unit">元</text></text>
+      <text class="anal-metric-trend {{analKpi.revenueTrendUp ? 'anal-trend-up' : 'anal-trend-down'}}">{{analKpi.revenueTrend}}</text>
+    </view>
+    <view class="anal-metric-card card {{analIsLoading ? 'anal-skeleton-pulse' : ''}}">
+      <text class="anal-metric-label">毛利润</text>
+      <text class="anal-metric-value">{{analKpi.profit}}<text class="anal-metric-unit">元</text></text>
+      <text class="anal-metric-trend anal-trend-up">毛利率 {{analKpi.margin}}%</text>
+    </view>
+    <view class="anal-metric-card card {{analIsLoading ? 'anal-skeleton-pulse' : ''}}">
+      <text class="anal-metric-label">出杯数</text>
+      <text class="anal-metric-value">{{analKpi.cups}}<text class="anal-metric-unit">杯</text></text>
+      <text class="anal-metric-trend anal-trend-up">客单 ¥{{analKpi.avgOrder}}</text>
+    </view>
+    <view class="anal-metric-card card {{analIsLoading ? 'anal-skeleton-pulse' : ''}}">
+      <text class="anal-metric-label">原料消耗</text>
+      <text class="anal-metric-value">¥{{analKpi.materialCost}}</text>
+      <text class="anal-metric-trend anal-trend-down">成本率 {{analKpi.costRate}}%</text>
+    </view>
+  </view>
+
+  <!-- 折线图 -->
+  <view class="anal-section-header">
+    <text class="anal-section-title">📈 销售趋势</text>
+  </view>
+  <view class="anal-chart-card card">
+    <canvas type="2d" id="aiLineChart" style="z-index:1;width:{{analChartW}}px;height:{{analLineH}}px;display:block;"></canvas>
+    <view class="anal-chart-legend">
+      <view class="anal-legend-item"><view class="anal-legend-dot" style="background:#c9a96e"></view><text class="anal-legend-label">营业额</text></view>
+      <view class="anal-legend-item"><view class="anal-legend-dot" style="background:#4caf84"></view><text class="anal-legend-label">毛利润</text></view>
+    </view>
+  </view>
+
+  <!-- 原料消耗排行 -->
+  <view class="anal-section-header">
+    <text class="anal-section-title">🧪 原料消耗 Top5</text>
+  </view>
+  <view class="anal-rank-card card">
+    <block wx:if="{{analTopIngredients.length > 0}}">
+      <view wx:for="{{analTopIngredients}}" wx:key="name"
+        class="anal-rank-item {{index < analTopIngredients.length-1 ? 'anal-rank-item-border' : ''}}">
+        <view class="anal-rank-num anal-rank-num-{{index+1}}">{{index+1}}</view>
+        <view class="anal-rank-info">
+          <text class="anal-rank-name">{{item.name}}</text>
+          <text class="anal-rank-sub">消耗 {{item.used}} · 成本 ¥{{item.cost}}</text>
+        </view>
+        <view class="anal-rank-bar-wrap">
+          <view class="anal-rank-bar" style="width:{{item.pct}}%;background:{{item.color}}"></view>
+        </view>
+      </view>
+    </block>
+    <view wx:elif="{{!analIsLoading}}" class="anal-empty-hint">
+      <text>暂无出库记录</text>
+      <text class="anal-empty-sub">在原料页面手动出库后，数据将展示在这里</text>
+    </view>
+    <view wx:else class="anal-skeleton-list">
+      <view wx:for="{{[1,2,3]}}" wx:key="*this" class="anal-skeleton-row"></view>
+    </view>
+  </view>
+
+  <!-- 库存健康度柱状图 -->
+  <view class="anal-section-header">
+    <text class="anal-section-title">📦 库存健康度</text>
+  </view>
+  <view class="anal-chart-card card">
+    <canvas type="2d" id="aiBarChart" style="width:{{analChartW}}px;height:{{analBarH}}px;display:block;"></canvas>
+    <view wx:if="{{analIsEmpty && !analIsLoading}}" class="anal-chart-empty">
+      <text class="anal-chart-empty-txt">添加原料后查看库存分布</text>
+    </view>
+  </view>
+
+  <!-- AI 经营建议 -->
+  <view class="anal-section-header anal-advice-header">
+    <text class="anal-section-title">✨ AI 经营建议</text>
+    <view wx:if="{{analIsPro}}" class="anal-advice-refresh {{analAiAdviceLoading ? 'anal-advice-refresh-loading' : ''}}" bindtap="onAnalRefreshAdvice"><text>↻</text></view>
+    <view wx:if="{{!analIsPro}}" class="anal-pro-badge">Pro</view>
+  </view>
+
+  <view wx:if="{{analIsPro && analAiAdvice.length === 0 && !analAiAdviceLoading && !analAiAdviceError}}" class="anal-advice-trigger card" bindtap="onAnalAIAdvice">
+    <text class="anal-advice-trigger-icon">✦</text>
+    <view class="anal-advice-trigger-body">
+      <text class="anal-advice-trigger-title">生成本期经营建议</text>
+      <text class="anal-advice-trigger-sub">基于你的真实数据，AI 给出具体可行的建议（每天 3 次）</text>
+    </view>
+    <text class="anal-advice-trigger-arrow">›</text>
+  </view>
+  <view wx:elif="{{analIsPro && analAiAdviceLoading}}" class="anal-advice-trigger card">
+    <text class="anal-advice-trigger-icon">✦</text>
+    <view class="anal-advice-trigger-body">
+      <text class="anal-advice-trigger-title">AI 正在分析数据…</text>
+      <view class="anal-advice-sk-list">
+        <view wx:for="{{[1,2,3]}}" wx:key="*this" class="anal-skeleton-row"></view>
+      </view>
+    </view>
+  </view>
+  <view wx:elif="{{analIsPro && analAiAdvice.length > 0}}" class="anal-advice-list">
+    <view wx:for="{{analAiAdvice}}" wx:key="title" class="anal-advice-card card">
+      <text class="anal-advice-icon">{{item.icon}}</text>
+      <view class="anal-advice-body">
+        <text class="anal-advice-title">{{item.title}}</text>
+        <text class="anal-advice-text">{{item.text}}</text>
+      </view>
+    </view>
+  </view>
+  <view wx:elif="{{analIsPro && analAiAdviceError}}" class="anal-advice-error card">
+    <text class="anal-advice-error-txt">{{analAiAdviceError}}</text>
+    <view class="anal-advice-retry" bindtap="onAnalAIAdvice">重试</view>
+  </view>
+
+  <view wx:if="{{!analIsPro}}" class="anal-upsell card" bindtap="onAnalAIAdvice">
+    <view class="anal-upsell-left">
+      <text class="anal-upsell-icon">🔒</text>
+      <view class="anal-upsell-body">
+        <text class="anal-upsell-title">AI 经营建议（Pro 专属）</text>
+        <text class="anal-upsell-sub">每天 3 次智能分析 · 基于真实经营数据</text>
+      </view>
+    </view>
+    <view class="anal-upsell-cta">升级</view>
+  </view>
+
+  <view wx:if="{{analIsEmpty && !analIsLoading}}" class="anal-advice-list" style="margin-top:8rpx">
+    <view class="anal-advice-card card">
+      <text class="anal-advice-icon">📊</text>
+      <view class="anal-advice-body">
+        <text class="anal-advice-title">开始记录，获取分析</text>
+        <text class="anal-advice-text">在原料页面进行出库操作后，经营数据将自动聚合展示。</text>
+      </view>
+    </view>
+  </view>
+  <view wx:if="{{analStockDist && analStockDist.raw && analStockDist.raw.danger > 0}}" class="anal-advice-list">
+    <view class="anal-advice-card card anal-advice-warn">
+      <text class="anal-advice-icon">⚠️</text>
+      <view class="anal-advice-body">
+        <text class="anal-advice-title">库存告急提醒</text>
+        <text class="anal-advice-text">有 {{analStockDist.raw.danger}} 种原料库存告急，建议尽快补货。</text>
+      </view>
+    </view>
+  </view>
+
+  <view style="height:60rpx"></view>
+</scroll-view>
+
+</view>

@@ -1,0 +1,145 @@
+/* pages/ingredient-form/ingredient-form.wxss */
+
+.form-scroll { height: 100vh; background: #0d0e12; }
+
+/* ── 扫码卡片 ── */
+.scan-card {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  margin: 24rpx 32rpx 16rpx;
+  padding: 28rpx 32rpx;
+  gap: 20rpx;
+}
+
+.scan-card-left { flex: 1; display: flex; flex-direction: column; gap: 8rpx; }
+.scan-card-title { font-size: 28rpx; font-weight: 700; color: #f0ede8; display: block; }
+.scan-card-sub   { font-size: 22rpx; color: #9a98a0; display: block; }
+
+.scan-card-btn {
+  flex-shrink: 0;
+  padding: 16rpx 32rpx;
+  border-radius: 20rpx;
+  font-size: 26rpx;
+  font-weight: 700;
+  text-align: center;
+  min-width: 120rpx;
+}
+
+.scan-card-btn.idle    { background: linear-gradient(135deg,#c9a96e,#a67c3e); color:#0d0e12; }
+.scan-card-btn.loading { background: rgba(201,169,110,0.15); color: #c9a96e; border: 2rpx solid rgba(201,169,110,0.3); }
+.scan-card-btn.ok      { background: rgba(76,175,132,0.15);  color: #4caf84; border: 2rpx solid rgba(76,175,132,0.3); }
+.scan-card-btn.fail    { background: rgba(224,92,92,0.12);   color: #e05c5c; border: 2rpx solid rgba(224,92,92,0.25); }
+
+/* ── 扫码提示条 ── */
+.scan-hint-bar {
+  margin: 0 32rpx 16rpx;
+  padding: 16rpx 24rpx;
+  border-radius: 16rpx;
+  font-size: 24rpx;
+  line-height: 1.6;
+}
+
+.scan-hint-ok   { background: rgba(76,175,132,0.1);  color: #4caf84; border: 2rpx solid rgba(76,175,132,0.2); }
+.scan-hint-warn { background: rgba(224,154,58,0.1);  color: #e09a3a; border: 2rpx solid rgba(224,154,58,0.2); }
+.scan-hint-fail { background: rgba(224,92,92,0.08);  color: #e05c5c; border: 2rpx solid rgba(224,92,92,0.2); }
+
+/* ── 表单区块 ── */
+.form-section {
+  margin: 0 32rpx 20rpx;
+  overflow: hidden;
+}
+
+.form-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 28rpx 32rpx;
+  gap: 20rpx;
+  min-height: 96rpx;
+}
+
+.form-row-col {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16rpx;
+}
+
+.form-divider { height: 2rpx; background: #2a2d38; margin: 0 32rpx; }
+
+.form-label-wrap { display: flex; flex-direction: column; gap: 4rpx; }
+.form-label { font-size: 26rpx; color: #9a98a0; flex-shrink: 0; min-width: 140rpx; display: block; }
+.form-label-required::before { content: '* '; color: #e05c5c; }
+.form-label-hint { font-size: 20rpx; color: #5c5b65; display: block; }
+
+.form-input {
+  flex: 1;
+  font-size: 28rpx;
+  color: #f0ede8;
+  text-align: right;
+  background: none;
+  min-width: 0;
+}
+
+.form-input-num { text-align: right; max-width: 160rpx; }
+.form-placeholder { color: #5c5b65; }
+
+.form-input-right {
+  flex: 1;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8rpx;
+}
+
+.form-unit-label { font-size: 24rpx; color: #5c5b65; flex-shrink: 0; }
+
+.inline-scan-btn {
+  font-size: 32rpx;
+  padding: 4rpx 12rpx;
+  background: #1e2029;
+  border: 2rpx solid #2a2d38;
+  border-radius: 12rpx;
+  flex-shrink: 0;
+}
+
+/* ── 品类/单位选择 ── */
+.option-row {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 14rpx;
+  width: 100%;
+}
+
+.option-chip {
+  padding: 12rpx 24rpx;
+  border-radius: 40rpx;
+  font-size: 24rpx;
+  font-weight: 500;
+  border: 2rpx solid #2a2d38;
+  color: #9a98a0;
+  background: #1e2029;
+}
+
+.option-chip-active {
+  background: rgba(201,169,110,0.12);
+  border-color: rgba(201,169,110,0.4);
+  color: #c9a96e;
+}
+
+/* ── 错误提示 ── */
+.error-bar {
+  margin: 0 32rpx 16rpx;
+  padding: 16rpx 24rpx;
+  border-radius: 16rpx;
+  background: rgba(224,92,92,0.08);
+  border: 2rpx solid rgba(224,92,92,0.25);
+  font-size: 26rpx;
+  color: #e05c5c;
+}
+
+/* ── 提交 ── */
+.submit-area { padding: 8rpx 32rpx 0; }

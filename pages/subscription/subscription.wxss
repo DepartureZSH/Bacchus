@@ -1,0 +1,222 @@
+/* pages/subscription/subscription.wxss */
+.sub-scroll { height: 100vh; background: #0d0e12; }
+
+/* ── 当前状态卡 ── */
+.current-card { margin: 24rpx 32rpx 20rpx; padding: 32rpx; }
+
+.current-badge {
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 10rpx;
+  padding: 8rpx 24rpx;
+  border-radius: 40rpx;
+  margin-bottom: 24rpx;
+}
+.badge-pro  { background: linear-gradient(135deg,#c9a96e,#a67c3e); }
+.badge-free { background: #1e2029; border: 2rpx solid #2a2d38; }
+
+.current-badge-icon { font-size: 24rpx; color: #0d0e12; font-weight: 800; }
+.current-badge-text { font-size: 26rpx; font-weight: 700; color: #0d0e12; }
+.badge-free .current-badge-icon,
+.badge-free .current-badge-text { color: #9a98a0; }
+
+.current-expiry { font-size: 28rpx; font-weight: 600; color: #f0ede8; display: block; margin-bottom: 16rpx; }
+.free-hint      { color: #9a98a0; font-weight: 400; font-size: 26rpx; }
+.current-sub    { font-size: 22rpx; color: #5c5b65; display: block; margin-top: 10rpx; }
+
+.expiry-bar-bg  { height: 8rpx; background: #2a2d38; border-radius: 4rpx; overflow: hidden; }
+.expiry-bar     { height: 8rpx; background: linear-gradient(90deg,#c9a96e,#4caf84); border-radius: 4rpx; }
+
+.ai-quota-bar   { margin-top: 12rpx; }
+.ai-quota-label {
+  display: flex; flex-direction: row; justify-content: space-between;
+  font-size: 22rpx; color: #9a98a0; margin-bottom: 10rpx;
+}
+.ai-quota-bg    { height: 8rpx; background: #2a2d38; border-radius: 4rpx; overflow: hidden; }
+.ai-quota-fill  { height: 8rpx; background: #c9a96e; border-radius: 4rpx; }
+
+/* ── section label ── */
+.section-label {
+  font-size: 22rpx; font-weight: 700; color: #5c5b65;
+  letter-spacing: 2rpx; padding: 4rpx 32rpx 16rpx; display: block;
+}
+
+/* ── 对比表 ── */
+.compare-card { margin: 0 32rpx 24rpx; overflow: hidden; }
+
+.compare-header {
+  display: flex; flex-direction: row; align-items: center;
+  padding: 20rpx 28rpx;
+  background: #1a1c25;
+}
+.compare-divider { height: 2rpx; background: #2a2d38; }
+
+.compare-feature-col { flex: 1; min-width: 0; }
+.compare-plan-col {
+  width: 140rpx;
+  display: flex; flex-direction: column; align-items: center; gap: 4rpx; flex-shrink: 0;
+}
+.compare-plan-col-pro { background: rgba(201,169,110,0.05); }
+
+.plan-name       { font-size: 26rpx; font-weight: 700; color: #9a98a0; display: block; }
+.plan-pro        { color: #c9a96e; }
+.plan-free       { color: #5c5b65; }
+.plan-price      { font-size: 22rpx; color: #5c5b65; display: block; }
+.plan-price-pro  { color: #c9a96e; }
+
+.compare-row {
+  display: flex; flex-direction: row; align-items: center;
+  padding: 20rpx 28rpx;
+}
+.compare-row-border { border-bottom: 2rpx solid #2a2d38; }
+
+.feature-name { font-size: 26rpx; color: #f0ede8; display: block; }
+.feature-hint { font-size: 20rpx; color: #5c5b65; display: block; margin-top: 4rpx; }
+
+.compare-val    { font-size: 24rpx; font-weight: 600; text-align: center; display: block; }
+.val-ok         { color: #4caf84; font-size: 28rpx; }
+.val-no         { color: #e05c5c; font-size: 28rpx; }
+.val-text       { color: #9a98a0; }
+.val-text-pro   { color: #c9a96e; }
+
+/* ── 套餐卡 ── */
+.plan-list { padding: 0 32rpx; display: flex; flex-direction: column; gap: 16rpx; }
+
+.plan-card {
+  padding: 28rpx 32rpx;
+  position: relative;
+  overflow: hidden;
+}
+.plan-card-selected {
+  border-color: rgba(201,169,110,0.6) !important;
+  background: rgba(201,169,110,0.05);
+}
+
+.plan-card-header {
+  display: flex; flex-direction: row; align-items: center; justify-content: space-between;
+}
+.plan-card-left { display: flex; flex-direction: row; align-items: center; gap: 14rpx; }
+.plan-card-name { font-size: 30rpx; font-weight: 700; color: #f0ede8; }
+
+.plan-tag {
+  padding: 4rpx 14rpx; border-radius: 8rpx; font-size: 20rpx; font-weight: 700;
+  background: rgba(201,169,110,0.15); color: #c9a96e; border: 2rpx solid rgba(201,169,110,0.3);
+}
+
+.plan-card-price { text-align: right; }
+.plan-card-num   { font-size: 40rpx; font-weight: 800; color: #c9a96e; display: block; line-height: 1; }
+.plan-card-period{ font-size: 22rpx; color: #9a98a0; display: block; }
+
+.plan-saving {
+  margin-top: 10rpx; font-size: 22rpx; color: #4caf84;
+}
+
+.plan-radio {
+  position: absolute; right: 32rpx; bottom: 32rpx;
+  width: 36rpx; height: 36rpx; border-radius: 50%;
+  border: 3rpx solid #2a2d38;
+  display: flex; flex-direction: row; align-items: center; justify-content: center;
+}
+.plan-radio-on   { border-color: #c9a96e; background: rgba(201,169,110,0.15); }
+.plan-radio-dot  { width: 18rpx; height: 18rpx; border-radius: 50%; background: #c9a96e; }
+
+/* ── 首单优惠横幅 ── */
+.promo-banner {
+  display: flex; flex-direction: row; align-items: center; gap: 20rpx;
+  margin: 16rpx 32rpx 0;
+  background: rgba(76,175,132,0.08);
+  border: 2rpx solid rgba(76,175,132,0.2);
+  border-radius: 20rpx;
+  padding: 20rpx 28rpx;
+}
+.promo-icon { font-size: 40rpx; flex-shrink: 0; }
+.promo-body { flex: 1; display: flex; flex-direction: column; gap: 6rpx; }
+.promo-title{ font-size: 26rpx; font-weight: 700; color: #4caf84; display: block; }
+.promo-sub  { font-size: 22rpx; color: #9a98a0; display: block; }
+
+/* ── 订阅按钮 ── */
+.subscribe-area { padding: 24rpx 32rpx 0; }
+.subscribe-btn {
+  background: linear-gradient(135deg,#c9a96e,#a67c3e);
+  border-radius: 32rpx; padding: 32rpx;
+  display: flex; flex-direction: column; align-items: center; gap: 6rpx;
+}
+.subscribe-btn-text { font-size: 32rpx; font-weight: 700; color: #0d0e12; display: block; }
+.subscribe-btn-sub  { font-size: 22rpx; color: rgba(13,14,18,0.6); display: block; }
+.subscribe-hint { display: block; text-align: center; font-size: 22rpx; color: #5c5b65; margin-top: 14rpx; }
+
+/* ── Pro 管理区 ── */
+.manage-card { margin: 0 32rpx 24rpx; overflow: hidden; }
+.manage-row {
+  display: flex; flex-direction: row; align-items: center;
+  padding: 28rpx 32rpx; gap: 16rpx;
+}
+.manage-divider { height: 2rpx; background: #2a2d38; margin: 0 32rpx; }
+.manage-icon  { font-size: 32rpx; flex-shrink: 0; }
+.manage-label { flex: 1; font-size: 28rpx; color: #f0ede8; }
+.manage-arrow { font-size: 32rpx; color: #5c5b65; }
+.cancel-text  { color: #e05c5c; }
+
+/* ── FAQ ── */
+.faq-list { padding: 0 32rpx; display: flex; flex-direction: column; gap: 12rpx; }
+.faq-card { padding: 0; overflow: hidden; }
+.faq-row  {
+  display: flex; flex-direction: row; align-items: center;
+  justify-content: space-between; padding: 24rpx 32rpx; gap: 16rpx;
+}
+.faq-q { flex: 1; font-size: 26rpx; color: #f0ede8; line-height: 1.5; font-weight: 500; }
+.faq-arrow { font-size: 32rpx; color: #5c5b65; flex-shrink: 0; display: inline-block; }
+.faq-open  { transform: rotate(90deg); color: #c9a96e; }
+.faq-a {
+  font-size: 24rpx; color: #9a98a0; line-height: 1.8;
+  padding: 0 32rpx 24rpx; display: block;
+  border-top: 2rpx solid #2a2d38; padding-top: 16rpx; margin-top: -4rpx;
+}
+
+/* ── Phase 4 新增样式 ── */
+.offline-banner {
+  margin: 20rpx 32rpx 0;
+  background: rgba(92,139,214,0.12);
+  border: 2rpx solid rgba(92,139,214,0.3);
+  border-radius: 16rpx;
+  padding: 18rpx 24rpx;
+  display: flex; align-items: center; gap: 12rpx;
+}
+.offline-icon { font-size: 30rpx; }
+.offline-text { font-size: 24rpx; color: #5c8fd6; }
+
+.expiry-row {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 12rpx;
+}
+.days-left-chip {
+  font-size: 22rpx; font-weight: 700; color: #c9a96e;
+  background: rgba(201,169,110,0.12);
+  border-radius: 20rpx; padding: 4rpx 14rpx;
+}
+.renew-status-row {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-top: 12rpx;
+}
+.auto-renew-chip {
+  font-size: 22rpx; border-radius: 20rpx; padding: 4rpx 14rpx;
+}
+.chip-on  { color: #4caf84; background: rgba(76,175,132,0.12); }
+.chip-off { color: #9a98a0; background: rgba(154,152,160,0.12); }
+
+.quota-warn { color: #e05c5c !important; font-weight: 700; }
+
+.subscribe-btn-disabled { opacity: 0.5; }
+
+.manage-row-loading { opacity: 0.6; }
+
+.cancel-note {
+  display: block; text-align: center; font-size: 22rpx;
+  color: #5c5b65; margin: -8rpx 32rpx 24rpx;
+}
+
+.plan-orig-price {
+  font-size: 22rpx; color: #5c5b65;
+  text-decoration: line-through; margin-right: 6rpx;
+}
