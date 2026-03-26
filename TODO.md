@@ -43,6 +43,10 @@
 
 claude --resume 41f5b270-24b7-4d02-b298-699db8bbe15c
 
+git config --global user.name  "Stars Lord"
+git config --global user.email "oncwnuIufNPSK_F9VBZKD1u4wlzE@git.weixin.qq.com"
+git clone https://git.weixin.qq.com/15828030238/Bacchus_Bar_Demo.git
+
 新需求：
 TODO 将所有图标都统一存储为svg保存到assets\icons
 TODO 将所有标签（包括AI生成的风格词、配方/合集标签、搜索标签）都写入数据库管理
