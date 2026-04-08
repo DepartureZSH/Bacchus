@@ -1,0 +1,111 @@
+<!-- pages/admin-import/admin-import.wxml -->
+<view class="import-root">
+
+  <!-- ── 空状态：选择文件 ── -->
+  <view wx:if="{{!recipes.length && !parsing}}" class="import-empty">
+    <text class="import-empty-icon">📥</text>
+    <text class="import-empty-hint">请选择配方 JSON / JSONL 文件</text>
+    <text class="import-empty-sub">将文件发送到微信聊天后，点击下方按钮选择</text>
+    <view class="import-file-btn" catchtap="onSelectFile">选择文件</view>
+  </view>
+
+  <!-- ── 解析中 ── -->
+  <view wx:elif="{{parsing}}" class="import-loading">
+    <view class="import-loading-dots">
+      <view class="import-dot import-dot-1"></view>
+      <view class="import-dot import-dot-2"></view>
+      <view class="import-dot import-dot-3"></view>
+    </view>
+    <text class="import-loading-txt">解析中…</text>
+  </view>
+
+  <!-- ── 配方列表 ── -->
+  <block wx:else>
+
+    <!-- 顶栏：全选 + 计数 + 重选 -->
+    <view class="import-topbar">
+      <view class="import-topbar-left" catchtap="onToggleAll">
+        <view class="import-checkbox {{selectAll ? 'checkbox-on' : (selectedCount > 0 ? 'checkbox-partial' : '')}}">
+          <text wx:if="{{selectAll}}" class="checkbox-tick">✓</text>
+          <text wx:elif="{{selectedCount > 0}}" class="checkbox-tick">—</text>
+        </view>
+        <text class="import-count-txt">已选 <text class="import-count-num">{{selectedCount}}</text> / {{totalCount}}</text>
+      </view>
+      <view class="import-reselect" catchtap="onSelectFile">
+        <text class="import-reselect-txt">重选文件</text>
+      </view>
+    </view>
+
+    <!-- 文件名提示 -->
+    <view class="import-filename-bar">
+      <text class="import-filename-icon">📄</text>
+      <text class="import-filename-txt">{{fileName}}</text>
+    </view>
+
+    <!-- 配方卡片列表 -->
+    <scroll-view class="import-scroll" scroll-y enhanced show-scrollbar="{{false}}">
+      <view class="import-card-list">
+
+        <view wx:for="{{recipes}}" wx:key="_idx" wx:for-item="r"
+          class="import-card {{selected[index] ? 'import-card-on' : ''}}"
+          data-index="{{index}}" catchtap="onToggleItem">
+
+          <!-- 勾选框 -->
+          <view class="import-cb-wrap" catchtap="onToggleItem" data-index="{{index}}">
+            <view class="import-checkbox {{selected[index] ? 'checkbox-on' : ''}}">
+              <text wx:if="{{selected[index]}}" class="checkbox-tick">✓</text>
+            </view>
+          </view>
+
+          <!-- 卡片内容 -->
+          <view class="import-card-body">
+
+            <!-- 标题行：emoji + 名称 + 标签 -->
+            <view class="import-rc-top">
+              <text class="import-rc-emoji">{{r.emoji}}</text>
+              <view class="import-rc-meta">
+                <text class="import-rc-name">{{r.name}}</text>
+                <view class="import-rc-tags">
+                  <view wx:if="{{r.base}}"  class="import-rc-tag">{{r.base}}</view>
+                  <view wx:if="{{r.style}}" class="import-rc-tag">{{r.style}}</view>
+                  <view wx:if="{{r.abv}}"   class="import-rc-tag import-rc-tag-dim">{{r.abv}}%</view>
+                </view>
+              </view>
+            </view>
+
+            <!-- 描述 -->
+            <text wx:if="{{r.desc}}" class="import-rc-desc">{{r.desc}}</text>
+
+            <!-- 原料预览 -->
+            <view class="import-rc-ings">
+              <text wx:for="{{r.ingredientPreview}}" wx:key="name" wx:for-item="ing"
+                class="import-rc-ing">· {{ing.name}}</text>
+              <text wx:if="{{r.moreCount > 0}}" class="import-rc-more">+{{r.moreCount}} 种</text>
+            </view>
+
+            <!-- 来源标签 + 公开标记 -->
+            <view class="import-rc-footer">
+              <view wx:if="{{r.category}}" class="import-src-tag">{{r.category}}</view>
+              <view wx:if="{{r.source}}"   class="import-src-tag">{{r.source}}</view>
+              <view wx:if="{{r.isPublic}}" class="import-pub-badge">公开</view>
+            </view>
+
+          </view>
+        </view>
+
+      </view>
+      <view style="height:160rpx"></view>
+    </scroll-view>
+
+    <!-- 底部操作栏 -->
+    <view class="import-action-bar">
+      <view class="import-action-btn {{(selectedCount === 0 || importing) ? 'import-btn-disabled' : ''}}"
+        catchtap="onImport">
+        <text wx:if="{{importing}}">导入中…</text>
+        <text wx:else>导入 {{selectedCount}} 条配方</text>
+      </view>
+    </view>
+
+  </block>
+
+</view>

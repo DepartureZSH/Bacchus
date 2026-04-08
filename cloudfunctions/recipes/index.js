@@ -1,27 +1,29 @@
 // cloudfunctions/recipes/index.js
-// 云函数：recipes  —  用户配方 + 收藏 + 合集 CRUD + AI 生成（Dify 工作流）
+// 云函数：recipes  —  用户配方 + 收藏 + 合集 CRUD + AI 生成（百炼工作流应用）
 //
 // 集合：recipes（每条文档 = 一个用户配方）
 //       collections（每条文档 = 一个合集）
 //
 // Actions:
-//   list         - 获取我的配方列表（含收藏标记）
-//   get          - 获取单个配方详情
-//   add          - 新增配方
-//   update       - 更新配方
-//   remove       - 删除配方
-//   toggleFav    - 切换收藏（写到 shops.favRecipeIds）
-//   getFavIds    - 获取收藏 ID 集合
-//   collList     - 获取合集列表
-//   collAdd      - 新建合集
-//   collUpdate   - 更新合集
-//   collRemove   - 删除合集
-//   collToggle   - 向合集添加/移除配方
-//   aiGenerate   - AI 生成配方（Dify 工作流）
-//   aiQuota      - 查询 AI 配方剩余次数
+//   list            - 获取我的配方列表（含收藏标记）
+//   get             - 获取单个配方详情
+//   add             - 新增配方
+//   update          - 更新配方
+//   remove          - 删除配方
+//   toggleFav       - 切换收藏（写到 shops.favRecipeIds）
+//   getFavIds       - 获取收藏 ID 集合
+//   collList        - 获取合集列表
+//   collAdd         - 新建合集
+//   collUpdate      - 更新合集
+//   collRemove      - 删除合集
+//   collToggle      - 向合集添加/移除配方
+//   getRecipeConfig - 返回口味/基酒选项（供前端动态加载）
+//   aiGenerate      - AI 生成配方（百炼工作流应用）
+//   aiQuota         - 查询 AI 配方剩余次数
 
 const cloud = require('wx-server-sdk')
 const https = require('https')
+const CFG   = require('./config')
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV })
 const db   = cloud.database()
 const _    = db.command
@@ -32,6 +34,7 @@ const iCol = db.collection('recipe_images')
 const pCol = db.collection('public_recipes')
 
 const RECIPE_QUOTA_FREE = 5
+const ADMIN_OPENID      = 'osgVb13vGJMbLpDbN2VOilX83epU'
 
 // ── 主入口 ────────────────────────────────────────────────
 exports.main = async (event) => {
@@ -51,8 +54,9 @@ exports.main = async (event) => {
     case 'collUpdate':  return await actionCollUpdate(OPENID, event.id, event.payload)
     case 'collRemove':  return await actionCollRemove(OPENID, event.id)
     case 'collToggle':  return await actionCollToggle(OPENID, event.collId, event.recipeId)
-    case 'aiGenerate':  return await actionAIGenerate(OPENID, event)
-    case 'aiQuota':     return await actionAIQuota(OPENID)
+    case 'getRecipeConfig': return actionGetRecipeConfig()
+    case 'aiGenerate':      return await actionAIGenerate(OPENID, event)
+    case 'aiQuota':         return await actionAIQuota(OPENID)
     // ── recipe_images 集合操作 ────────────────────────────
     case 'imageList':      return await actionImageList(OPENID, event)
     case 'imageSetCover':  return await actionImageSetCover(OPENID, event)
@@ -60,6 +64,7 @@ exports.main = async (event) => {
     case 'imageCoverMap':  return await actionImageCoverMap(OPENID)
     // ── public_recipes 集合操作 ──────────────────────────
     case 'discoverList':      return await actionDiscoverList(OPENID, event)
+    case 'discoverTags':      return await actionDiscoverTags()
     case 'discoverPublish':   return await actionDiscoverPublish(OPENID, event)
     case 'discoverUnpublish': return await actionDiscoverUnpublish(OPENID, event)
     case 'discoverLike':      return await actionDiscoverLike(OPENID, event)
@@ -78,6 +83,12 @@ exports.main = async (event) => {
     case 'detailComment':     return await actionDetailComment(OPENID, event.publicId, event.content)
     case 'detailCommentList': return await actionDetailCommentList(OPENID, event.publicId, event.lastId, event.limit)
     case 'detailTagVote':     return await actionDetailTagVote(OPENID, event.publicId, event.tags)
+    // ── 批量操作 ─────────────────────────────────────────
+    case 'collBulkAdd': return await actionCollBulkAdd(OPENID, event)
+    case 'bulkRemove':  return await actionBulkRemove(OPENID, event)
+    // ── 管理员操作 ────────────────────────────────────────
+    case 'adminCheck':      return { isAdmin: OPENID === ADMIN_OPENID }
+    case 'adminBulkImport': return await actionAdminBulkImport(OPENID, event)
     default:            return { success: false, error: 'unknown_action' }
   }
 }
@@ -374,16 +385,24 @@ async function actionCollToggle(openid, collId, recipeId) {
   }
 }
 
-// ── aiGenerate：调用 Dify 工作流生成配方 ─────────────────
+// ── getRecipeConfig：返回前端可用的口味/基酒选项 ─────────
+function actionGetRecipeConfig() {
+  return {
+    success:       true,
+    flavorOptions: CFG.FLAVOR_OPTIONS,
+    baseOptions:   CFG.BASE_OPTIONS,
+  }
+}
+
+// ── aiGenerate：百炼工作流应用生成配方（主流程）──────────
 async function actionAIGenerate(openid, event) {
-  const { flavors = [], base = '随机', note = '' } = event
+  const { flavors = [], base = '随机', customPrompt = '' } = event
   try {
-    // 配额检查
     const { data: [shop] } = await sCol.where({ _openid: openid }).limit(1).get()
     if (!shop) return { success: false, error: 'shop_not_found' }
 
-    const isPro     = shop.plan === 'pro'
-    const now       = Date.now()
+    const isPro      = (shop.plan || '').toLowerCase() === 'pro'
+    const now        = Date.now()
     const needsReset = _needsMonthlyReset(shop.recipeAiQuotaReset || 0, now)
     let currentUsed  = needsReset ? 0 : (shop.recipeAiQuotaUsed || 0)
     if (needsReset) {
@@ -393,17 +412,15 @@ async function actionAIGenerate(openid, event) {
       return { success: false, error: 'quota_exceeded', quotaUsed: currentUsed, quotaLimit: RECIPE_QUOTA_FREE }
     }
 
-    // 调用 Dify
-    const difyResult = await callDifyWorkflow({ flavors, base, note })
-    if (!difyResult.success) return { success: false, error: difyResult.error || 'ai_error' }
+    const result = await callBailianWorkflow({ flavors, base, customPrompt })
+    if (!result.success) return { success: false, error: result.error || 'ai_error' }
 
-    // 扣减配额
     await sCol.doc(shop._id).update({ data: { recipeAiQuotaUsed: _.inc(1) } })
     currentUsed++
 
     return {
       success:        true,
-      recipe:         difyResult.recipe,
+      recipe:         result.recipe,
       quotaUsed:      currentUsed,
       quotaRemaining: isPro ? null : RECIPE_QUOTA_FREE - currentUsed,
     }
@@ -431,41 +448,52 @@ async function actionAIQuota(openid) {
   }
 }
 
-// ── callDifyWorkflow：/workflows/run ──────────────────────
-async function callDifyWorkflow({ flavors, base, note }) {
-  const API_KEY  = process.env.DIFY_API_KEY || ''
-  const BASE_URL = (process.env.DIFY_API_URL || 'https://api.dify.ai/v1').replace(/\/$/, '')
-  if (!API_KEY) return { success: false, error: 'DIFY_API_KEY not configured' }
+// ── callBailianWorkflow：百炼工作流应用 responses API ─────
+async function callBailianWorkflow({ flavors, base, customPrompt }) {
+  const API_KEY = process.env.BAILIAN_API_KEY || ''
+  const APP_ID  = process.env.BAILIAN_RECIPE_APP_ID || CFG.WORKFLOW_APP_ID || ''
+  if (!API_KEY) return { success: false, error: 'BAILIAN_API_KEY not configured' }
+  if (!APP_ID)  return { success: false, error: 'BAILIAN_RECIPE_APP_ID not configured' }
 
-  const flavorStr = Array.isArray(flavors) ? flavors.join('、') : String(flavors || '')
-  const body = JSON.stringify({
-    inputs: {
-      flavors:  flavorStr,
-      base:     base  || '随机',
-      note:     note  || '',
-    },
-    response_mode: 'blocking',
-    user:          'bacchus-cloud',
-  })
+  const bizParams = {
+    flavors:       Array.isArray(flavors) ? flavors.join(', ') : String(flavors || '随机'),
+    base:          base || '随机',
+    output_format: 'json',
+  }
+  if (customPrompt) bizParams.custom_requirement = customPrompt
+
+  const url  = `https://dashscope.aliyuncs.com/api/v2/apps/agent/${APP_ID}/compatible-mode/v1/responses`
+  const body = JSON.stringify({ stream: false, biz_params: bizParams })
 
   try {
-    const rawText = await httpsPost(`${BASE_URL}/workflows/run`, {
+    const rawText = await httpsPost(url, {
       'Authorization': `Bearer ${API_KEY}`,
       'Content-Type':  'application/json',
     }, body)
 
-    const res = JSON.parse(rawText)
-    if (res.data && res.data.status === 'succeeded') {
-      const out        = res.data.outputs || {}
-      const outputText = out.result || out.text || out.output || Object.values(out)[0] || ''
-      if (!outputText) return { success: false, error: 'empty_output_from_dify' }
-      const recipe = parseRecipeOutput(outputText)
-      return { success: true, recipe }
+    const res  = JSON.parse(rawText)
+    let text   = res.result
+      || res.output_text
+      || (res.output && res.output[0] && res.output[0].content
+          && res.output[0].content[0] && res.output[0].content[0].text)
+      || ''
+    if (!text) return { success: false, error: 'empty_output' }
+
+    // 工作流输出变量包装解包：'{"result":"..."}' → 取 result 字段
+    if (text.trimStart().startsWith('{')) {
+      try {
+        const inner = JSON.parse(text)
+        if (inner && typeof inner === 'object' && !Array.isArray(inner)) {
+          text = inner.result || inner.output || inner.text || text
+        }
+      } catch (_) {}
     }
-    const errMsg = (res.data && res.data.error) || `status=${res.data && res.data.status}`
-    return { success: false, error: `dify_error: ${errMsg}` }
+
+    const recipe = parseRecipeOutput(text)
+    if (!recipe) return { success: false, error: 'parse_failed' }
+    return { success: true, recipe }
   } catch (e) {
-    console.error('[callDifyWorkflow]', e)
+    console.error('[callBailianWorkflow]', e)
     return { success: false, error: e.message }
   }
 }
@@ -474,7 +502,11 @@ function parseRecipeOutput(text) {
   if (!text) return null
   try {
     const cleaned = text.replace(/```json|```/g, '').trim()
-    const parsed  = JSON.parse(cleaned)
+    let parsed    = JSON.parse(cleaned)
+    // result 字段可能仍是 JSON 字符串，再 parse 一次
+    if (parsed && typeof parsed === 'object' && !Array.isArray(parsed) && typeof parsed.result === 'string') {
+      try { parsed = JSON.parse(parsed.result) } catch (_) {}
+    }
     return {
       emoji:       parsed.emoji       || '🍸',
       name:        parsed.name        || '未命名配方',
@@ -578,6 +610,143 @@ async function actionImageCoverMap(openid) {
   }
 }
 
+// ── adminBulkImport：管理员批量导入配方 ───────────────────
+// event.recipes: JSONL 每行解析后的对象数组
+// 字段映射：name/emoji/base/style/abv/desc/ingredients/steps/notes
+//   + tags = [category, source]（去重），category/source 原值保留
+// ── collBulkAdd：批量将配方加入合集 ──────────────────────────
+async function actionCollBulkAdd(openid, event) {
+  const { collId, recipeIds = [] } = event
+  if (!collId || !recipeIds.length) return { success: false, error: 'missing_params' }
+  try {
+    const { data: coll } = await cCol.doc(collId).get()
+    if (!coll || coll._openid !== openid) return { success: false, error: 'forbidden' }
+    const existing = new Set(coll.recipeIds || [])
+    const toAdd    = recipeIds.filter(id => !existing.has(id))
+    if (!toAdd.length) return { success: true, added: 0 }
+    await cCol.doc(collId).update({ data: { recipeIds: _.push({ each: toAdd }) } })
+    return { success: true, added: toAdd.length }
+  } catch (e) {
+    return { success: false, error: e.message }
+  }
+}
+
+// ── bulkRemove：批量删除配方 ─────────────────────────────────
+async function actionBulkRemove(openid, event) {
+  const { ids = [] } = event
+  if (!ids.length) return { success: true, removed: 0 }
+  try {
+    await Promise.all(ids.map(id =>
+      rCol.where({ _id: id, _openid: openid }).remove()
+    ))
+    return { success: true, removed: ids.length }
+  } catch (e) {
+    return { success: false, error: e.message }
+  }
+}
+
+// 跳过已存在同名配方（按 openid+name 去重）
+// isPublic=true 的配方同步写入 public_recipes
+async function actionAdminBulkImport(openid, event) {
+  if (openid !== ADMIN_OPENID) return { success: false, error: 'forbidden' }
+
+  const { recipes = [] } = event
+  if (!Array.isArray(recipes) || !recipes.length) return { success: false, error: 'empty' }
+
+  // 取已有配方名用于去重
+  const { data: existing } = await rCol.where({ _openid: openid }).field({ name: true }).limit(500).get()
+  const existingNames = new Set(existing.map(r => r.name))
+
+  const now       = Date.now()
+  let   count     = 0
+  let   skipped   = 0
+  let   pubCount  = 0
+  const errors    = []
+
+  // 解析 amount 字符串为 {amount, unit}
+  function parseAmount(str) {
+    const m = (str || '').match(/^([\d./]+)\s*(.+)$/)
+    return m ? { amount: m[1], unit: m[2].trim() } : { amount: str || '', unit: '' }
+  }
+
+  // 逐条插入（每批 5 条并发）
+  const BATCH = 5
+  for (let i = 0; i < recipes.length; i += BATCH) {
+    const batch = recipes.slice(i, i + BATCH)
+    await Promise.all(batch.map(async (r) => {
+      if (!r || !r.name) return
+      if (existingNames.has(r.name)) { skipped++; return }
+
+      try {
+        const ingredients = (r.ingredients || []).map(ing => ({
+          name: ing.name || '',
+          ...parseAmount(ing.amount),
+        }))
+
+        // tags = [category, source]，去重去空
+        const tags = [...new Set([r.category, r.source].filter(Boolean))]
+
+        const recipeData = {
+          _openid:    openid,
+          name:       r.name        || '未命名',
+          emoji:      r.emoji       || '🍹',
+          base:       r.base        || '',
+          style:      r.style       || '',
+          abv:        Number(r.abv) || 0,
+          desc:       r.desc        || '',
+          ingredients,
+          steps:      r.steps       || [],
+          notes:      r.notes       || '',
+          isAI:       false,
+          isClone:    false,
+          isOriginal: !!r.isOriginal,
+          tags,
+          category:   r.category    || '',
+          source:     r.source      || '',
+          isPublic:   false,
+          publishId:  '',
+          createdAt:  now,
+          updatedAt:  now,
+        }
+
+        const { _id: recipeId } = await rCol.add({ data: recipeData })
+        count++
+        existingNames.add(r.name)  // 防止同批次重名
+
+        if (r.isPublic) {
+          const { _id: publishId } = await pCol.add({
+            data: {
+              _openid:      openid,
+              authorOpenid: openid,
+              targetType:   'recipe',
+              targetId:     recipeId,
+              name:         recipeData.name,
+              emoji:        recipeData.emoji,
+              desc:         recipeData.desc,
+              base:         recipeData.base,
+              ingredients:  ingredients.slice(0, 10),
+              steps:        recipeData.steps,
+              notes:        recipeData.notes,
+              isAI:         false,
+              tags:         tags.slice(0, 5),
+              coverFileID:  '',
+              likeCount:    0,
+              publishedAt:  now,
+              updatedAt:    now,
+            },
+          })
+          await rCol.doc(recipeId).update({ data: { isPublic: true, publishId } })
+          pubCount++
+        }
+      } catch (e) {
+        errors.push(`${r.name}: ${e.message}`)
+      }
+    }))
+  }
+
+  return { success: true, count, skipped, pubCount, errors }
+}
+
 // ── 工具函数 ──────────────────────────────────────────────
 async function _getFavIds(openid) {
   try {
@@ -631,33 +800,105 @@ function httpsPost(url, headers, body) {
 // public_recipes 集合 — 发现页公开配方
 // ════════════════════════════════════════════════════════════
 
-// 预设标签（前端也维护同一份，保持一致）
-const PRESET_TAGS = ['果味', '清爽', '低度', '经典', '创意', '烟熏', '花香', '热带', '夏日', '甜蜜', '苦涩', '无酒精']
+// 预设标签分组（始终出现，即使尚无内容）
+const FLAVOR_TAG_SET = new Set(['果味', '甜蜜', '清爽', '苦涩', '热带', '烟熏', '花香'])
+const STYLE_TAG_SET  = new Set(['低度', '经典', '创意', '夏日', '无酒精'])
+const PRESET_FLAVOR_TAGS = [...FLAVOR_TAG_SET]
+const PRESET_STYLE_TAGS  = [...STYLE_TAG_SET]
+
+// ── discoverTags：动态标签热度排序（分三组返回）──────────
+// 取最近 100 条，按 count×10 + sumLikes×2 + recentCount×5 排序
+// 返回 { bases[], flavorTags[], styleTags[] }
+async function actionDiscoverTags() {
+  try {
+    const { data } = await pCol
+      .orderBy('publishedAt', 'desc')
+      .limit(100)
+      .field({ tags: true, likeCount: true, publishedAt: true, base: true })
+      .get()
+
+    const now = Date.now()
+    const THIRTY_DAYS = 30 * 24 * 60 * 60 * 1000
+    const baseStats   = {}
+    const flavorStats = {}
+    const styleStats  = {}
+
+    for (const r of data) {
+      const isRecent = (now - (r.publishedAt || 0)) < THIRTY_DAYS
+      const likes    = r.likeCount || 0
+      // 基酒
+      if (r.base) {
+        if (!baseStats[r.base]) baseStats[r.base] = { count: 0, sumLikes: 0, recentCount: 0 }
+        baseStats[r.base].count++
+        baseStats[r.base].sumLikes += likes
+        if (isRecent) baseStats[r.base].recentCount++
+      }
+      // 风味 / 风格标签
+      for (const tag of (r.tags || [])) {
+        if (!tag) continue
+        const bucket = FLAVOR_TAG_SET.has(tag) ? flavorStats : STYLE_TAG_SET.has(tag) ? styleStats : null
+        if (!bucket) continue
+        if (!bucket[tag]) bucket[tag] = { count: 0, sumLikes: 0, recentCount: 0 }
+        bucket[tag].count++
+        bucket[tag].sumLikes += likes
+        if (isRecent) bucket[tag].recentCount++
+      }
+    }
+
+    const sortBucket = (statsObj, presets) => {
+      for (const p of presets) if (!statsObj[p]) statsObj[p] = { count: 0, sumLikes: 0, recentCount: 0 }
+      return Object.entries(statsObj)
+        .map(([tag, s]) => ({ tag, score: s.count * 10 + s.sumLikes * 2 + s.recentCount * 5 }))
+        .sort((a, b) => b.score - a.score)
+        .map(t => t.tag)
+    }
+
+    return {
+      success:    true,
+      bases:      sortBucket(baseStats,   []),
+      flavorTags: sortBucket(flavorStats, PRESET_FLAVOR_TAGS),
+      styleTags:  sortBucket(styleStats,  PRESET_STYLE_TAGS),
+    }
+  } catch (e) {
+    console.error('[discoverTags]', e)
+    return { success: false, bases: [], flavorTags: PRESET_FLAVOR_TAGS, styleTags: PRESET_STYLE_TAGS }
+  }
+}
 
 // ── discoverList：分页查询公开配方 ────────────────────────
-// event: { tag?, keyword?, lastId?, limit? }
+// event: { base?, flavorTag?, styleTag?, aiFilter?, keyword?, offset?, limit?, targetType? }
 // 权限：所有用户可读（集合权限已在控制台设置）
 async function actionDiscoverList(openid, event) {
-  const { tag = '', keyword = '', lastId = null, limit = 20, targetType = '' } = event
+  const {
+    base = '全部', flavorTag = '全部', styleTag = '全部', aiFilter = '全部',
+    keyword = '', offset = 0, limit = 20, targetType = '',
+  } = event
   try {
-    // 构造 where 条件
-    const buildWhere = (extraTs) => {
+    // 构造 where 条件（多维 AND）
+    const buildWhere = () => {
       const w = {}
       if (targetType && targetType !== 'all') w.targetType = targetType
-      if (tag && tag !== '全部') w.tags = db.command.elemMatch(db.command.eq(tag))
-      if (extraTs) w.publishedAt = db.command.lt(extraTs)
+      if (base && base !== '全部') w.base = base
+      // 风味 + 风格标签可同时选，AND 关系
+      const tagFilters = [
+        flavorTag !== '全部' ? flavorTag : null,
+        styleTag  !== '全部' ? styleTag  : null,
+      ].filter(Boolean)
+      if (tagFilters.length === 1) {
+        w.tags = db.command.elemMatch(db.command.eq(tagFilters[0]))
+      } else if (tagFilters.length > 1) {
+        w.tags = db.command.all(tagFilters)
+      }
+      // isAI 在应用层过滤（避免依赖 DB 对缺失字段的 neq 行为）
       return w
     }
 
-    let query = pCol.where(buildWhere()).orderBy('publishedAt', 'desc')
-
-    // 分页游标
-    if (lastId) {
-      const { data: lastDoc } = await pCol.doc(lastId).get()
-      if (lastDoc) query = pCol.where(buildWhere(lastDoc.publishedAt)).orderBy('publishedAt', 'desc')
-    }
-
-    const { data } = await query.limit(limit + 1).get()
+    const { data } = await pCol
+      .where(buildWhere())
+      .orderBy('publishedAt', 'desc')
+      .skip(offset)
+      .limit(limit + 1)
+      .get()
 
     const hasMore = data.length > limit
     const list    = data.slice(0, limit)
@@ -694,15 +935,18 @@ async function actionDiscoverList(openid, event) {
       return { ...r, authorName: authorNameMap[aOpenid] || r.authorName || '酒吧' }
     })
 
-    // 关键词在应用层过滤（此时 authorName 已是实时名，支持按作者名搜索）
-    const filtered = keyword
-      ? resolved.filter(r =>
-          r.name.includes(keyword) ||
-          (r.desc || '').includes(keyword) ||
-          (r.tags || []).some(t => t.includes(keyword)) ||
-          (r.authorName || '').includes(keyword)
-        )
-      : resolved
+    // 应用层过滤：keyword + isAI（避免依赖 DB 对缺失字段的 neq 行为）
+    let filtered = resolved
+    if (aiFilter === 'AI生成') filtered = filtered.filter(r => r.isAI === true)
+    else if (aiFilter === '手创') filtered = filtered.filter(r => r.isAI !== true)
+    if (keyword) {
+      filtered = filtered.filter(r =>
+        r.name.includes(keyword) ||
+        (r.desc || '').includes(keyword) ||
+        (r.tags || []).some(t => t.includes(keyword)) ||
+        (r.authorName || '').includes(keyword)
+      )
+    }
 
     const result = filtered.map(r => ({
       ...r,
@@ -711,10 +955,10 @@ async function actionDiscoverList(openid, event) {
     }))
 
     return {
-      success: true,
-      data:    result,
-      hasMore: hasMore && filtered.length >= limit,
-      lastId:  list.length ? list[list.length - 1]._id : null,
+      success:    true,
+      data:       result,
+      hasMore:    hasMore,
+      nextOffset: offset + list.length,
     }
   } catch (e) {
     console.error('[discoverList]', e)
@@ -917,6 +1161,7 @@ async function actionCollPublish(openid, event) {
           recipeCount:  (c.recipeIds || []).length,
           coverFileID:  collCoverFileID || c.coverImage || '',
           posterFileID: posterFileID || '',
+          isAI:         false,
           updatedAt:    now,
         }
       })
@@ -937,6 +1182,7 @@ async function actionCollPublish(openid, event) {
         recipeCount: (c.recipeIds || []).length,
         coverFileID: collCoverFileID || c.coverImage || '',
         posterFileID,
+        isAI:        false,
         likeCount:   0,
         publishedAt: now,
         updatedAt:   now,
@@ -1150,26 +1396,55 @@ async function actionDetailGet(openid, publicId) {
     const { data: pub } = await pCol.doc(publicId).get()
     if (!pub) return { success: false, error: 'not_found' }
 
-    // 2. 若是合集，补全配方详情（public_recipes 只存快照，需从 recipes 集合重新拉）
-    if (pub.targetType === 'collection' && pub.recipes && pub.recipes.length > 0) {
-      const recipeIds = pub.recipes.map(r => r.id).filter(Boolean)
-      if (recipeIds.length > 0) {
+    // 2. 若是合集，加载所有配方详情
+    // public_recipes 只存前 6 条快照，需从 collections 取完整 recipeIds 再从 recipes 拉全量
+    if (pub.targetType === 'collection') {
+      // 快照 map（保留 coverFileID 等额外字段）
+      const snapMap = {}
+      ;(pub.recipes || []).forEach(s => { if (s.id) snapMap[s.id] = s })
+
+      // 从原合集文档取所有 recipeIds
+      let allRecipeIds = []
+      if (pub.targetId) {
         try {
-          const { data: fullRecs } = await rCol.where({ _id: _.in(recipeIds) }).get()
-          const fullMap = {}
-          fullRecs.forEach(r => { fullMap[r._id] = r })
-          pub.recipes = pub.recipes.map(snap => {
-            const full = fullMap[snap.id]
-            if (!full) return snap
-            return {
-              ...snap,
-              desc:        full.desc        || '',
-              ingredients: full.ingredients || [],
-              steps:       full.steps       || [],
-              notes:       full.notes       || '',
-            }
-          })
+          const { data: coll } = await cCol.doc(pub.targetId).get()
+          if (coll && coll.recipeIds && coll.recipeIds.length > 0) {
+            allRecipeIds = coll.recipeIds
+          }
         } catch (_) {}
+      }
+      // 兜底：直接用快照 ids
+      if (allRecipeIds.length === 0) {
+        allRecipeIds = Object.keys(snapMap)
+      }
+
+      if (allRecipeIds.length > 0) {
+        const fullRecs = []
+        for (let i = 0; i < allRecipeIds.length; i += 20) {
+          try {
+            const { data: batch } = await rCol.where({ _id: _.in(allRecipeIds.slice(i, i + 20)) }).get()
+            fullRecs.push(...batch)
+          } catch (_) {}
+        }
+        const fullMap = {}
+        fullRecs.forEach(r => { fullMap[r._id] = r })
+
+        pub.recipes = allRecipeIds.map(rid => {
+          const snap = snapMap[rid] || { id: rid }
+          const full = fullMap[rid]
+          if (!full) return snap
+          return {
+            ...snap,
+            id:          rid,
+            name:        full.name        || snap.name  || '',
+            emoji:       full.emoji       || snap.emoji || '🍹',
+            base:        full.base        || snap.base  || '',
+            desc:        full.desc        || '',
+            ingredients: full.ingredients || [],
+            steps:       full.steps       || [],
+            notes:       full.notes       || '',
+          }
+        })
       }
     }
 

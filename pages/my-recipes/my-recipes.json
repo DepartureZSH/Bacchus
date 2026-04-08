@@ -2,5 +2,6 @@
   "navigationBarTitleText": "配方",
   "navigationBarBackgroundColor": "#0d0e12",
   "navigationBarTextStyle": "white",
-  "backgroundColor": "#0d0e12"
+  "backgroundColor": "#0d0e12",
+  "onReachBottomDistance": 200
 }

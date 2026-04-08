@@ -15,8 +15,17 @@
     </view>
     <!-- 右侧操作按钮 -->
     <view class="top-actions">
-      <view wx:if="{{activeTab === 'mine'}}" class="top-search-btn" bindtap="onToggleSearch">🔍</view>
-      <view wx:if="{{activeTab === 'mine' && mineSubTab === 'recipe'}}"     class="top-add-btn" bindtap="onAddRecipe">＋</view>
+      <!-- 批量选择：我的配方 -->
+      <view wx:if="{{activeTab === 'mine' && mineSubTab === 'recipe' && !batchMode}}"
+        class="top-select-btn" bindtap="onEnterBatchMode">选择</view>
+      <view wx:if="{{activeTab === 'mine' && mineSubTab === 'recipe' && batchMode}}"
+        class="top-select-btn top-select-btn-on" bindtap="onExitBatchMode">取消</view>
+      <!-- 批量选择：收藏配方 -->
+      <view wx:if="{{activeTab === 'fav' && favSubTab === 'recipe' && !batchMode}}"
+        class="top-select-btn" bindtap="onEnterBatchMode">选择</view>
+      <view wx:if="{{activeTab === 'fav' && favSubTab === 'recipe' && batchMode}}"
+        class="top-select-btn top-select-btn-on" bindtap="onExitBatchMode">取消</view>
+      <view wx:if="{{activeTab === 'mine' && mineSubTab === 'recipe' && !batchMode}}"     class="top-add-btn" bindtap="onAddRecipe">＋</view>
       <view wx:if="{{activeTab === 'mine' && mineSubTab === 'collection'}}" class="top-add-btn" bindtap="onAddCollection">＋</view>
     </view>
   </view>
@@ -26,61 +35,96 @@
     <view class="global-loading-track"></view>
   </view>
 
-  <!-- 搜索栏（可收起） -->
-  <view wx:if="{{showSearch}}" class="search-bar">
-    <text class="search-icon-txt">🔍</text>
-    <input
-      class="search-input"
-      placeholder="搜索配方名称、原料…"
-      placeholder-class="search-ph"
-      value="{{searchText}}"
-      bindinput="onSearch"
-      focus="{{showSearch}}"
-    />
-    <view class="search-clear" wx:if="{{searchText}}" bindtap="onClearSearch">✕</view>
-  </view>
-
   <!-- ══ Tab: 发现（云端公开配方）══ -->
   <view wx:if="{{activeTab === 'discover'}}" class="discover-wrap">
 
-    <!-- 标签筛选条 -->
-    <scroll-view scroll-x class="filter-scroll" show-scrollbar="{{false}}">
-      <view class="filter-row">
-        <view wx:for="{{discoverTags}}" wx:key="*this"
-          class="filter-chip {{discoverTag === item ? 'chip-on' : ''}}"
-          data-val="{{item}}" catchtap="onDiscoverTag">{{item}}</view>
-      </view>
-    </scroll-view>
+    <!-- 粘性栏头：子Tab（常驻）+ 可折叠筛选区 -->
+    <view class="discover-sticky-hd">
 
-    <!-- 搜索栏 -->
-    <view class="discover-search-bar">
-      <text class="search-icon-txt">🔍</text>
-      <input
-        class="search-input"
-        placeholder="搜索名称、标签、作者…"
-        placeholder-class="search-ph"
-        value="{{discoverKeyword}}"
-        bindinput="onDiscoverSearch"
-      />
-      <view wx:if="{{discoverKeyword}}" class="search-clear" catchtap="onDiscoverClearSearch">✕</view>
-    </view>
+      <!-- 子 Tab + 筛选开关（始终可见） -->
+      <view class="discover-sub-tabs">
+        <view class="discover-sub-tab {{discoverSubTab === 'recipe' ? 'discover-sub-tab-on' : ''}}"
+          data-val="recipe" catchtap="onDiscoverSubTab">
+          <text>配方</text>
+        </view>
+        <view class="discover-sub-tab {{discoverSubTab === 'collection' ? 'discover-sub-tab-on' : ''}}"
+          data-val="collection" catchtap="onDiscoverSubTab">
+          <text>合集</text>
+        </view>
+        <!-- 筛选开关按钮 -->
+        <view class="discover-filter-btn {{(discoverBase !== '全部' || discoverFlavorTag !== '全部' || discoverStyleTag !== '全部' || discoverAIFilter !== '全部' || discoverKeyword) ? 'discover-filter-btn-on' : ''}}"
+          catchtap="onToggleDiscoverFilter">
+          <text class="discover-filter-btn-txt">筛选</text>
+          <image class="discover-filter-arrow"
+            src="{{discoverFilterOpen ? '/assets/icons/up.svg' : '/assets/icons/down.svg'}}"
+            mode="aspectFit" />
+        </view>
+      </view>
 
-    <!-- 子 Tab：配方 / 合集 -->
-    <view class="discover-sub-tabs">
-      <view class="discover-sub-tab {{discoverSubTab === 'recipe' ? 'discover-sub-tab-on' : ''}}"
-        data-val="recipe" catchtap="onDiscoverSubTab">
-        <text>配方</text>
-      </view>
-      <view class="discover-sub-tab {{discoverSubTab === 'collection' ? 'discover-sub-tab-on' : ''}}"
-        data-val="collection" catchtap="onDiscoverSubTab">
-        <text>合集</text>
-      </view>
+      <!-- 可折叠：过滤行 + 搜索框 -->
+      <block wx:if="{{discoverFilterOpen}}">
+        <!-- 基酒行（有数据才显示） -->
+        <view wx:if="{{discoverBaseTags.length > 1}}" class="filter-group">
+          <text class="filter-label">基酒</text>
+          <scroll-view scroll-x class="filter-scroll" show-scrollbar="{{false}}">
+            <view class="filter-row">
+              <view wx:for="{{discoverBaseTags}}" wx:key="*this"
+                class="filter-chip {{discoverBase === item ? 'chip-on' : ''}}"
+                data-val="{{item}}" catchtap="onDiscoverBase">{{item}}</view>
+            </view>
+          </scroll-view>
+        </view>
+        <!-- 风味行 -->
+        <view class="filter-group">
+          <text class="filter-label">风味</text>
+          <scroll-view scroll-x class="filter-scroll" show-scrollbar="{{false}}">
+            <view class="filter-row">
+              <view wx:for="{{discoverFlavorTags}}" wx:key="*this"
+                class="filter-chip {{discoverFlavorTag === item ? 'chip-on' : ''}}"
+                data-val="{{item}}" catchtap="onDiscoverFlavorTag">{{item}}</view>
+            </view>
+          </scroll-view>
+        </view>
+        <!-- 标签行 -->
+        <view class="filter-group">
+          <text class="filter-label">标签</text>
+          <scroll-view scroll-x class="filter-scroll" show-scrollbar="{{false}}">
+            <view class="filter-row">
+              <view wx:for="{{discoverStyleTags}}" wx:key="*this"
+                class="filter-chip {{discoverStyleTag === item ? 'chip-on' : ''}}"
+                data-val="{{item}}" catchtap="onDiscoverStyleTag">{{item}}</view>
+            </view>
+          </scroll-view>
+        </view>
+        <!-- AI 类型行 -->
+        <view class="filter-group">
+          <text class="filter-label">类型</text>
+          <scroll-view scroll-x class="filter-scroll" show-scrollbar="{{false}}">
+            <view class="filter-row">
+              <view wx:for="{{['全部','AI生成','手创']}}" wx:key="*this"
+                class="filter-chip {{discoverAIFilter === item ? 'chip-on' : ''}}"
+                data-val="{{item}}" catchtap="onDiscoverAIFilter">{{item}}</view>
+            </view>
+          </scroll-view>
+        </view>
+        <!-- 搜索栏 -->
+        <view class="discover-search-bar">
+          <text class="search-icon-txt">🔍</text>
+          <input
+            class="search-input"
+            placeholder="搜索名称、标签、作者…"
+            placeholder-class="search-ph"
+            value="{{discoverKeyword}}"
+            bindinput="onDiscoverSearch"
+          />
+          <view wx:if="{{discoverKeyword}}" class="search-clear" catchtap="onDiscoverClearSearch">✕</view>
+        </view>
+      </block>
+
     </view>
 
     <!-- ── 配方子分区 ── -->
-    <scroll-view wx:if="{{discoverSubTab === 'recipe'}}"
-      class="tab-scroll" scroll-y enhanced show-scrollbar="{{false}}"
-      bindscrolltolower="onDiscoverLoadMore" lower-threshold="120">
+    <view wx:if="{{discoverSubTab === 'recipe'}}" class="tab-scroll">
 
       <!-- loading（首次） -->
       <view wx:if="{{discoverRecipeLoading && discoverRecipeList.length === 0}}" class="discover-loading">
@@ -154,9 +198,6 @@
                 catchtap="onLike" data-publishid="{{item._id}}">
                 <text>{{item.isLiked ? '♥ 已点赞' : '♡ 点赞'}} {{item.likeCount || 0}}</text>
               </view>
-              <view class="detail-action-btn" catchtap="onClonePublic" data-id="{{item._id}}">
-                <text>📋 复制配方</text>
-              </view>
               <view class="detail-action-btn" catchtap="onNavToDetail" data-type="public" data-id="{{item._id}}">
                 <text>📖 详情</text>
               </view>
@@ -176,16 +217,17 @@
       <view wx:if="{{discoverRecipeLoading && discoverRecipeList.length > 0}}" class="discover-load-more">
         <text class="discover-load-txt">加载中…</text>
       </view>
-      <view wx:elif="{{!discoverRecipeHasMore && discoverRecipeList.length > 0}}" class="discover-load-more">
+      <view wx:elif="{{discoverRecipeHasMore}}" class="load-more-btn" catchtap="onDiscoverLoadMore">
+        <text class="load-more-txt">加载更多</text>
+      </view>
+      <view wx:elif="{{discoverRecipeList.length > 0}}" class="discover-load-more">
         <text class="discover-load-txt">— 已显示全部 —</text>
       </view>
       <view style="height:60rpx"></view>
-    </scroll-view>
+    </view>
 
     <!-- ── 合集子分区 ── -->
-    <scroll-view wx:if="{{discoverSubTab === 'collection'}}"
-      class="tab-scroll" scroll-y enhanced show-scrollbar="{{false}}"
-      bindscrolltolower="onDiscoverLoadMore" lower-threshold="120">
+    <view wx:if="{{discoverSubTab === 'collection'}}" class="tab-scroll">
 
       <!-- loading（首次） -->
       <view wx:if="{{discoverCollLoading && discoverCollList.length === 0}}" class="discover-loading">
@@ -273,9 +315,6 @@
                 catchtap="onToggleFavColl" data-publishid="{{item._id}}">
                 <text>{{item.isFavColl ? '★ 已收藏合集' : '☆ 收藏合集'}}</text>
               </view>
-              <view class="detail-action-btn" catchtap="onClonePublicColl" data-publishid="{{item._id}}">
-                <text>📂 复制合集</text>
-              </view>
               <view class="detail-action-btn" catchtap="onNavToCollDetail" data-type="public" data-id="{{item._id}}">
                 <text>📖 详情</text>
               </view>
@@ -295,28 +334,91 @@
       <view wx:if="{{discoverCollLoading && discoverCollList.length > 0}}" class="discover-load-more">
         <text class="discover-load-txt">加载中…</text>
       </view>
-      <view wx:elif="{{!discoverCollHasMore && discoverCollList.length > 0}}" class="discover-load-more">
+      <view wx:elif="{{discoverCollHasMore}}" class="load-more-btn" catchtap="onDiscoverLoadMore">
+        <text class="load-more-txt">加载更多</text>
+      </view>
+      <view wx:elif="{{discoverCollList.length > 0}}" class="discover-load-more">
         <text class="discover-load-txt">— 已显示全部 —</text>
       </view>
       <view style="height:60rpx"></view>
-    </scroll-view>
+    </view>
 
   </view>
 
   <!-- ══ Tab: 我的（配方 + 合集）══ -->
   <view wx:if="{{activeTab === 'mine'}}" class="mine-wrap">
 
-    <!-- 子 Tab：配方 / 合集 -->
-    <view class="discover-sub-tabs">
-      <view class="discover-sub-tab {{mineSubTab === 'recipe' ? 'discover-sub-tab-on' : ''}}"
-        data-val="recipe" catchtap="onMineSubTab"><text>配方</text></view>
-      <view class="discover-sub-tab {{mineSubTab === 'collection' ? 'discover-sub-tab-on' : ''}}"
-        data-val="collection" catchtap="onMineSubTab"><text>合集</text></view>
+    <!-- 粘性子 Tab + 可折叠筛选 -->
+    <view class="mine-sticky-hd">
+      <!-- 子 Tab + 筛选开关（始终可见） -->
+      <view class="discover-sub-tabs">
+        <view class="discover-sub-tab {{mineSubTab === 'recipe' ? 'discover-sub-tab-on' : ''}}"
+          data-val="recipe" catchtap="onMineSubTab"><text>配方</text></view>
+        <view class="discover-sub-tab {{mineSubTab === 'collection' ? 'discover-sub-tab-on' : ''}}"
+          data-val="collection" catchtap="onMineSubTab"><text>合集</text></view>
+        <!-- 筛选开关（仅配方子 Tab 显示） -->
+        <view wx:if="{{mineSubTab === 'recipe'}}"
+          class="discover-filter-btn {{(mineTag !== '全部' || mineSourceTag !== '全部' || minePubTag !== '全部' || searchText) ? 'discover-filter-btn-on' : ''}}"
+          catchtap="onToggleMineFilter">
+          <text class="discover-filter-btn-txt">筛选</text>
+          <image class="discover-filter-arrow"
+            src="{{mineFilterOpen ? '/assets/icons/up.svg' : '/assets/icons/down.svg'}}"
+            mode="aspectFit" />
+        </view>
+      </view>
+      <!-- 可折叠：过滤行 + 搜索框 -->
+      <block wx:if="{{mineSubTab === 'recipe' && mineFilterOpen}}">
+        <!-- 基酒行 -->
+        <view wx:if="{{mineTags.length > 1}}" class="filter-group">
+          <text class="filter-label">基酒</text>
+          <scroll-view scroll-x class="filter-scroll" show-scrollbar="{{false}}">
+            <view class="filter-row">
+              <view wx:for="{{mineTags}}" wx:key="*this"
+                class="filter-chip {{mineTag === item ? 'chip-on' : ''}}"
+                data-val="{{item}}" catchtap="onMineTag">{{item}}</view>
+            </view>
+          </scroll-view>
+        </view>
+        <!-- 来源行 -->
+        <view wx:if="{{mineSourceTags.length > 1}}" class="filter-group">
+          <text class="filter-label">来源</text>
+          <scroll-view scroll-x class="filter-scroll" show-scrollbar="{{false}}">
+            <view class="filter-row">
+              <view wx:for="{{mineSourceTags}}" wx:key="*this"
+                class="filter-chip {{mineSourceTag === item ? 'chip-on' : ''}}"
+                data-val="{{item}}" catchtap="onMineSourceTag">{{item}}</view>
+            </view>
+          </scroll-view>
+        </view>
+        <!-- 是否公开行 -->
+        <view class="filter-group">
+          <text class="filter-label">公开</text>
+          <scroll-view scroll-x class="filter-scroll" show-scrollbar="{{false}}">
+            <view class="filter-row">
+              <view wx:for="{{['全部','已公开','未公开']}}" wx:key="*this"
+                class="filter-chip {{minePubTag === item ? 'chip-on' : ''}}"
+                data-val="{{item}}" catchtap="onMinePubTag">{{item}}</view>
+            </view>
+          </scroll-view>
+        </view>
+        <!-- 搜索栏 -->
+        <view class="search-bar">
+          <text class="search-icon-txt">🔍</text>
+          <input
+            class="search-input"
+            placeholder="搜索配方名称、原料…"
+            placeholder-class="search-ph"
+            value="{{searchText}}"
+            bindinput="onSearch"
+            focus="{{mineFilterOpen}}"
+          />
+          <view class="search-clear" wx:if="{{searchText}}" bindtap="onClearSearch">✕</view>
+        </view>
+      </block>
     </view>
 
     <!-- ── 配方子分区 ── -->
-    <scroll-view wx:if="{{mineSubTab === 'recipe'}}" class="tab-scroll" scroll-y enhanced
-      show-scrollbar="{{false}}" bindscrolltolower="onMineRecipeMore">
+    <view wx:if="{{mineSubTab === 'recipe'}}" class="tab-scroll">
       <view wx:if="{{mineRecipeList.length === 0 && !searchText}}" class="empty-full">
         <text class="empty-full-icon">✨</text>
         <text class="empty-full-title">还没有自创配方</text>
@@ -327,7 +429,15 @@
         <view wx:if="{{mineRecipeList.length === 0 && searchText}}" class="empty-state">
           <text class="empty-icon">🔍</text><text class="empty-tip">无匹配配方</text>
         </view>
-        <view wx:for="{{mineRecipeList}}" wx:key="id" class="recipe-card card user-card-border" data-id="{{item.id}}" data-source="user" bindtap="onCardTap">
+        <view wx:for="{{mineRecipeList}}" wx:key="id"
+          class="recipe-card card user-card-border {{batchMode && batchSelected[item.id] ? 'batch-card-on' : ''}}"
+          data-id="{{item.id}}" data-source="user" bindtap="onCardTap">
+        <!-- 批量模式勾选框 -->
+        <view wx:if="{{batchMode}}" class="batch-cb-wrap" catchtap="onBatchToggle" data-id="{{item.id}}">
+          <view class="batch-cb {{batchSelected[item.id] ? 'batch-cb-on' : ''}}">
+            <text wx:if="{{batchSelected[item.id]}}" class="batch-cb-tick">✓</text>
+          </view>
+        </view>
         <!-- 封面图（有则显示，高度固定，覆盖整个卡片顶部） -->
         <view wx:if="{{item.coverTempUrl}}" class="rc-cover-wrap">
           <image class="rc-cover" src="{{item.coverTempUrl}}" mode="aspectFill" lazy-load></image>
@@ -414,15 +524,17 @@
         <text class="ai-fab-icon">✦</text>
         <text class="ai-fab-label">AI 创建</text>
       </view>
-      <view wx:if="{{!mineRecipeHasMore && mineRecipeList.length > 0}}" class="discover-load-more">
+      <view wx:if="{{mineRecipeHasMore}}" class="load-more-btn" catchtap="onMineRecipeMore">
+        <text class="load-more-txt">加载更多</text>
+      </view>
+      <view wx:elif="{{mineRecipeList.length > 0}}" class="discover-load-more">
         <text class="discover-load-txt">— 已显示全部 —</text>
       </view>
       <view style="height:120rpx"></view>
-    </scroll-view>
+    </view>
 
     <!-- ── 合集子分区 ── -->
-    <scroll-view wx:if="{{mineSubTab === 'collection'}}" class="tab-scroll" scroll-y enhanced
-      show-scrollbar="{{false}}" bindscrolltolower="onMineCollMore">
+    <view wx:if="{{mineSubTab === 'collection'}}" class="tab-scroll">
       <view wx:if="{{mineCollList.length === 0}}" class="empty-full">
         <text class="empty-full-icon">📂</text>
         <text class="empty-full-title">还没有合集</text>
@@ -450,8 +562,7 @@
             </view>
             <view class="coll-actions">
               <view class="coll-edit" catchtap="onEditCollection" data-id="{{item.id}}">✏️</view>
-              <view class="coll-img-btn" catchtap="onOpenImgDrawer" data-type="collection" data-id="{{item.id}}">🖼</view>
-              <view class="coll-poster-btn" catchtap="onOpenPosterDrawer" data-id="{{item.id}}">🎭</view>
+              <view class="coll-mktg-btn" catchtap="onOpenCollMktg" data-id="{{item.id}}">🎨</view>
               <view class="coll-del" catchtap="onDeleteCollection" data-id="{{item.id}}">🗑</view>
             </view>
           </view>
@@ -521,35 +632,93 @@
           </view>
         </view>
       </view>
-      <view wx:if="{{!mineCollHasMore && mineCollList.length > 0}}" class="discover-load-more">
+      <view wx:if="{{mineCollHasMore}}" class="load-more-btn" catchtap="onMineCollMore">
+        <text class="load-more-txt">加载更多</text>
+      </view>
+      <view wx:elif="{{mineCollList.length > 0}}" class="discover-load-more">
         <text class="discover-load-txt">— 已显示全部 —</text>
       </view>
       <view style="height:60rpx"></view>
-    </scroll-view>
+    </view>
 
   </view>
 
   <!-- ══ Tab: 收藏（配方 + 合集）══ -->
   <view wx:if="{{activeTab === 'fav'}}" class="fav-wrap">
 
-    <!-- 子 Tab：配方 / 合集 -->
-    <view class="discover-sub-tabs">
-      <view class="discover-sub-tab {{favSubTab === 'recipe' ? 'discover-sub-tab-on' : ''}}"
-        data-val="recipe" catchtap="onFavSubTab"><text>配方</text></view>
-      <view class="discover-sub-tab {{favSubTab === 'collection' ? 'discover-sub-tab-on' : ''}}"
-        data-val="collection" catchtap="onFavSubTab"><text>合集</text></view>
+    <!-- 粘性子 Tab + 可折叠筛选 -->
+    <view class="fav-sticky-hd">
+      <!-- 子 Tab + 筛选开关（始终可见） -->
+      <view class="discover-sub-tabs">
+        <view class="discover-sub-tab {{favSubTab === 'recipe' ? 'discover-sub-tab-on' : ''}}"
+          data-val="recipe" catchtap="onFavSubTab"><text>配方</text></view>
+        <view class="discover-sub-tab {{favSubTab === 'collection' ? 'discover-sub-tab-on' : ''}}"
+          data-val="collection" catchtap="onFavSubTab"><text>合集</text></view>
+        <!-- 筛选开关（仅配方子 Tab 显示） -->
+        <view wx:if="{{favSubTab === 'recipe'}}"
+          class="discover-filter-btn {{(favTag !== '全部' || favTypeTag !== '全部' || favSourceTag !== '全部') ? 'discover-filter-btn-on' : ''}}"
+          catchtap="onToggleFavFilter">
+          <text class="discover-filter-btn-txt">筛选</text>
+          <image class="discover-filter-arrow"
+            src="{{favFilterOpen ? '/assets/icons/up.svg' : '/assets/icons/down.svg'}}"
+            mode="aspectFit" />
+        </view>
+      </view>
+      <!-- 可折叠：过滤行 -->
+      <block wx:if="{{favSubTab === 'recipe' && favFilterOpen}}">
+        <!-- 基酒行 -->
+        <view wx:if="{{favTags.length > 1}}" class="filter-group">
+          <text class="filter-label">基酒</text>
+          <scroll-view scroll-x class="filter-scroll" show-scrollbar="{{false}}">
+            <view class="filter-row">
+              <view wx:for="{{favTags}}" wx:key="*this"
+                class="filter-chip {{favTag === item ? 'chip-on' : ''}}"
+                data-val="{{item}}" catchtap="onFavTag">{{item}}</view>
+            </view>
+          </scroll-view>
+        </view>
+        <!-- 类型行：原创/AI生成 -->
+        <view wx:if="{{favTypeTags.length > 1}}" class="filter-group">
+          <text class="filter-label">类型</text>
+          <scroll-view scroll-x class="filter-scroll" show-scrollbar="{{false}}">
+            <view class="filter-row">
+              <view wx:for="{{favTypeTags}}" wx:key="*this"
+                class="filter-chip {{favTypeTag === item ? 'chip-on' : ''}}"
+                data-val="{{item}}" catchtap="onFavTypeTag">{{item}}</view>
+            </view>
+          </scroll-view>
+        </view>
+        <!-- 来源行：内置库/自创 -->
+        <view wx:if="{{favSourceTags.length > 1}}" class="filter-group">
+          <text class="filter-label">来源</text>
+          <scroll-view scroll-x class="filter-scroll" show-scrollbar="{{false}}">
+            <view class="filter-row">
+              <view wx:for="{{favSourceTags}}" wx:key="*this"
+                class="filter-chip {{favSourceTag === item ? 'chip-on' : ''}}"
+                data-val="{{item}}" catchtap="onFavSourceTag">{{item}}</view>
+            </view>
+          </scroll-view>
+        </view>
+      </block>
     </view>
 
     <!-- ── 收藏配方 ── -->
-    <scroll-view wx:if="{{favSubTab === 'recipe'}}" class="tab-scroll" scroll-y enhanced
-      show-scrollbar="{{false}}" bindscrolltolower="onFavRecipeMore">
+    <view wx:if="{{favSubTab === 'recipe'}}" class="tab-scroll">
       <view wx:if="{{favRecipeList.length === 0}}" class="empty-full">
         <text class="empty-full-icon">♡</text>
         <text class="empty-full-title">还没有收藏的配方</text>
         <text class="empty-full-sub">在「发现」或「我的」页面收藏喜欢的配方</text>
       </view>
       <view class="card-list">
-        <view wx:for="{{favRecipeList}}" wx:key="id" class="recipe-card card" data-id="{{item.id}}" data-source="{{item.source}}" bindtap="onCardTap">
+        <view wx:for="{{favRecipeList}}" wx:key="id"
+          class="recipe-card card {{batchMode && batchSelected[item.id] ? 'batch-card-on' : ''}}"
+          data-id="{{item.id}}" data-source="{{item.source}}" bindtap="onCardTap">
+          <!-- 批量模式勾选框 -->
+          <view wx:if="{{batchMode}}" class="batch-cb-wrap" catchtap="onBatchToggle" data-id="{{item.id}}">
+            <view class="batch-cb {{batchSelected[item.id] ? 'batch-cb-on' : ''}}">
+              <text wx:if="{{batchSelected[item.id]}}" class="batch-cb-tick">✓</text>
+            </view>
+          </view>
           <view class="rc-top">
             <text class="rc-emoji">{{item.emoji || '🍹'}}</text>
             <view class="rc-meta">
@@ -608,15 +777,17 @@
           </view>
         </view>
       </view>
-      <view wx:if="{{!favRecipeHasMore && favRecipeList.length > 0}}" class="discover-load-more">
+      <view wx:if="{{favRecipeHasMore}}" class="load-more-btn" catchtap="onFavRecipeMore">
+        <text class="load-more-txt">加载更多</text>
+      </view>
+      <view wx:elif="{{favRecipeList.length > 0}}" class="discover-load-more">
         <text class="discover-load-txt">— 已显示全部 —</text>
       </view>
       <view style="height:60rpx"></view>
-    </scroll-view>
+    </view>
 
     <!-- ── 收藏合集 ── -->
-    <scroll-view wx:if="{{favSubTab === 'collection'}}" class="tab-scroll" scroll-y enhanced
-      show-scrollbar="{{false}}">
+    <view wx:if="{{favSubTab === 'collection'}}" class="tab-scroll">
       <view wx:if="{{favCollList.length === 0}}" class="empty-full">
         <text class="empty-full-icon">📂</text>
         <text class="empty-full-title">还没有收藏的合集</text>
@@ -645,20 +816,59 @@
             </view>
           </view>
           <view class="detail-actions" style="margin-top:8rpx">
-            <view class="detail-action-btn" catchtap="onCloneCollPublic" data-id="{{item._id}}">
-              <text>📋 复制合集</text>
-            </view>
             <view class="detail-action-btn" catchtap="onNavToCollDetail" data-type="public" data-id="{{item._id}}">
               <text>📖 详情</text>
             </view>
           </view>
         </view>
       </view>
+      <view wx:if="{{favCollHasMore}}" class="load-more-btn" catchtap="onFavCollMore">
+        <text class="load-more-txt">加载更多</text>
+      </view>
+      <view wx:elif="{{favCollList.length > 0}}" class="discover-load-more">
+        <text class="discover-load-txt">— 已显示全部 —</text>
+      </view>
       <view style="height:60rpx"></view>
-    </scroll-view>
+    </view>
 
   </view>
 
+</view>
+
+<!-- ══ 批量操作底栏 ══ -->
+<view wx:if="{{batchMode}}" class="batch-action-bar">
+  <view class="batch-bar-left" catchtap="onBatchSelectAll">
+    <view class="batch-cb {{batchCount > 0 && batchCount === (activeTab === 'mine' ? mineRecipeList.length : favRecipeList.length) ? 'batch-cb-on' : (batchCount > 0 ? 'batch-cb-partial' : '')}}">
+      <text wx:if="{{batchCount > 0 && batchCount === (activeTab === 'mine' ? mineRecipeList.length : favRecipeList.length)}}" class="batch-cb-tick">✓</text>
+      <text wx:elif="{{batchCount > 0}}" class="batch-cb-tick">—</text>
+    </view>
+    <text class="batch-bar-count">已选 {{batchCount}}</text>
+  </view>
+  <view class="batch-bar-actions">
+    <view class="batch-bar-btn {{batchCount === 0 ? 'batch-bar-btn-dim' : ''}}"
+      catchtap="onBatchAddToColl">加入合集</view>
+    <view class="batch-bar-btn batch-bar-btn-danger {{batchCount === 0 ? 'batch-bar-btn-dim' : ''}}"
+      catchtap="onBatchDelete">删除</view>
+  </view>
+</view>
+
+<!-- ══ 合集选择器 ══ -->
+<view wx:if="{{showCollPicker}}" class="coll-picker-mask" catchtap="onCloseCollPicker">
+  <view class="coll-picker-sheet" catchtap="stopProp">
+    <view class="coll-picker-handle"></view>
+    <text class="coll-picker-title">选择合集</text>
+    <scroll-view class="coll-picker-scroll" scroll-y>
+      <view wx:for="{{collPickerList}}" wx:key="id" class="coll-picker-item"
+        catchtap="onPickCollection" data-id="{{item._id || item.id}}">
+        <text class="coll-picker-emoji">{{item.emoji || '📂'}}</text>
+        <view class="coll-picker-meta">
+          <text class="coll-picker-name">{{item.name}}</text>
+          <text class="coll-picker-sub">{{item.count || 0}} 款配方</text>
+        </view>
+        <text class="coll-picker-arrow">›</text>
+      </view>
+    </scroll-view>
+  </view>
 </view>
 
 <!-- ══ AI 创建配方 底部抽屉 ══ -->
@@ -676,7 +886,7 @@
         <text class="ai-field-label">口味偏好</text>
         <view class="ai-chips">
           <view wx:for="{{flavorOptions}}" wx:key="*this"
-            class="ai-chip {{aiForm.flavors.indexOf(item) >= 0 ? 'ai-chip-on' : ''}}"
+            class="ai-chip {{flavorSelectedMap[item] ? 'ai-chip-on' : ''}}"
             data-val="{{item}}" bindtap="onToggleFlavor">{{item}}</view>
         </view>
       </view>
@@ -689,14 +899,14 @@
         </view>
       </view>
       <view class="ai-field">
-        <text class="ai-field-label">补充说明（可选）</text>
+        <text class="ai-field-label">额外要求<text class="ai-field-hint">（可选）</text></text>
         <textarea
           class="ai-textarea"
           placeholder="如：想要夏日风格、颜色好看、客人喜欢低甜度…"
           placeholder-class="ai-ph"
-          value="{{aiForm.note}}"
-          bindinput="onAINote"
-          maxlength="100"
+          value="{{aiForm.customPrompt}}"
+          bindinput="onAICustomPrompt"
+          maxlength="150"
           auto-height
         ></textarea>
       </view>
@@ -719,21 +929,42 @@
     <!-- 生成结果 -->
     <view wx:if="{{aiState === 'result'}}" class="ai-result">
       <view class="ai-result-card">
-        <text class="ai-result-emoji">{{aiResult.emoji}}</text>
-        <text class="ai-result-name">{{aiResult.name}}</text>
-        <text class="ai-result-desc">{{aiResult.desc}}</text>
-        <view class="ai-result-ings">
-          <view wx:for="{{aiResult.ingredients}}" wx:key="name" wx:for-item="ing" class="ai-ing-row">
-            <view class="ing-dot"></view>
-            <text class="detail-ing-name">{{ing.name}}</text>
-            <text class="detail-ing-amt">{{ing.amount}}</text>
+        <!-- 标题行：emoji + 名称 + 标签 -->
+        <view class="ai-rc-top">
+          <text class="ai-rc-emoji">{{aiResult.emoji}}</text>
+          <view class="ai-rc-meta">
+            <text class="ai-rc-name">{{aiResult.name}}</text>
+            <view class="ai-rc-tags">
+              <text wx:if="{{aiResult.base}}"  class="ai-rc-tag">{{aiResult.base}}</text>
+              <text wx:if="{{aiResult.style}}" class="ai-rc-tag">{{aiResult.style}}</text>
+              <text wx:if="{{aiResult.abv}}"   class="ai-rc-tag">{{aiResult.abv}}%</text>
+            </view>
           </view>
         </view>
+        <!-- 描述 -->
+        <text wx:if="{{aiResult.desc}}" class="ai-rc-desc">{{aiResult.desc}}</text>
+        <!-- 原料 -->
+        <view class="ai-rc-divider"></view>
+        <text class="ai-rc-section">原料</text>
+        <view class="ai-result-ings">
+          <view wx:for="{{aiResult.ingredients}}" wx:key="name" wx:for-item="ing" class="detail-ing-row">
+            <view class="ing-dot"></view>
+            <text class="detail-ing-name">{{ing.name}}</text>
+            <text class="detail-ing-amt">{{ing.amount}}{{ing.unit}}</text>
+          </view>
+        </view>
+        <!-- 步骤 -->
+        <view class="ai-rc-divider"></view>
+        <text class="ai-rc-section">步骤</text>
         <view class="ai-result-steps">
           <view wx:for="{{aiResult.steps}}" wx:key="index" wx:for-item="step" class="step-row">
             <view class="step-num"><text>{{index+1}}</text></view>
             <text class="step-text">{{step}}</text>
           </view>
+        </view>
+        <!-- 备注 -->
+        <view wx:if="{{aiResult.notes}}" class="notes-box">
+          <text class="notes-text">💡 {{aiResult.notes}}</text>
         </view>
       </view>
       <view class="ai-result-actions">
@@ -1120,90 +1351,167 @@
   </view>
 </view>
 
-<!-- ══ 合集海报生成 抽屉 ══ -->
-<view class="ai-mask {{showPosterDrawer ? 'ai-mask-show' : ''}}" bindtap="onClosePosterDrawer">
-  <view class="ai-drawer poster-drawer {{showPosterDrawer ? 'ai-drawer-show' : ''}}" catchtap="stopProp">
+<!-- ══ 合集营销图（统一抽屉）══ -->
+<view class="ai-mask {{showCollMktgDrawer ? 'ai-mask-show' : ''}}" bindtap="onCloseCollMktg">
+  <view class="ai-drawer coll-mktg-drawer {{showCollMktgDrawer ? 'ai-drawer-show' : ''}}" catchtap="stopProp">
     <view class="ai-drawer-handle"></view>
     <view class="ai-drawer-header">
       <view class="img-drawer-title-wrap">
-        <text class="ai-drawer-title">🎭 AI 营销海报</text>
-        <text class="img-drawer-subtitle">{{posterTarget.name || '合集'}}</text>
+        <text class="ai-drawer-title">✦ AI 营销图</text>
+        <text wx:if="{{collMktgTarget}}" class="img-drawer-subtitle">{{collMktgTarget.emoji}} {{collMktgTarget.name}}</text>
       </view>
-      <view class="ai-drawer-close" bindtap="onClosePosterDrawer">✕</view>
+      <view class="ai-drawer-close" bindtap="onCloseCollMktg">✕</view>
     </view>
 
     <!-- 配置态 -->
-    <scroll-view wx:if="{{posterState === 'config' || posterState === 'idle'}}" scroll-y class="img-config-scroll">
-      <text class="img-section-label">海报风格</text>
+    <scroll-view wx:if="{{collMktgState === 'idle'}}" scroll-y class="img-config-scroll">
+
+      <!-- 图片类型 -->
+      <text class="img-section-label">图片类型</text>
+      <view class="coll-mktg-type-row">
+        <view wx:for="{{collMktgTypes}}" wx:key="id"
+          class="coll-mktg-type-card {{collMktgType === item.id ? 'coll-mktg-type-on' : ''}}"
+          data-type="{{item.id}}" bindtap="onCollMktgTypeSwitch">
+          <text class="coll-mktg-type-emoji">{{item.emoji}}</text>
+          <text class="coll-mktg-type-label">{{item.label}}</text>
+          <text class="coll-mktg-type-desc">{{item.desc}}</text>
+        </view>
+      </view>
+
+      <!-- 风格选择 -->
+      <text class="img-section-label" style="margin-top:24rpx">图片风格</text>
       <scroll-view scroll-x class="img-style-scroll" show-scrollbar="{{false}}">
         <view class="img-style-row">
-          <view wx:for="{{posterStyles}}" wx:key="id"
-            class="img-style-card {{posterStyle === item.id ? 'img-style-card-on' : ''}}"
-            data-id="{{item.id}}" bindtap="onPosterStyleTap">
-            <text class="img-style-emoji">{{item.emoji}}</text>
-            <text class="img-style-label">{{item.label}}</text>
-            <text class="img-style-desc">{{item.desc}}</text>
-            <view wx:if="{{posterStyle === item.id}}" class="img-style-check">✓</view>
-          </view>
+          <block wx:if="{{collMktgType === 'cover'}}">
+            <view wx:for="{{imgStyles}}" wx:key="id"
+              class="img-style-card {{collMktgStyle === item.id ? 'img-style-card-on' : ''}}"
+              data-id="{{item.id}}" bindtap="onCollMktgStyleTap">
+              <text class="img-style-emoji">{{item.emoji}}</text>
+              <text class="img-style-label">{{item.label}}</text>
+              <text class="img-style-desc">{{item.desc}}</text>
+              <view wx:if="{{collMktgStyle === item.id}}" class="img-style-check">✓</view>
+            </view>
+          </block>
+          <block wx:if="{{collMktgType === 'poster'}}">
+            <view wx:for="{{posterStyles}}" wx:key="id"
+              class="img-style-card {{collMktgPosterStyle === item.id ? 'img-style-card-on' : ''}}"
+              data-id="{{item.id}}" bindtap="onCollMktgPosterStyleTap">
+              <text class="img-style-emoji">{{item.emoji}}</text>
+              <text class="img-style-label">{{item.label}}</text>
+              <text class="img-style-desc">{{item.desc}}</text>
+              <view wx:if="{{collMktgPosterStyle === item.id}}" class="img-style-check">✓</view>
+            </view>
+          </block>
         </view>
       </scroll-view>
 
-      <text class="img-section-label" style="margin-top:28rpx">文字排版</text>
-      <view class="poster-layout-form">
-        <view class="poster-layout-row">
-          <text class="poster-layout-label">酒馆名</text>
-          <input class="poster-layout-input" value="{{posterLayout.shopName}}"
-            bindinput="onPosterLayoutInput" data-field="shopName" placeholder="你的酒吧名称"/>
+      <!-- 文字排版（仅海报模式）-->
+      <block wx:if="{{collMktgType === 'poster'}}">
+        <text class="img-section-label" style="margin-top:24rpx">文字排版</text>
+        <view class="poster-layout-form">
+          <view class="poster-layout-row">
+            <text class="poster-layout-label">酒馆名</text>
+            <input class="poster-layout-input" value="{{collMktgLayout.shopName}}"
+              data-field="shopName" bindinput="onCollMktgLayoutInput" placeholder="你的酒吧名称"/>
+          </view>
+          <view class="poster-layout-row">
+            <text class="poster-layout-label">主标题</text>
+            <input class="poster-layout-input" value="{{collMktgLayout.headline}}"
+              data-field="headline" bindinput="onCollMktgLayoutInput" placeholder="合集名称"/>
+          </view>
+          <view class="poster-layout-row">
+            <text class="poster-layout-label">副标题</text>
+            <input class="poster-layout-input" value="{{collMktgLayout.subline}}"
+              data-field="subline" bindinput="onCollMktgLayoutInput" placeholder="一句话介绍（可选）"/>
+          </view>
         </view>
-        <view class="poster-layout-row">
-          <text class="poster-layout-label">主标题</text>
-          <input class="poster-layout-input" value="{{posterLayout.headline}}"
-            bindinput="onPosterLayoutInput" data-field="headline" placeholder="合集名称"/>
-        </view>
-        <view class="poster-layout-row">
-          <text class="poster-layout-label">副标题</text>
-          <input class="poster-layout-input" value="{{posterLayout.subline}}"
-            bindinput="onPosterLayoutInput" data-field="subline" placeholder="一句话介绍（可选）"/>
-        </view>
-      </view>
+      </block>
 
-      <text class="img-section-label" style="margin-top:20rpx">补充描述（可选）</text>
+      <!-- 补充描述 -->
+      <text class="img-section-label" style="margin-top:24rpx">补充描述<text class="ai-field-hint">（可选）</text></text>
       <textarea class="img-custom-input"
         placeholder="如：突出夏日清凉感、玫瑰色调…"
         placeholder-class="img-custom-ph"
-        value="{{posterCustomPrompt}}"
-        bindinput="onPosterCustomInput"
-        maxlength="60" auto-height/>
+        value="{{collMktgCustomPrompt}}"
+        bindinput="onCollMktgCustomInput"
+        maxlength="80" auto-height/>
 
-      <view class="img-gen-btn" style="margin-top:28rpx" bindtap="onGenPosterStart">
-        <text class="img-gen-btn-icon">🎭</text>
-        <text class="img-gen-btn-label">生成海报背景</text>
+      <!-- 生成按钮 -->
+      <view class="img-gen-btn" style="margin-top:28rpx" bindtap="onGenCollMktg">
+        <text class="img-gen-btn-icon">✦</text>
+        <text class="img-gen-btn-label">生成营销图</text>
       </view>
+
+      <!-- 历史图片 -->
+      <block wx:if="{{collMktgImages.length > 0}}">
+        <view class="img-history-header" style="margin-top:32rpx">
+          <text class="img-section-label" style="margin-bottom:0">历史生成</text>
+          <text class="img-history-count">{{collMktgImages.length}} 张</text>
+        </view>
+        <scroll-view scroll-x class="img-history-scroll" show-scrollbar="{{false}}">
+          <view class="img-history-row">
+            <view wx:for="{{collMktgImages}}" wx:key="_id"
+              class="img-history-thumb-wrap {{item.isCover ? 'img-history-thumb-cover' : ''}}">
+              <image wx:if="{{item.tempUrl}}" class="img-history-thumb"
+                src="{{item.tempUrl}}" mode="aspectFill" lazy-load/>
+              <view wx:else class="img-history-thumb img-history-loading">
+                <text class="img-history-loading-txt">…</text>
+              </view>
+              <view wx:if="{{item.isCover}}" class="img-history-cover-badge">封面</view>
+              <view class="img-history-actions">
+                <view wx:if="{{!item.isCover}}" class="img-history-act"
+                  catchtap="onSetCollMktgCover"
+                  data-imageid="{{item._id}}"
+                  data-targetid="{{collMktgTarget.id}}">设封面</view>
+                <view class="img-history-act img-history-del"
+                  catchtap="onDeleteCollMktgImg"
+                  data-imageid="{{item._id}}"
+                  data-targetid="{{collMktgTarget.id}}">删除</view>
+              </view>
+            </view>
+          </view>
+        </scroll-view>
+      </block>
       <view style="height:40rpx"></view>
     </scroll-view>
 
     <!-- 生成中 -->
-    <view wx:if="{{posterState === 'loading'}}" class="img-loading-wrap">
+    <view wx:if="{{collMktgState === 'loading'}}" class="img-loading-wrap">
       <view class="img-loading-dots">
         <view class="img-ld img-ld-1"></view>
         <view class="img-ld img-ld-2"></view>
         <view class="img-ld img-ld-3"></view>
       </view>
-      <text class="img-loading-step">{{posterLoadingStep}}</text>
+      <text class="img-loading-step">{{collMktgLoadStep}}</text>
       <text class="img-loading-hint">通常需要 15–40 秒</text>
     </view>
 
-    <!-- Canvas 排版 / 完成 -->
-    <view wx:if="{{posterState === 'canvas' || posterState === 'done'}}" class="poster-canvas-wrap">
-      <canvas id="posterCanvas" type="2d" class="poster-canvas"></canvas>
-      <view wx:if="{{posterState === 'canvas'}}" class="poster-canvas-loading">
-        <text>排版中…</text>
-      </view>
-      <view wx:if="{{posterState === 'done'}}" class="img-done-actions" style="margin-top:20rpx">
-        <view class="img-done-btn img-done-save" bindtap="onSavePosterToAlbum">
+    <!-- 封面图完成 -->
+    <view wx:if="{{collMktgState === 'done' && collMktgType === 'cover'}}" class="img-done-wrap">
+      <image class="img-preview" src="{{collMktgResult.tempUrl}}"
+        mode="aspectFit" show-menu-by-longpress="{{true}}"/>
+      <view class="img-done-actions">
+        <view class="img-done-btn img-done-save" bindtap="onCollMktgSave">
           <text>⬇ 保存到相册</text>
         </view>
-        <view class="img-done-btn img-done-retry" bindtap="onRegeneratePoster">
+        <view class="img-done-btn img-done-retry" bindtap="onCollMktgRegenerate">
+          <text>↺ 再生成一张</text>
+        </view>
+      </view>
+      <view style="height:40rpx"></view>
+    </view>
+
+    <!-- 海报 Canvas 排版 / 完成 -->
+    <view wx:if="{{(collMktgState === 'canvas' || collMktgState === 'done') && collMktgType === 'poster'}}" class="poster-canvas-wrap">
+      <canvas id="collMktgCanvas" type="2d" class="poster-canvas"></canvas>
+      <view wx:if="{{collMktgState === 'canvas'}}" class="poster-canvas-loading">
+        <text>排版中…</text>
+      </view>
+      <view wx:if="{{collMktgState === 'done'}}" class="img-done-actions" style="margin-top:20rpx">
+        <view class="img-done-btn img-done-save" bindtap="onCollMktgSave">
+          <text>⬇ 保存到相册</text>
+        </view>
+        <view class="img-done-btn img-done-retry" bindtap="onCollMktgRegenerate">
           <text>↺ 重新生成</text>
         </view>
       </view>
@@ -1211,11 +1519,12 @@
     </view>
 
     <!-- 错误 -->
-    <view wx:if="{{posterState === 'error'}}" class="img-error-wrap">
+    <view wx:if="{{collMktgState === 'error'}}" class="img-error-wrap">
       <text class="img-error-icon">⚠️</text>
-      <text class="img-error-msg">{{posterErrorMsg}}</text>
-      <view class="img-error-retry" bindtap="onRegeneratePoster">重试</view>
+      <text class="img-error-msg">{{collMktgError}}</text>
+      <view class="img-error-retry" bindtap="onCollMktgRegenerate">重试</view>
     </view>
+
   </view>
 </view>
 

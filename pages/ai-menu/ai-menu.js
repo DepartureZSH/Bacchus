@@ -69,10 +69,10 @@ Page({
     activeTab: 'menu',   // 'menu' | 'mktg'
 
     // ══ Tab1: AI酒单 ════════════════════════════════════════
-    menuGoals:      ['高利润', '清库存', '日常', '主题'],
-    flavors:        ['果味', '经典', '清爽', '创新'],
-    selectedGoal:   '高利润',
-    selectedFlavor: '果味',
+    menuGoals:      [],
+    flavors:        [],
+    selectedGoal:   '',
+    selectedFlavor: '',
     isLoading:      false,
     loadingDots:    '',
     loadingMsg:     '正在生成',
@@ -83,6 +83,7 @@ Page({
     quotaLimit:     10,
     isPro:          false,
     fromCache:      false,
+    menuCustomPrompt: '',
 
     // ══ Tab2: AI营销 ════════════════════════════════════════
     mktgMode:     'recipe',   // 'recipe' | 'collection'
@@ -186,6 +187,7 @@ Page({
       this.setData({ activeTab: tab })
     }
     this._loadQuota()
+    this._loadMenuConfig()
     this._loadLists()
     if (this.data.activeTab === 'purchase') {
       this._purchLoadCollList()
@@ -210,6 +212,22 @@ Page({
   // ════════════════════════════════════════════════════════
   // Step 2: 数据加载
   // ════════════════════════════════════════════════════════
+
+  _loadMenuConfig() {
+    wx.cloud.callFunction({ name: 'ai-menu', data: { action: 'getConfig' } })
+      .then(res => {
+        const r = res.result || {}
+        if (!r.success) return
+        const goals   = r.goals   || []
+        const flavors = r.flavors || []
+        this.setData({
+          menuGoals:    goals,
+          flavors:      flavors,
+          selectedGoal:   goals[0]   ? goals[0].id   : '',
+          selectedFlavor: flavors[0] ? flavors[0].id : '',
+        })
+      }).catch(() => {})
+  },
 
   _loadQuota() {
     const plan = (app.globalData.shopInfo && app.globalData.shopInfo.plan) || 'free'
@@ -276,6 +294,7 @@ Page({
 
   onSelectGoal(e)   { this.setData({ selectedGoal:   e.currentTarget.dataset.val }) },
   onSelectFlavor(e) { this.setData({ selectedFlavor: e.currentTarget.dataset.val }) },
+  onMenuCustomPromptInput(e) { this.setData({ menuCustomPrompt: e.detail.value }) },
 
   onGenerate() {
     if (this.data.isLoading) return
@@ -288,19 +307,21 @@ Page({
       })
       return
     }
-    this._pollCount = 0
     this.setData({ isLoading: true, menuItems: [], hasGenerated: false, fromCache: false, loadingMsg: '正在连接 AI' })
     this._startDots()
     wx.showNavigationBarLoading()
     wx.cloud.callFunction({
       name: 'ai-menu',
-      data: { action: 'submit', goal: this.data.selectedGoal, flavor: this.data.selectedFlavor },
+      data: {
+        action:       'generate',
+        goal:         this.data.selectedGoal,
+        flavor:       this.data.selectedFlavor,
+        customPrompt: this.data.menuCustomPrompt || '',
+      },
     }).then(res => {
       const r = res.result || {}
       if (!r.success) { this._handleError(r.error); return }
-      if (r.fromCache) { this._showResult(r); return }
-      this.setData({ loadingMsg: 'AI 正在分析库存' })
-      this._startPolling(r.taskId)
+      this._showResult(r)
     }).catch(() => {
       this._stopLoading()
       wx.showToast({ title: '网络异常，请重试', icon: 'none' })
@@ -352,7 +373,7 @@ Page({
         confirmText: '升级 Pro', cancelText: '关闭',
         success: (res) => { if (res.confirm) wx.navigateTo({ url: '/pages/subscription/subscription' }) }
       })
-    } else if (errorCode && errorCode.includes('DIFY_API_KEY')) {
+    } else if (errorCode && (errorCode.includes('BAILIAN_API_KEY') || errorCode.includes('not configured'))) {
       wx.showToast({ title: 'AI 服务未配置，请联系管理员', icon: 'none', duration: 3000 })
     } else {
       wx.showToast({ title: 'AI 生成失败，请稍后重试', icon: 'none' })

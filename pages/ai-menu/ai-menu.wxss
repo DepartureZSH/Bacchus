@@ -704,3 +704,24 @@
 .anal-upsell-title { font-size:26rpx;font-weight:700;color:#f0ede8;display:block; }
 .anal-upsell-sub   { font-size:22rpx;color:#9a98a0;display:block; }
 .anal-upsell-cta   { font-size:24rpx;font-weight:700;color:#16181f;background:#c9a96e;border-radius:16rpx;padding:10rpx 24rpx;flex-shrink:0; }
+
+/* ── AI酒单：自定义 Prompt 输入 ── */
+.form-label-hint {
+  font-size: 22rpx;
+  color: #5c5b65;
+  font-weight: 400;
+  margin-left: 8rpx;
+}
+.menu-custom-prompt {
+  width: 100%;
+  min-height: 80rpx;
+  background: rgba(255,255,255,0.04);
+  border: 2rpx solid rgba(255,255,255,0.08);
+  border-radius: 14rpx;
+  padding: 18rpx 20rpx;
+  font-size: 26rpx;
+  color: #e8e6f0;
+  box-sizing: border-box;
+  line-height: 1.6;
+}
+.menu-custom-ph { color: #4a4a55; }

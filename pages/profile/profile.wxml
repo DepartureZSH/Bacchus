@@ -100,6 +100,21 @@
     </view>
   </view>
 
+  <!-- 管理（仅管理员可见） -->
+  <block wx:if="{{isAdmin}}">
+    <view class="section-label">管理</view>
+    <view class="settings-card card">
+      <view class="settings-row" bindtap="onAdminImport">
+        <text class="settings-icon">📥</text>
+        <text class="settings-label">批量导入配方</text>
+        <view class="settings-right">
+          <text class="settings-value">JSONL 文件</text>
+          <text class="settings-arrow">›</text>
+        </view>
+      </view>
+    </view>
+  </block>
+
   <view class="version-hint">Bacchus Demo v0.1.0 · MVP 演示版</view>
 
   <button class="btn-ghost logout-btn" bindtap="onLogout">退出登录</button>

@@ -1,11 +1,175 @@
 /* pages/my-recipes/my-recipes.wxss */
 
+/* ══ 批量选择 ══ */
+.top-select-btn {
+  font-size: 24rpx;
+  color: #c9a96e;
+  padding: 8rpx 16rpx;
+  border-radius: 12rpx;
+  background: rgba(201,169,110,0.1);
+  border: 2rpx solid rgba(201,169,110,0.2);
+}
+.top-select-btn-on {
+  color: #9a99a3;
+  background: rgba(255,255,255,0.06);
+  border-color: rgba(255,255,255,0.1);
+}
+
+.batch-cb-wrap {
+  position: absolute;
+  top: 20rpx;
+  right: 20rpx;
+  z-index: 5;
+}
+.batch-cb {
+  width: 44rpx;
+  height: 44rpx;
+  border-radius: 22rpx;
+  border: 3rpx solid rgba(255,255,255,0.25);
+  background: rgba(13,14,18,0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.15s;
+}
+.batch-cb-on {
+  border-color: #c9a96e;
+  background: rgba(201,169,110,0.25);
+}
+.batch-cb-partial {
+  border-color: rgba(201,169,110,0.5);
+  background: rgba(201,169,110,0.12);
+}
+.batch-cb-tick {
+  font-size: 22rpx;
+  color: #c9a96e;
+  font-weight: 700;
+  line-height: 1;
+}
+.batch-card-on {
+  border-color: rgba(201,169,110,0.4) !important;
+  background: #1c1e28 !important;
+}
+
+/* ══ 批量底部操作栏 ══ */
+.batch-action-bar {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  padding: 16rpx 28rpx calc(env(safe-area-inset-bottom) + 16rpx);
+  background: rgba(13,14,18,0.96);
+  border-top: 2rpx solid rgba(255,255,255,0.06);
+  backdrop-filter: blur(16px);
+  z-index: 60;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}
+.batch-bar-left {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 14rpx;
+}
+.batch-bar-count {
+  font-size: 26rpx;
+  color: #9a99a3;
+}
+.batch-bar-actions {
+  display: flex;
+  flex-direction: row;
+  gap: 16rpx;
+}
+.batch-bar-btn {
+  font-size: 26rpx;
+  font-weight: 600;
+  color: #0d0e12;
+  background: linear-gradient(90deg, #c9a96e, #e8c07a);
+  padding: 18rpx 36rpx;
+  border-radius: 16rpx;
+}
+.batch-bar-btn-danger {
+  background: linear-gradient(90deg, #e05c5c, #e87777);
+}
+.batch-bar-btn-dim {
+  background: rgba(255,255,255,0.08) !important;
+  color: #5c5b65 !important;
+}
+
+/* ══ 合集选择器抽屉 ══ */
+.coll-picker-mask {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+.coll-picker-sheet {
+  background: #16181f;
+  border-radius: 32rpx 32rpx 0 0;
+  padding: 0 0 calc(env(safe-area-inset-bottom) + 24rpx);
+  max-height: 70vh;
+  display: flex;
+  flex-direction: column;
+}
+.coll-picker-handle {
+  width: 72rpx; height: 8rpx;
+  background: rgba(255,255,255,0.15);
+  border-radius: 4rpx;
+  margin: 20rpx auto 0;
+  flex-shrink: 0;
+}
+.coll-picker-title {
+  font-size: 30rpx;
+  font-weight: 700;
+  color: #f0ede8;
+  text-align: center;
+  padding: 24rpx 0 16rpx;
+  flex-shrink: 0;
+  border-bottom: 2rpx solid rgba(255,255,255,0.06);
+}
+.coll-picker-scroll {
+  flex: 1;
+}
+.coll-picker-item {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 24rpx 32rpx;
+  gap: 20rpx;
+  border-bottom: 2rpx solid rgba(255,255,255,0.04);
+}
+.coll-picker-emoji {
+  font-size: 44rpx;
+  flex-shrink: 0;
+}
+.coll-picker-meta {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4rpx;
+}
+.coll-picker-name {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #f0ede8;
+}
+.coll-picker-sub {
+  font-size: 22rpx;
+  color: #5c5b65;
+}
+.coll-picker-arrow {
+  font-size: 36rpx;
+  color: #5c5b65;
+}
+
 /* ══ 根容器 ══ */
 .recipes-root {
   background: #0d0e12;
   min-height: 100vh;
-  display: flex;
-  flex-direction: column;
 }
 
 /* ══ 顶部 Tab ══ */
@@ -110,13 +274,29 @@
 }
 
 /* ══ 分类筛选 ══ */
+/* 带标签的一行过滤组：标签 + 横向 scroll */
+.filter-group {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding-left: 20rpx;
+}
+.filter-label {
+  flex-shrink: 0;
+  width: 64rpx;
+  font-size: 21rpx;
+  color: rgba(255,255,255,0.35);
+  letter-spacing: 0.5rpx;
+}
+.filter-group .filter-scroll { flex: 1; overflow: hidden; }
+
 .filter-scroll { width: 100%; }
 
 .filter-row {
   display: flex;
   flex-direction: row;
   gap: 12rpx;
-  padding: 14rpx 28rpx 10rpx;
+  padding: 10rpx 20rpx 10rpx 0;
 }
 
 .filter-chip {
@@ -139,8 +319,7 @@
 
 /* ══ 滚动区 ══ */
 .tab-scroll {
-  flex: 1;
-  height: calc(100vh - 160rpx);
+  /* plain content container — page itself scrolls */
 }
 
 /* ══ 配方卡片 ══ */
@@ -578,6 +757,7 @@
   display: block;
   margin-bottom: 14rpx;
 }
+.ai-field-hint { font-size: 22rpx; color: #5c5b65; font-weight: 400; margin-left: 6rpx; }
 
 .ai-chips {
   display: flex;
@@ -660,16 +840,67 @@
 .ai-result { display: flex; flex-direction: column; gap: 20rpx; }
 
 .ai-result-card {
-  background: #1e2029;
+  background: #16181f;
   border: 2rpx solid #2a2d38;
-  border-radius: 24rpx;
-  padding: 28rpx;
+  border-left: 6rpx solid rgba(201,169,110,0.5);
+  border-radius: 20rpx;
+  padding: 28rpx 24rpx;
 }
-.ai-result-emoji { font-size: 64rpx; display: block; text-align: center; margin-bottom: 12rpx; }
-.ai-result-name  { font-size: 34rpx; font-weight: 800; color: #f0ede8; display: block; text-align: center; margin-bottom: 8rpx; }
-.ai-result-desc  { font-size: 24rpx; color: #9a98a0; display: block; text-align: center; margin-bottom: 20rpx; line-height: 1.6; }
 
-.ai-result-ings { margin-bottom: 16rpx; }
+/* 标题行 */
+.ai-rc-top {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 16rpx;
+  margin-bottom: 14rpx;
+}
+.ai-rc-emoji { font-size: 52rpx; flex-shrink: 0; line-height: 1; }
+.ai-rc-meta  { flex: 1; display: flex; flex-direction: column; gap: 8rpx; min-width: 0; }
+.ai-rc-name  { font-size: 30rpx; font-weight: 700; color: #f0ede8; display: block; }
+.ai-rc-tags  { display: flex; flex-direction: row; gap: 8rpx; flex-wrap: wrap; }
+.ai-rc-tag   {
+  padding: 4rpx 14rpx;
+  border-radius: 8rpx;
+  font-size: 20rpx;
+  background: rgba(201,169,110,0.10);
+  color: #c9a96e;
+  border: 1rpx solid rgba(201,169,110,0.25);
+}
+
+/* 描述 */
+.ai-rc-desc {
+  font-size: 24rpx;
+  color: #9a98a0;
+  display: block;
+  line-height: 1.6;
+  margin-bottom: 4rpx;
+}
+
+/* 分区分割线 + 标题 */
+.ai-rc-divider {
+  height: 1rpx;
+  background: #2a2d38;
+  margin: 18rpx 0 14rpx;
+}
+.ai-rc-section {
+  font-size: 22rpx;
+  font-weight: 600;
+  color: #c9a96e;
+  display: block;
+  margin-bottom: 10rpx;
+  letter-spacing: 2rpx;
+  text-transform: uppercase;
+}
+
+.ai-result-ings  { margin-bottom: 4rpx; }
+.ai-result-steps { margin-bottom: 4rpx; }
+
+/* step-num 在深色卡片中加深背景以保持可见 */
+.ai-result-card .step-num {
+  background: #252730;
+  border-color: #353848;
+}
 
 .ai-result-actions {
   display: flex;
@@ -904,13 +1135,16 @@
    Step 8: AI 图片生成抽屉 & 入口按钮
    ════════════════════════════════════════ */
 
-/* ── 合集 🖼 入口按钮 ── */
-.coll-img-btn {
-  width: 52rpx; height: 52rpx;
+/* ── 合集营销图入口按钮 ── */
+.coll-mktg-btn {
+  width: 52rpx;
+  height: 52rpx;
   border-radius: 14rpx;
-  background: rgba(201, 169, 110, 0.1);
-  border: 2rpx solid rgba(201, 169, 110, 0.28);
-  display: flex; align-items: center; justify-content: center;
+  background: rgba(201,169,110,0.1);
+  border: 2rpx solid rgba(201,169,110,0.28);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-size: 28rpx;
   margin-left: 8rpx;
 }
@@ -1261,7 +1495,16 @@
 .fav-wrap {
   display: flex;
   flex-direction: column;
-  height: 100%;
+}
+
+/* ── 粘性子栏头（过滤、搜索、子Tab）── */
+.discover-sticky-hd,
+.mine-sticky-hd,
+.fav-sticky-hd {
+  position: sticky;
+  top: 88rpx;   /* 顶部 Tab 栏高度（约88rpx）*/
+  z-index: 8;
+  background: #0d0e12;
 }
 
 /* ── 搜索栏 ── */
@@ -1361,6 +1604,22 @@
   padding: 24rpx 0 8rpx;
 }
 .discover-load-txt { font-size: 24rpx; color: #3e3d46; }
+
+.load-more-btn {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 16rpx 28rpx;
+  padding: 20rpx 0;
+  border-radius: 16rpx;
+  border: 2rpx solid rgba(201,169,110,0.3);
+  background: rgba(201,169,110,0.06);
+}
+.load-more-txt {
+  font-size: 26rpx;
+  color: #c9a96e;
+  font-weight: 500;
+}
 
 /* ════════════════════════════════════════
    「我的」Tab — 发布按钮
@@ -1584,14 +1843,6 @@
   color: #c9a96e;
 }
 
-/* 海报按钮 */
-.coll-poster-btn {
-  width: 52rpx; height: 52rpx; border-radius: 14rpx;
-  background: rgba(154,100,214,0.1);
-  border: 2rpx solid rgba(154,100,214,0.28);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 28rpx; margin-left: 8rpx;
-}
 
 /* ════════════════════════════════════════
    海报生成抽屉（Step 5b）
@@ -1708,6 +1959,38 @@
   border-radius: 2rpx;
 }
 
+/* ── 发现页筛选开关按钮 ── */
+.discover-filter-btn {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 6rpx;
+  padding: 10rpx 20rpx;
+  margin: 10rpx 0 10rpx auto;
+  border-radius: 28rpx;
+  background: #1e2029;
+  border: 1.5rpx solid #2a2d38;
+  flex-shrink: 0;
+}
+.discover-filter-btn-on {
+  border-color: #c9a96e;
+}
+.discover-filter-btn-txt {
+  font-size: 22rpx;
+  color: #6e6d76;
+}
+.discover-filter-btn-on .discover-filter-btn-txt {
+  color: #c9a96e;
+}
+.discover-filter-arrow {
+  width: 24rpx;
+  height: 24rpx;
+  opacity: 0.5;
+}
+.discover-filter-btn-on .discover-filter-arrow {
+  opacity: 1;
+}
+
 /* ── 发现页：合集收藏按钮（★/☆）─────────────────── */
 .discover-right-actions {
   display: flex; flex-direction: row; align-items: center; gap: 8rpx;
@@ -1761,3 +2044,31 @@
   color: #e8c07a; background: rgba(201,169,110,0.1);
   border-color: rgba(201,169,110,0.35);
 }
+
+/* ══ 合集营销图类型选择 ══ */
+.coll-mktg-drawer { max-height: 92vh; }
+
+.coll-mktg-type-row {
+  display: flex;
+  flex-direction: row;
+  gap: 12rpx;
+  margin-bottom: 4rpx;
+}
+.coll-mktg-type-card {
+  flex: 1;
+  padding: 20rpx 12rpx;
+  background: #1e2029;
+  border: 2rpx solid #2a2d38;
+  border-radius: 16rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6rpx;
+}
+.coll-mktg-type-on {
+  background: rgba(201,169,110,0.12);
+  border-color: rgba(201,169,110,0.4);
+}
+.coll-mktg-type-emoji { font-size: 36rpx; line-height: 1; }
+.coll-mktg-type-label { font-size: 26rpx; color: #f0ede8; font-weight: 600; }
+.coll-mktg-type-desc  { font-size: 20rpx; color: #9a98a0; }

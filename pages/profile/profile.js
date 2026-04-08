@@ -2,20 +2,23 @@
 const app = getApp()
 const DB  = require('../../data/ingredients')
 
+const ADMIN_OPENID = 'osgVb13vGJMbLpDbN2VOilX83epU'
+
 Page({
-  data: { shopInfo: {}, unitLabel: '', alertCount: 0, isPro: false },
+  data: { shopInfo: {}, unitLabel: '', alertCount: 0, isPro: false, isAdmin: false },
 
   onLoad() { this._refresh() },
   onShow()  { this._refresh() },
 
   _refresh() {
-    const s = app.globalData.shopInfo
+    const s = app.globalData.shopInfo || {}
     const u = app.globalData.unitSettings
     // 先用缓存渲染
     this.setData({
       shopInfo:  s,
       isPro:     s.plan === 'pro' || s.plan === 'Pro',
       unitLabel: `${u.volume} · ${u.weight} · ${u.currency}`,
+      isAdmin:   (s._openid || '') === ADMIN_OPENID,
     })
     // 异步拉库存告警数
     DB.getAll().then(list => {
@@ -33,6 +36,11 @@ Page({
   goHelp()         { wx.navigateTo({ url: '/pages/help/help' }) },
   goSubscription() { wx.navigateTo({ url: '/pages/subscription/subscription' }) },
   goExport()       { wx.navigateTo({ url: '/pages/export/export' }) },
+
+  // ── 管理员：进入批量导入页面 ────────────────────────────
+  onAdminImport() {
+    wx.navigateTo({ url: '/pages/admin-import/admin-import' })
+  },
 
   onLogout() {
     wx.showModal({

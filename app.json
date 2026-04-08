@@ -20,7 +20,8 @@
     "pages/subscription/subscription",
     "pages/export/export",
     "pages/profile/profile",
-    "pages/sales-records/sales-records"
+    "pages/sales-records/sales-records",
+    "pages/admin-import/admin-import"
   ],
   "window": {
     "backgroundTextStyle": "dark",

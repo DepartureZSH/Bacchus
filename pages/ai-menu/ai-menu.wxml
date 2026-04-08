@@ -40,18 +40,30 @@
       <view class="form-group">
         <text class="form-label">酒单目标</text>
         <view class="option-row">
-          <view wx:for="{{menuGoals}}" wx:key="*this"
-            class="option-chip {{selectedGoal === item ? 'option-chip-active' : ''}}"
-            data-val="{{item}}" bindtap="onSelectGoal">{{item}}</view>
+          <view wx:for="{{menuGoals}}" wx:key="id"
+            class="option-chip {{selectedGoal === item.id ? 'option-chip-active' : ''}}"
+            data-val="{{item.id}}" bindtap="onSelectGoal">{{item.emoji}} {{item.label}}</view>
         </view>
       </view>
       <view class="form-group">
         <text class="form-label">风格偏好</text>
         <view class="option-row">
-          <view wx:for="{{flavors}}" wx:key="*this"
-            class="option-chip {{selectedFlavor === item ? 'option-chip-active' : ''}}"
-            data-val="{{item}}" bindtap="onSelectFlavor">{{item}}</view>
+          <view wx:for="{{flavors}}" wx:key="id"
+            class="option-chip {{selectedFlavor === item.id ? 'option-chip-active' : ''}}"
+            data-val="{{item.id}}" bindtap="onSelectFlavor">{{item.emoji}} {{item.label}}</view>
         </view>
+      </view>
+      <view class="form-group">
+        <text class="form-label">额外要求 <text class="form-label-hint">可选，最多100字</text></text>
+        <textarea
+          class="menu-custom-prompt"
+          placeholder="如：突出季节性原料、适合周末特饮、简单易调..."
+          placeholder-class="menu-custom-ph"
+          value="{{menuCustomPrompt}}"
+          bindinput="onMenuCustomPromptInput"
+          maxlength="100"
+          auto-height
+        />
       </view>
       <button class="btn-primary ai-gen-btn {{isLoading ? 'btn-loading' : ''}}"
         bindtap="onGenerate" disabled="{{isLoading}}">

@@ -1,4 +1,6 @@
 {
-  "navigationBarHidden": true,
+  "navigationBarTitleText": "合集详情",
+  "navigationBarBackgroundColor": "#0d0e12",
+  "navigationBarTextStyle": "white",
   "backgroundColor": "#0d0e12"
 }

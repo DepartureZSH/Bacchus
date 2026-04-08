@@ -1,16 +1,6 @@
 <!-- pages/recipe-detail/recipe-detail.wxml -->
 <view class="rd-root">
 
-  <!-- ── 顶部导航栏 ── -->
-  <view class="rd-nav">
-    <view class="rd-back" bindtap="onBack">
-      <text class="rd-back-arrow">‹</text>
-    </view>
-    <text class="rd-nav-title">{{recipe.name || '配方详情'}}</text>
-    <view wx:if="{{mode === 'preview'}}" class="rd-preview-badge">预览</view>
-    <view wx:else class="rd-nav-placeholder"></view>
-  </view>
-
   <!-- ── 主滚动区 ── -->
   <scroll-view class="rd-scroll" scroll-y enhanced show-scrollbar="{{false}}">
 
@@ -24,10 +14,11 @@
     <block wx:if="{{!isLoading && recipe}}">
 
       <!-- ①  图片轮播 -->
-      <view wx:if="{{images.length > 0}}" class="rd-hero">
+      <view wx:if="{{images.length > 0}}" class="rd-hero" style="height:{{heroHeight}}rpx">
         <swiper class="rd-swiper" bindchange="onSwiperChange" circular autoplay="{{false}}">
           <swiper-item wx:for="{{images}}" wx:key="fileID">
-            <image class="rd-hero-img" src="{{item.tempUrl}}" mode="aspectFill" />
+            <image class="rd-hero-img" src="{{item.tempUrl}}" mode="aspectFit"
+              catchtap="onPreviewImage" data-idx="{{index}}" />
           </swiper-item>
         </swiper>
         <!-- 指示点 -->

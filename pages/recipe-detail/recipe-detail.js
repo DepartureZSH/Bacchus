@@ -25,8 +25,9 @@ Page({
     recipe: null,
 
     // 图片轮播
-    images:   [],
-    imageIdx: 0,
+    images:     [],
+    imageIdx:   0,
+    heroHeight: 680,   // rpx，由 _computeHeroHeight 动态更新
 
     // 公开互动数据
     publicId:    '',
@@ -90,6 +91,7 @@ Page({
         return
       }
       const recipe = r.recipe || {}
+      wx.setNavigationBarTitle({ title: recipe.name || '配方详情' })
 
       // 检查是否已收藏
       const favIds = RDB.getFavIds()
@@ -134,6 +136,7 @@ Page({
       return
     }
     this.setData({ isLoading: false, recipe: raw })
+    wx.setNavigationBarTitle({ title: (raw.name || '配方详情') + ' · 预览' })
     this._loadImages(recipeId, 'recipe')
   },
 
@@ -162,8 +165,36 @@ Page({
         })
         const updated = this.data.images.map(r => urlMap[r.fileID] ? { ...r, tempUrl: urlMap[r.fileID] } : r)
         this.setData({ images: updated })
+        this._computeHeroHeight(updated)
       }).catch(() => {})
     }).catch(() => {})
+  },
+
+  // ── 根据图片实际比例动态设置 hero 区高度 ────────────────────
+  _computeHeroHeight(images) {
+    const valid = images.filter(img => img.tempUrl)
+    if (!valid.length) return
+    let maxRatio = 1   // h/w，默认 1:1
+    let pending  = valid.length
+    valid.forEach(img => {
+      wx.getImageInfo({
+        src: img.tempUrl,
+        success: (info) => {
+          if (info.width > 0) {
+            const ratio = info.height / info.width
+            if (ratio > maxRatio) maxRatio = ratio
+          }
+        },
+        complete: () => {
+          pending--
+          if (pending === 0) {
+            // 750rpx = 全屏宽；最高 900rpx 避免占屏过多
+            const heroHeight = Math.min(Math.round(maxRatio * 750), 900)
+            this.setData({ heroHeight })
+          }
+        },
+      })
+    })
   },
 
   // ── 计算评分分布图数据 ───────────────────────────────────
@@ -201,6 +232,14 @@ Page({
   // ── 图片轮播切换 ─────────────────────────────────────────
   onSwiperChange(e) {
     this.setData({ imageIdx: e.detail.current })
+  },
+
+  // ── 点击图片全屏预览（长按可保存/分享）───────────────────
+  onPreviewImage(e) {
+    const urls = this.data.images.map(img => img.tempUrl).filter(Boolean)
+    if (!urls.length) return
+    const idx = e.currentTarget.dataset.idx ?? this.data.imageIdx
+    wx.previewImage({ urls, current: urls[idx] || urls[0] })
   },
 
   // ── 返回 ────────────────────────────────────────────────

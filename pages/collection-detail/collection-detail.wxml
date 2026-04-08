@@ -1,16 +1,6 @@
 <!-- pages/collection-detail/collection-detail.wxml -->
 <view class="cd-root">
 
-  <!-- ── 顶部导航栏 ── -->
-  <view class="cd-nav">
-    <view class="cd-back" bindtap="onBack">
-      <text class="cd-back-arrow">‹</text>
-    </view>
-    <text class="cd-nav-title">{{collection.name || '合集详情'}}</text>
-    <view wx:if="{{mode === 'preview'}}" class="cd-preview-badge">预览</view>
-    <view wx:else class="cd-nav-placeholder"></view>
-  </view>
-
   <!-- ── 主滚动区 ── -->
   <scroll-view class="cd-scroll" scroll-y enhanced show-scrollbar="{{false}}">
 
@@ -24,10 +14,11 @@
     <block wx:if="{{!isLoading && collection}}">
 
       <!-- ① 图片轮播 -->
-      <view wx:if="{{images.length > 0}}" class="cd-hero">
+      <view wx:if="{{images.length > 0}}" class="cd-hero" style="height:{{heroHeight}}rpx">
         <swiper class="cd-swiper" bindchange="onSwiperChange" circular autoplay="{{false}}">
           <swiper-item wx:for="{{images}}" wx:key="fileID">
-            <image class="cd-hero-img" src="{{item.tempUrl}}" mode="aspectFill" />
+            <image class="cd-hero-img" src="{{item.tempUrl}}" mode="aspectFit"
+              catchtap="onPreviewImage" data-idx="{{index}}" />
           </swiper-item>
         </swiper>
         <view wx:if="{{images.length > 1}}" class="cd-swiper-dots">

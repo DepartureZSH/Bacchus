@@ -7,8 +7,12 @@ const { RECIPES: BUILTIN } = require('../../data/recipes')
 const FLAVOR_OPTIONS = ['酸爽', '甜蜜', '苦涩', '清爽', '烟熏', '花香', '热带', '草本']
 const BASE_OPTIONS   = ['随机', '金酒', '伏特加', '朗姆酒', '龙舌兰', '威士忌', '无酒精']
 const BASES_FILTER   = ['全部', '金酒', '伏特加', '朗姆酒', '龙舌兰', '威士忌', '无酒精', '其他']
-const DISCOVER_TAGS  = ['全部', '果味', '清爽', '低度', '经典', '创意', '烟熏', '花香', '热带', '夏日', '甜蜜', '无酒精']
-const PUBLISH_TAGS   = ['果味', '清爽', '低度', '经典', '创意', '烟熏', '花香', '热带', '夏日', '甜蜜', '苦涩', '无酒精']
+const PUBLISH_TAGS         = ['果味', '清爽', '低度', '经典', '创意', '烟熏', '花香', '热带', '夏日', '甜蜜', '苦涩', '无酒精']
+// 发现页标签预设（CF 加载前的兜底）
+const PRESET_FLAVOR_TAGS   = ['全部', '果味', '甜蜜', '清爽', '苦涩', '热带', '烟熏', '花香']
+const PRESET_STYLE_TAGS    = ['全部', '低度', '经典', '创意', '夏日', '无酒精']
+// 我的 / 收藏页来源维度
+const MINE_SOURCE_ORDER    = ['全部', '原创', 'AI生成', '克隆']
 
 const EMPTY_RECIPE_FORM = {
   name:'', emoji:'🍹', base:'', desc:'',
@@ -43,19 +47,27 @@ Page({
     showSearch:   false,
     searchText:   '',
     // ── 发现页 ────────────────────────────────────────────
-    discoverTags:          DISCOVER_TAGS,
-    discoverTag:           '全部',
-    discoverKeyword:       '',
-    likedPublicIds:        {},
-    discoverSubTab:        'recipe',        // 'recipe' | 'collection'
+    // 多维过滤状态
+    discoverBase:       '全部',
+    discoverFlavorTag:  '全部',
+    discoverStyleTag:   '全部',
+    discoverAIFilter:   '全部',
+    // 动态标签池（CF 加载后覆盖预设）
+    discoverBaseTags:   ['全部'],
+    discoverFlavorTags: PRESET_FLAVOR_TAGS,
+    discoverStyleTags:  PRESET_STYLE_TAGS,
+    discoverKeyword:    '',
+    discoverFilterOpen: false,           // 筛选面板是否展开
+    likedPublicIds:     {},
+    discoverSubTab:     'recipe',        // 'recipe' | 'collection'
     // 配方子分区
     discoverRecipeList:    [],
-    discoverRecipeLastId:  null,
+    discoverRecipeOffset:  0,
     discoverRecipeHasMore: false,
     discoverRecipeLoading: false,
     // 合集子分区
     discoverCollList:      [],
-    discoverCollLastId:    null,
+    discoverCollOffset:    0,
     discoverCollHasMore:   false,
     discoverCollLoading:   false,
     // ── 发布抽屉 ─────────────────────────────────────────
@@ -66,6 +78,12 @@ Page({
     publishTagOptions: PUBLISH_TAGS,
     // ── 我的（配方+合集）─────────────────────────────────────
     mineSubTab:        'recipe',   // 'recipe' | 'collection'
+    mineFilterOpen:    false,      // 筛选面板是否展开
+    mineTags:          ['全部'],   // 基酒
+    mineTag:           '全部',
+    mineSourceTags:    ['全部'],   // 来源/类型（原创/AI生成/克隆/动态）
+    mineSourceTag:     '全部',
+    minePubTag:        '全部',     // 是否已公开（固定三选一）
     mineRecipeList:    [],
     mineRecipeHasMore: false,
     mineRecipePage:    15,
@@ -74,22 +92,40 @@ Page({
     mineCollPage:      10,
     // ── 收藏（配方+合集）─────────────────────────────────────
     favSubTab:         'recipe',   // 'recipe' | 'collection'
+    favFilterOpen:     false,      // 筛选面板是否展开
+    favTags:           ['全部'],   // 基酒
+    favTag:            '全部',
+    favTypeTags:       ['全部'],   // 原创/AI生成
+    favTypeTag:        '全部',
+    favSourceTags:     ['全部'],   // 内置库/自创
+    favSourceTag:      '全部',
     favRecipeList:     [],
     favRecipeHasMore:  false,
     favRecipePage:     15,
     favCollList:       [],
+    favCollHasMore:   false,
+    favCollPage:      10,
     isTapping: false,
     expandedId:      null,
     expandedCollId:  null,
 
+    // ── 批量选择模式 ─────────────────────────────────────
+    batchMode:         false,
+    batchSelected:     {},   // { id: true }
+    batchCount:        0,
+    showCollPicker:    false,
+    collPickerList:    [],
+
     // AI 抽屉
-    showAIDrawer: false,
-    aiState:      'input',
-    aiForm:       { flavors:[], base:'随机', note:'' },
-    aiResult:     null,
-    aiErrorMsg:   '',
-    flavorOptions: FLAVOR_OPTIONS,
-    baseOptions:   BASE_OPTIONS,
+    showAIDrawer:      false,
+    aiState:           'input',
+    aiForm:            { flavors:[], base:'随机', customPrompt:'' },
+    flavorSelectedMap: {},   // { '酸爽': true, ... } 用于 WXML 选中态判断
+    aiResult:          null,
+    aiErrorMsg:        '',
+    aiSaving:          false,
+    flavorOptions:     FLAVOR_OPTIONS,
+    baseOptions:       BASE_OPTIONS,
 
     // 配方表单
     showFormDrawer: false,
@@ -105,15 +141,23 @@ Page({
     collForm:      { ...EMPTY_COLL_FORM },
     collTagOptions: ['果味','清爽','低度','经典','创意','烟熏','花香','热带','夏日','甜蜜','苦涩','无酒精'],
 
-    // 合集海报生成
-    showPosterDrawer: false,
-    posterTarget:     null,   // { id, name, emoji, desc, recipes[], coverTempUrl }
-    posterStyle:      'luxury',
-    posterCustomPrompt: '',
-    posterState:      'idle', // idle | config | loading | done | error
-    posterResult:     null,   // { fileID, tempUrl, bgTempUrl }
-    posterErrorMsg:   '',
-    posterLoadingStep: '正在生成背景…',
+    // 合集营销图（统一：封面图 + 营销海报）
+    showCollMktgDrawer:   false,
+    collMktgTarget:       null,   // { id, name, emoji, desc, recipes[], coverTempUrl }
+    collMktgType:         'cover',  // 'cover' | 'poster'
+    collMktgState:        'idle',   // idle | loading | canvas | done | error
+    collMktgStyle:        'elegant',
+    collMktgPosterStyle:  'luxury',
+    collMktgCustomPrompt: '',
+    collMktgLoadStep:     '',
+    collMktgError:        '',
+    collMktgResult:       null,   // { fileID, tempUrl } or { bgFileID, bgTempUrl, localPath }
+    collMktgImages:       [],
+    collMktgLayout:       { shopName:'', headline:'', subline:'' },
+    collMktgTypes: [
+      { id:'cover',  emoji:'🖼',  label:'封面图',  desc:'1:1 方图' },
+      { id:'poster', emoji:'🎭', label:'营销海报', desc:'3:4 带文字' },
+    ],
     posterStyles: [
       { id:'luxury',  label:'奢华金黑', desc:'高端夜店风', emoji:'🖤' },
       { id:'garden',  label:'花园清新', desc:'夏日户外风', emoji:'🌿' },
@@ -121,13 +165,6 @@ Page({
       { id:'minimal', label:'极简白',   desc:'简约菜单风', emoji:'⬜' },
       { id:'neon',    label:'霓虹赛博', desc:'夜店赛博风', emoji:'🌈' },
     ],
-    // Canvas 排版配置（用于叠加文字）
-    posterLayout: {
-      shopName:  '',    // 从 globalData 读
-      headline:  '',    // 合集名
-      subline:   '',    // 自定义副标题
-      cocktails: [],    // 最多 4 款配方名
-    },
 
     // 合集发布
     showCollPublishDrawer: false,
@@ -157,7 +194,7 @@ Page({
     ],
   },
 
-  onLoad()  { this._init() },
+  onLoad()  { this._init(); this._loadRecipeConfig() },
   onShow()  {
     // 非首次进入时刷新（避免 onLoad 刚加载完立即 onShow 重复请求）
     if (this._hasLoaded) this._init()
@@ -165,6 +202,22 @@ Page({
   },
 
   _hasLoaded: false,
+
+  // ── 加载 AI 配方配置（口味/基酒选项）────────────────────
+  _loadRecipeConfig() {
+    wx.cloud.callFunction({
+      name: 'recipes',
+      data: { action: 'getRecipeConfig' },
+    }).then(res => {
+      const r = (res && res.result) || {}
+      if (r.success) {
+        this.setData({
+          flavorOptions: r.flavorOptions || FLAVOR_OPTIONS,
+          baseOptions:   r.baseOptions   || BASE_OPTIONS,
+        })
+      }
+    }).catch(() => {})  // 失败时保持本地默认值
+  },
 
   // ── 初始化：预加载云端数据 ────────────────────────────
   _init() {
@@ -174,8 +227,9 @@ Page({
       this._refresh()
       // 发现页：首次进入时加载
       if (this.data.activeTab === 'discover' && this.data.discoverRecipeList.length === 0) {
-        this._loadDiscoverRecipes('全部', '', true)
-        this._loadDiscoverColls('全部', '', true)
+        this._loadDiscoverTags()
+        this._loadDiscoverRecipes(true)
+        this._loadDiscoverColls(true)
       }
       // 拉取已点赞 ID
       wx.cloud.callFunction({ name: 'recipes', data: { action: 'discoverGetLiked' } })
@@ -194,35 +248,48 @@ Page({
 
   _refresh() {
     const favIds = RDB.getFavIds()
-    // 发现页独立从云端加载，不走本地 BUILTIN
-    if (this.data.activeTab === 'discover') {
-      this._loadDiscoverRecipes(this.data.discoverTag, this.data.discoverKeyword, true)
-      this._loadDiscoverColls(this.data.discoverTag, this.data.discoverKeyword, true)
-    }
+    // 发现页在 _init / tab 切换时按需加载，_refresh 不重置（避免翻页后返回被重置）
     this._renderMine(this.data.searchText, favIds)
     this._renderFav(favIds)
     this._renderColls()
     wx.nextTick(() => this._fetchMissingTempUrls())
   },
 
+  // ── 发现：动态标签热度排序 ─────────────────────────────
+  _loadDiscoverTags() {
+    wx.cloud.callFunction({ name: 'recipes', data: { action: 'discoverTags' } })
+      .then(res => {
+        const r = res.result || {}
+        if (!r.success) return
+        const upd = {}
+        if (r.bases      && r.bases.length)      upd.discoverBaseTags   = ['全部', ...r.bases]
+        if (r.flavorTags && r.flavorTags.length) upd.discoverFlavorTags = ['全部', ...r.flavorTags]
+        if (r.styleTags  && r.styleTags.length)  upd.discoverStyleTags  = ['全部', ...r.styleTags]
+        if (Object.keys(upd).length) this.setData(upd)
+      }).catch(() => {})
+  },
+
   // ── 发现：配方子分区 ──────────────────────────────────
-  _loadDiscoverRecipes(tag, keyword, reset) {
+  _loadDiscoverRecipes(reset) {
     if (!this._discoverRecipeVer) this._discoverRecipeVer = 0
     const ver = ++this._discoverRecipeVer
     if (reset !== false) {
-      this.setData({ discoverRecipeList: [], discoverRecipeLastId: null, discoverRecipeHasMore: false, discoverRecipeLoading: false })
+      this.setData({ discoverRecipeList: [], discoverRecipeOffset: 0, discoverRecipeHasMore: false, discoverRecipeLoading: false })
     }
     if (this.data.discoverRecipeLoading) return
     this.setData({ discoverRecipeLoading: true })
-    const t = (tag !== undefined ? tag : this.data.discoverTag) || '全部'
-    const k = (keyword !== undefined ? keyword : this.data.discoverKeyword) || ''
+    const offset = reset === false ? this.data.discoverRecipeOffset : 0
     wx.cloud.callFunction({
       name: 'recipes',
       data: {
-        action: 'discoverList', targetType: 'recipe',
-        tag: t === '全部' ? '' : t, keyword: k,
-        lastId: reset !== false ? null : this.data.discoverRecipeLastId,
-        limit: 20,
+        action:     'discoverList',
+        targetType: 'recipe',
+        base:       this.data.discoverBase      || '全部',
+        flavorTag:  this.data.discoverFlavorTag || '全部',
+        styleTag:   this.data.discoverStyleTag  || '全部',
+        aiFilter:   this.data.discoverAIFilter  || '全部',
+        keyword:    this.data.discoverKeyword   || '',
+        offset, limit: 20,
       },
     }).then(res => {
       if (ver !== this._discoverRecipeVer) return
@@ -235,34 +302,37 @@ Page({
         isFav:   !!(favIds[item._id] || favIds[item.targetId]),
         isLiked: !!(this.data.likedPublicIds[item._id]),
       }))
-      const cur = reset !== false ? [] : (this.data.discoverRecipeList || [])
+      const cur = reset === false ? (this.data.discoverRecipeList || []) : []
       this.setData({
         discoverRecipeList:    [...cur, ...newList],
         discoverRecipeHasMore: r.hasMore,
-        discoverRecipeLastId:  r.lastId,
+        discoverRecipeOffset:  r.nextOffset,
       })
       wx.nextTick(() => this._fetchDiscoverCoverUrls(newList, cur.length, 'discoverRecipeList'))
     }).catch(() => this.setData({ discoverRecipeLoading: false }))
   },
 
   // ── 发现：合集子分区 ──────────────────────────────────
-  _loadDiscoverColls(tag, keyword, reset) {
+  _loadDiscoverColls(reset) {
     if (!this._discoverCollVer) this._discoverCollVer = 0
     const ver = ++this._discoverCollVer
     if (reset !== false) {
-      this.setData({ discoverCollList: [], discoverCollLastId: null, discoverCollHasMore: false, discoverCollLoading: false })
+      this.setData({ discoverCollList: [], discoverCollOffset: 0, discoverCollHasMore: false, discoverCollLoading: false })
     }
     if (this.data.discoverCollLoading) return
     this.setData({ discoverCollLoading: true })
-    const t = (tag !== undefined ? tag : this.data.discoverTag) || '全部'
-    const k = (keyword !== undefined ? keyword : this.data.discoverKeyword) || ''
+    const offset = reset === false ? this.data.discoverCollOffset : 0
     wx.cloud.callFunction({
       name: 'recipes',
       data: {
-        action: 'discoverList', targetType: 'collection',
-        tag: t === '全部' ? '' : t, keyword: k,
-        lastId: reset !== false ? null : this.data.discoverCollLastId,
-        limit: 20,
+        action:     'discoverList',
+        targetType: 'collection',
+        base:       this.data.discoverBase      || '全部',
+        flavorTag:  this.data.discoverFlavorTag || '全部',
+        styleTag:   this.data.discoverStyleTag  || '全部',
+        aiFilter:   this.data.discoverAIFilter  || '全部',
+        keyword:    this.data.discoverKeyword   || '',
+        offset, limit: 20,
       },
     }).then(res => {
       if (ver !== this._discoverCollVer) return
@@ -275,11 +345,11 @@ Page({
         isFavColl: !!(favCollIds[item._id]),
         isLiked:   !!(this.data.likedPublicIds[item._id]),
       }))
-      const cur = reset !== false ? [] : (this.data.discoverCollList || [])
+      const cur = reset === false ? (this.data.discoverCollList || []) : []
       this.setData({
         discoverCollList:    [...cur, ...newList],
         discoverCollHasMore: r.hasMore,
-        discoverCollLastId:  r.lastId,
+        discoverCollOffset:  r.nextOffset,
       })
       wx.nextTick(() => this._fetchDiscoverCoverUrls(newList, cur.length, 'discoverCollList'))
     }).catch(() => this.setData({ discoverCollLoading: false }))
@@ -313,33 +383,65 @@ Page({
     this.setData({ discoverSubTab: e.currentTarget.dataset.val })
   },
 
-  onDiscoverTag(e) {
-    const tag = e.currentTarget.dataset.val
-    this.setData({ discoverTag: tag, discoverKeyword: '' })
-    this._loadDiscoverRecipes(tag, '', true)
-    this._loadDiscoverColls(tag, '', true)
+  // ── 发现页：多维过滤 handler ─────────────────────────────
+  _discoverReload() {
+    this._loadDiscoverRecipes(true)
+    this._loadDiscoverColls(true)
+  },
+
+  onDiscoverBase(e) {
+    this.setData({ discoverBase: e.currentTarget.dataset.val })
+    this._discoverReload()
+  },
+  onDiscoverFlavorTag(e) {
+    this.setData({ discoverFlavorTag: e.currentTarget.dataset.val })
+    this._discoverReload()
+  },
+  onDiscoverStyleTag(e) {
+    this.setData({ discoverStyleTag: e.currentTarget.dataset.val })
+    this._discoverReload()
+  },
+  onDiscoverAIFilter(e) {
+    this.setData({ discoverAIFilter: e.currentTarget.dataset.val })
+    this._discoverReload()
+  },
+
+  onToggleDiscoverFilter() {
+    this.setData({ discoverFilterOpen: !this.data.discoverFilterOpen })
   },
 
   onDiscoverSearch(e) {
     const keyword = e.detail.value || ''
     this.setData({ discoverKeyword: keyword })
-    this._loadDiscoverRecipes(this.data.discoverTag, keyword, true)
-    this._loadDiscoverColls(this.data.discoverTag, keyword, true)
+    this._discoverReload()
   },
 
   onDiscoverClearSearch() {
     this.setData({ discoverKeyword: '' })
-    this._loadDiscoverRecipes(this.data.discoverTag, '', true)
-    this._loadDiscoverColls(this.data.discoverTag, '', true)
+    this._discoverReload()
+  },
+
+  // 页面级触底 → 派发到当前 Tab 的加载更多
+  onReachBottom() {
+    const { activeTab, discoverSubTab, mineSubTab, favSubTab } = this.data
+    if (activeTab === 'discover') {
+      this.onDiscoverLoadMore()
+    } else if (activeTab === 'mine') {
+      if (mineSubTab === 'recipe') this.onMineRecipeMore()
+      else                         this.onMineCollMore()
+    } else if (activeTab === 'fav') {
+      if (favSubTab === 'recipe') this.onFavRecipeMore()
+      else                        this.onFavCollMore()
+    }
   },
 
   onDiscoverLoadMore() {
     if (this.data.discoverSubTab === 'recipe') {
       if (!this.data.discoverRecipeHasMore || this.data.discoverRecipeLoading) return
-      this._loadDiscoverRecipes(this.data.discoverTag, this.data.discoverKeyword, false)
+      this._loadDiscoverRecipes(false)
     } else {
       if (!this.data.discoverCollHasMore || this.data.discoverCollLoading) return
-      this._loadDiscoverColls(this.data.discoverTag, this.data.discoverKeyword, false)
+      this._loadDiscoverColls(false)
     }
   },
 
@@ -469,8 +571,8 @@ Page({
       RDB.preload().then(() => this._renderMine(this.data.searchText, RDB.getFavIds()))
       // 刷新发现页
       if (this.data.activeTab === 'discover') {
-        this._loadDiscoverRecipes(this.data.discoverTag, '', true)
-        this._loadDiscoverColls(this.data.discoverTag, '', true)
+        this._loadDiscoverRecipes(true)
+        this._loadDiscoverColls(true)
       }
     }).catch(() => { wx.hideLoading(); wx.showToast({ title: '网络异常', icon: 'none' }) })
   },
@@ -505,7 +607,48 @@ Page({
   _renderMine(search, favIds) {
     const PAGE = 15
     favIds = favIds || RDB.getFavIds()
-    let all = RDB.getMyAll()
+    const raw = RDB.getMyAll()
+
+    // ① 基酒标签：按频率派生
+    const baseCounts = {}
+    for (const r of raw) {
+      const b = r.base || ''
+      if (b) baseCounts[b] = (baseCounts[b] || 0) + 1
+    }
+    const mineTags = ['全部', ...Object.entries(baseCounts).sort((a,b)=>b[1]-a[1]).map(([b])=>b)]
+
+    // ② 来源标签：原创/AI生成/克隆 + 动态 source 字段
+    const srcSet = new Set()
+    for (const r of raw) {
+      if (r.isOriginal) srcSet.add('原创')
+      if (r.isAI)       srcSet.add('AI生成')
+      if (r.isClone)    srcSet.add('克隆')
+      if (r.source)     srcSet.add(r.source)
+    }
+    const dynamic = Array.from(srcSet).filter(s => !MINE_SOURCE_ORDER.includes(s))
+    const mineSourceTags = [...MINE_SOURCE_ORDER.filter(s => s === '全部' || srcSet.has(s)), ...dynamic]
+
+    let all = raw
+
+    // 按基酒过滤
+    const tag = this.data.mineTag
+    if (tag && tag !== '全部') all = all.filter(r => (r.base || '') === tag)
+
+    // 按来源过滤
+    const srcTag = this.data.mineSourceTag
+    if (srcTag && srcTag !== '全部') {
+      if      (srcTag === '原创')   all = all.filter(r => r.isOriginal)
+      else if (srcTag === 'AI生成') all = all.filter(r => r.isAI)
+      else if (srcTag === '克隆')   all = all.filter(r => r.isClone)
+      else                          all = all.filter(r => r.source === srcTag)
+    }
+
+    // 按公开状态过滤
+    const pubTag = this.data.minePubTag
+    if      (pubTag === '已公开') all = all.filter(r => r.isPublic)
+    else if (pubTag === '未公开') all = all.filter(r => !r.isPublic)
+
+    // 文字搜索
     if (search) {
       const q = search.toLowerCase()
       all = all.filter(r =>
@@ -513,16 +656,37 @@ Page({
         (r.ingredients||[]).some(i=>i.name.includes(q))
       )
     }
+
     this._mineRecipeAll = all.map(r => withPreview(r, favIds))
     this.setData({
+      mineTags,
+      mineSourceTags,
       mineRecipeList:    this._mineRecipeAll.slice(0, PAGE),
       mineRecipeHasMore: this._mineRecipeAll.length > PAGE,
       mineRecipePage:    PAGE,
     })
   },
 
+  onMineTag(e) {
+    this.setData({ mineTag: e.currentTarget.dataset.val })
+    this._renderMine(this.data.searchText, RDB.getFavIds())
+  },
+  onMineSourceTag(e) {
+    this.setData({ mineSourceTag: e.currentTarget.dataset.val })
+    this._renderMine(this.data.searchText, RDB.getFavIds())
+  },
+  onMinePubTag(e) {
+    this.setData({ minePubTag: e.currentTarget.dataset.val })
+    this._renderMine(this.data.searchText, RDB.getFavIds())
+  },
+
+  onToggleMineFilter() {
+    this.setData({ mineFilterOpen: !this.data.mineFilterOpen })
+  },
+
   onMineSubTab(e) {
-    this.setData({ mineSubTab: e.currentTarget.dataset.val })
+    const val = e.currentTarget.dataset.val
+    this.setData({ mineSubTab: val, mineFilterOpen: false, batchMode: false, batchSelected: {}, batchCount: 0, mineTag: '全部', mineSourceTag: '全部', minePubTag: '全部' })
   },
 
   onMineRecipeMore() {
@@ -558,15 +722,53 @@ Page({
     const PAGE = 15
     favIds = favIds || RDB.getFavIds()
     const ids = Object.keys(favIds)
-    const all = []
+    const raw = []
     ids.forEach(id => {
       const builtin = BUILTIN.find(r => String(r.id) === String(id))
-      if (builtin) { all.push({ ...withPreview(builtin, favIds), source:'builtin' }); return }
+      if (builtin) { raw.push({ ...withPreview(builtin, favIds), source:'builtin' }); return }
       const user = RDB.getMyById(id)
-      if (user)    { all.push({ ...withPreview(user, favIds), source:'user' }) }
+      if (user)    { raw.push({ ...withPreview(user, favIds), source:'user' }) }
     })
+
+    // ① 基酒标签
+    const baseCounts = {}
+    for (const r of raw) {
+      const b = r.base || ''
+      if (b) baseCounts[b] = (baseCounts[b] || 0) + 1
+    }
+    const favTags = ['全部', ...Object.entries(baseCounts).sort((a,b)=>b[1]-a[1]).map(([b])=>b)]
+
+    // ② 类型标签：原创/AI生成
+    const typeSet = new Set()
+    for (const r of raw) {
+      if (r.isOriginal) typeSet.add('原创')
+      if (r.isAI)       typeSet.add('AI生成')
+    }
+    const favTypeTags = ['全部', ...Array.from(typeSet)]
+
+    // ③ 来源标签：内置库/自创
+    const srcSet = new Set()
+    for (const r of raw) { srcSet.add(r.source === 'builtin' ? '内置库' : '自创') }
+    const favSourceTags = ['全部', ...Array.from(srcSet)]
+
+    let all = raw
+
+    const baseTag = this.data.favTag
+    if (baseTag && baseTag !== '全部') all = all.filter(r => (r.base || '') === baseTag)
+
+    const typeTag = this.data.favTypeTag
+    if      (typeTag === '原创')   all = all.filter(r => r.isOriginal)
+    else if (typeTag === 'AI生成') all = all.filter(r => r.isAI)
+
+    const srcTag = this.data.favSourceTag
+    if      (srcTag === '内置库') all = all.filter(r => r.source === 'builtin')
+    else if (srcTag === '自创')   all = all.filter(r => r.source === 'user')
+
     this._favRecipeAll = all
     this.setData({
+      favTags,
+      favTypeTags,
+      favSourceTags,
       favRecipeList:    all.slice(0, PAGE),
       favRecipeHasMore: all.length > PAGE,
       favRecipePage:    PAGE,
@@ -574,8 +776,26 @@ Page({
     this._loadFavColls()
   },
 
+  onFavTag(e) {
+    this.setData({ favTag: e.currentTarget.dataset.val })
+    this._renderFav(RDB.getFavIds())
+  },
+  onFavTypeTag(e) {
+    this.setData({ favTypeTag: e.currentTarget.dataset.val })
+    this._renderFav(RDB.getFavIds())
+  },
+  onFavSourceTag(e) {
+    this.setData({ favSourceTag: e.currentTarget.dataset.val })
+    this._renderFav(RDB.getFavIds())
+  },
+
+  onToggleFavFilter() {
+    this.setData({ favFilterOpen: !this.data.favFilterOpen })
+  },
+
   onFavSubTab(e) {
-    this.setData({ favSubTab: e.currentTarget.dataset.val })
+    const val = e.currentTarget.dataset.val
+    this.setData({ favSubTab: val, favFilterOpen: false, batchMode: false, batchSelected: {}, batchCount: 0, favTag: '全部', favTypeTag: '全部', favSourceTag: '全部' })
   },
 
   onFavRecipeMore() {
@@ -591,17 +811,142 @@ Page({
     })
   },
 
+  // ── 批量选择模式 ────────────────────────────────────────────
+  onEnterBatchMode() {
+    this.setData({ batchMode: true, batchSelected: {}, batchCount: 0, expandedId: null })
+  },
+
+  onExitBatchMode() {
+    this.setData({ batchMode: false, batchSelected: {}, batchCount: 0 })
+  },
+
+  onBatchToggle(e) {
+    const { id } = e.currentTarget.dataset
+    if (!id) return
+    const sel = { ...this.data.batchSelected }
+    if (sel[id]) delete sel[id]; else sel[id] = true
+    this.setData({ batchSelected: sel, batchCount: Object.keys(sel).length })
+  },
+
+  onBatchSelectAll() {
+    const list = this.data.activeTab === 'mine'
+      ? (this.data.mineRecipeList || [])
+      : (this.data.favRecipeList  || [])
+    const allSelected = this.data.batchCount === list.length
+    if (allSelected) {
+      this.setData({ batchSelected: {}, batchCount: 0 })
+    } else {
+      const sel = {}
+      list.forEach(r => { sel[r.id || r._id] = true })
+      this.setData({ batchSelected: sel, batchCount: list.length })
+    }
+  },
+
+  onBatchAddToColl() {
+    if (this.data.batchCount === 0) return
+    const colls = RDB.getCollAll()
+    if (colls.length === 0) {
+      wx.showModal({
+        title: '还没有合集', content: '先创建一个合集？', confirmText: '去创建',
+        success: (res) => { if (res.confirm) this.setData({ mineSubTab: 'collection' }) }
+      })
+      return
+    }
+    this.setData({ showCollPicker: true, collPickerList: colls })
+  },
+
+  onCloseCollPicker() {
+    this.setData({ showCollPicker: false })
+  },
+
+  onPickCollection(e) {
+    const { id } = e.currentTarget.dataset
+    const recipeIds = Object.keys(this.data.batchSelected)
+    if (!id || !recipeIds.length) return
+    this.setData({ showCollPicker: false })
+    wx.showLoading({ title: '加入中…', mask: true })
+    wx.cloud.callFunction({
+      name: 'recipes',
+      data: { action: 'collBulkAdd', collId: id, recipeIds },
+    }).then(res => {
+      wx.hideLoading()
+      const r = res.result || {}
+      if (r.success) {
+        wx.showToast({ title: `已加入合集 (${r.added || recipeIds.length})`, icon: 'success' })
+        RDB.invalidateCache()
+        RDB.preload().then(() => this._renderColls())
+        this.setData({ batchMode: false, batchSelected: {}, batchCount: 0 })
+      } else {
+        wx.showToast({ title: r.error || '操作失败', icon: 'none' })
+      }
+    }).catch(() => { wx.hideLoading(); wx.showToast({ title: '网络错误', icon: 'none' }) })
+  },
+
+  onBatchDelete() {
+    const ids = Object.keys(this.data.batchSelected)
+    if (!ids.length) return
+    wx.showModal({
+      title: `删除 ${ids.length} 条配方`,
+      content: '删除后无法恢复',
+      confirmText: '删除', confirmColor: '#e05c5c',
+      success: (res) => {
+        if (!res.confirm) return
+        wx.showLoading({ title: '删除中…', mask: true })
+        wx.cloud.callFunction({
+          name: 'recipes',
+          data: { action: 'bulkRemove', ids },
+        }).then(res2 => {
+          wx.hideLoading()
+          const r = res2.result || {}
+          if (r.success) {
+            wx.showToast({ title: `已删除 ${r.removed || ids.length} 条`, icon: 'success' })
+            RDB.invalidateCache()
+            return RDB.preload()
+          } else {
+            wx.showToast({ title: r.error || '删除失败', icon: 'none' })
+          }
+        }).then(() => {
+          const favIds = RDB.getFavIds()
+          this._renderMine(this.data.searchText, favIds)
+          this._renderFav(favIds)
+          this.setData({ batchMode: false, batchSelected: {}, batchCount: 0 })
+        }).catch(() => { wx.hideLoading(); wx.showToast({ title: '网络错误', icon: 'none' }) })
+      }
+    })
+  },
+
   _loadFavColls() {
+    const PAGE = 10
     const favCollIds = RDB.getFavCollIds()
     if (Object.keys(favCollIds).length === 0) {
-      this.setData({ favCollList: [] })
+      this.setData({ favCollList: [], favCollHasMore: false, favCollPage: PAGE })
       return
     }
     wx.cloud.callFunction({ name: 'recipes', data: { action: 'favCollList' } })
       .then(res => {
         const r = res.result || {}
-        if (r.success) this.setData({ favCollList: r.data || [] })
+        if (r.success) {
+          const all = r.data || []
+          this._favCollAll = all
+          this.setData({
+            favCollList:    all.slice(0, PAGE),
+            favCollHasMore: all.length > PAGE,
+            favCollPage:    PAGE,
+          })
+        }
       }).catch(() => {})
+  },
+
+  onFavCollMore() {
+    if (!this.data.favCollHasMore) return
+    const all  = this._favCollAll || []
+    const cur  = this.data.favCollList.length
+    const next = cur + 10
+    this.setData({
+      favCollList:    [...this.data.favCollList, ...all.slice(cur, next)],
+      favCollHasMore: next < all.length,
+      favCollPage:    next,
+    })
   },
 
   // ── 我的合集（虚拟分页，PAGE=10）───────────────────────
@@ -636,10 +981,11 @@ Page({
   // ── Tab ──────────────────────────────────────────────
   onTab(e) {
     const id = e.currentTarget.dataset.id
-    this.setData({ activeTab: id, expandedId: null, expandedCollId: null, searchText: '', showSearch: false })
+    this.setData({ activeTab: id, expandedId: null, expandedCollId: null, searchText: '', showSearch: false, batchMode: false, batchSelected: {}, batchCount: 0 })
     if (id === 'discover' && this.data.discoverRecipeList.length === 0) {
-      this._loadDiscoverRecipes('全部', '', true)
-      this._loadDiscoverColls('全部', '', true)
+      this._loadDiscoverTags()
+      this._loadDiscoverRecipes(true)
+      this._loadDiscoverColls(true)
     } else {
       this._refresh()
     }
@@ -652,10 +998,18 @@ Page({
 
   // ── 展开配方 ─────────────────────────────────────────
   onCardTap(e) {
+    const { id, source } = e.currentTarget.dataset
+    // 批量模式下点击卡片 = 切换选中
+    if (this.data.batchMode) {
+      const sel = { ...this.data.batchSelected }
+      const key = id || (e.currentTarget.dataset.id)
+      if (sel[key]) delete sel[key]; else sel[key] = true
+      this.setData({ batchSelected: sel, batchCount: Object.keys(sel).length })
+      return
+    }
     if(this.data.isTapping) return
     this.data.isTapping = true
     if(this.data.isTapping){
-      const { id, source } = e.currentTarget.dataset
       const key = id + '_' + source
       this.setData({ expandedId: this.data.expandedId === key ? null : key })
       setTimeout(() => {
@@ -1285,199 +1639,225 @@ Page({
   },
 
   // ── AI 创建配方 ───────────────────────────────────────
-  onAICreate()  { this.setData({ showAIDrawer: true, aiState:'input' }) },
+  onAICreate() {
+    this.setData({
+      showAIDrawer:      true,
+      aiState:           'input',
+      aiForm:            { flavors:[], base:'随机', customPrompt:'' },
+      flavorSelectedMap: {},
+      aiResult:          null,
+      aiErrorMsg:        '',
+      aiSaving:          false,
+    })
+  },
   onCloseAI()   { this.setData({ showAIDrawer: false }) },
-  // ══ 合集海报生成 ══════════════════════════════════════════
+  // ══ 合集营销图（统一入口）════════════════════════════════
 
-  onOpenPosterDrawer(e) {
+  onOpenCollMktg(e) {
     const id = e.currentTarget.dataset.id
     const c  = (this.data.mineCollList || []).find(x => (x._id || x.id) === id)
     if (!c) return
+    const collId   = c._id || c.id
+    const shopName = (getApp().globalData && getApp().globalData.shopName) || '我的酒吧'
     this.setData({
-      showPosterDrawer:  true,
-      posterTarget:      {
-        id:           c._id || c.id,
+      showCollMktgDrawer:   true,
+      collMktgTarget:       {
+        id:           collId,
         name:         c.name,
-        emoji:        c.emoji || '📂',
-        desc:         c.desc  || '',
+        emoji:        c.emoji  || '📂',
+        desc:         c.desc   || '',
         coverTempUrl: c.coverTempUrl || '',
-        recipes:      (c.recipes || []).slice(0, 4).map(r => ({ name: r.name, emoji: r.emoji || '🍹' })),
+        recipes:      (c.recipes || []).slice(0, 6).map(r => ({ name: r.name, emoji: r.emoji || '🍹' })),
       },
-      posterStyle:       'luxury',
-      posterCustomPrompt:'',
-      posterState:       'config',
-      posterResult:      null,
-      posterErrorMsg:    '',
-      posterLoadingStep: '正在生成背景图…',
-      posterLayout: {
-        shopName:  (getApp().globalData && getApp().globalData.shopName) || '我的酒吧',
-        headline:  c.name,
-        subline:   c.desc || '',
-        cocktails: (c.recipes || []).slice(0, 4).map(r => r.name).filter(Boolean),
+      collMktgType:         'cover',
+      collMktgState:        'idle',
+      collMktgStyle:        'elegant',
+      collMktgPosterStyle:  'luxury',
+      collMktgCustomPrompt: '',
+      collMktgError:        '',
+      collMktgResult:       null,
+      collMktgImages:       [],
+      collMktgLayout: {
+        shopName,
+        headline: c.name,
+        subline:  c.desc || '',
       },
+    })
+    wx.nextTick(() => this._loadCollMktgHistory(collId))
+  },
+
+  onCloseCollMktg() {
+    this.setData({ showCollMktgDrawer: false, collMktgState: 'idle' })
+  },
+
+  onCollMktgTypeSwitch(e) {
+    this.setData({
+      collMktgType:   e.currentTarget.dataset.type,
+      collMktgState:  'idle',
+      collMktgResult: null,
+      collMktgError:  '',
     })
   },
 
-  onClosePosterDrawer() {
-    this.setData({ showPosterDrawer: false, posterState: 'idle' })
+  onCollMktgStyleTap(e)       { this.setData({ collMktgStyle:       e.currentTarget.dataset.id }) },
+  onCollMktgPosterStyleTap(e) { this.setData({ collMktgPosterStyle: e.currentTarget.dataset.id }) },
+  onCollMktgCustomInput(e)    { this.setData({ collMktgCustomPrompt: e.detail.value }) },
+  onCollMktgLayoutInput(e) {
+    this.setData({ [`collMktgLayout.${e.currentTarget.dataset.field}`]: e.detail.value })
   },
 
-  onPosterStyleTap(e) { this.setData({ posterStyle: e.currentTarget.dataset.id }) },
-  onPosterCustomInput(e) { this.setData({ posterCustomPrompt: e.detail.value }) },
-  onPosterLayoutInput(e) {
-    this.setData({ [`posterLayout.${e.currentTarget.dataset.field}`]: e.detail.value })
+  _loadCollMktgHistory(targetId) {
+    if (!targetId) return
+    wx.cloud.callFunction({
+      name: 'recipes',
+      data: { action: 'imageList', targetType: 'collection', targetId },
+    }).then(res => {
+      const r    = res.result || {}
+      const list = (r.success && r.data) ? r.data : []
+      if (!list.length) { this.setData({ collMktgImages: [] }); return }
+      const fileIDs = list.map(img => img.fileID).filter(Boolean)
+      wx.cloud.getTempFileURL({ fileList: fileIDs }).then(tres => {
+        const urlMap = {}
+        ;(tres.fileList || []).forEach(f => { if (f.tempFileURL) urlMap[f.fileID] = f.tempFileURL })
+        this.setData({ collMktgImages: list.map(img => ({ ...img, tempUrl: urlMap[img.fileID] || '' })) })
+      }).catch(() => this.setData({ collMktgImages: list }))
+    }).catch(() => {})
   },
 
-  // Step A: 调 buildPosterPrompt → Step B: genPoster 生成背景图
-  onGenPosterStart() {
-    const { posterTarget, posterStyle, posterCustomPrompt } = this.data
-    if (!posterTarget) return
-    this.setData({ posterState: 'loading', posterLoadingStep: '正在生成背景描述…', posterErrorMsg: '' })
+  onGenCollMktg() {
+    const { collMktgType } = this.data
+    if (collMktgType === 'cover') this._genCollMktgCover()
+    else                          this._genCollMktgPoster()
+  },
 
+  _genCollMktgCover() {
+    const { collMktgTarget, collMktgStyle, collMktgCustomPrompt } = this.data
+    if (!collMktgTarget) return
+    this.setData({ collMktgState: 'loading', collMktgLoadStep: '正在生成描述词…', collMktgError: '' })
     wx.cloud.callFunction({
       name: 'imagegen',
-      data: {
-        action:       'buildPosterPrompt',
-        data:         posterTarget,
-        posterStyle,
-        customPrompt: posterCustomPrompt,
-      },
+      data: { action: 'buildPrompt', type: 'collection', data: collMktgTarget, style: collMktgStyle, customPrompt: collMktgCustomPrompt },
     }).then(res => {
       const r = res.result || {}
-      if (!r.success) { this.setData({ posterState: 'error', posterErrorMsg: r.error || '描述生成失败' }); return }
+      if (!r.success) { this.setData({ collMktgState: 'error', collMktgError: r.error || '描述词生成失败' }); return }
+      this.setData({ collMktgLoadStep: '正在渲染图片…' })
+      wx.cloud.callFunction({
+        name: 'imagegen',
+        data: {
+          action:     'genImage',
+          prompt:     r.prompt,
+          style:      collMktgStyle,
+          nameHint:   collMktgTarget.name.slice(0, 12),
+          targetType: 'collection',
+          targetId:   collMktgTarget.id,
+        },
+      }).then(res2 => {
+        const r2 = res2.result || {}
+        if (!r2.success) { this.setData({ collMktgState: 'error', collMktgError: r2.error || '图片生成失败' }); return }
+        this.setData({ collMktgState: 'done', collMktgResult: { fileID: r2.fileID, tempUrl: r2.tempUrl } })
+        this._onImageGenDone('collection', collMktgTarget.id, r2.fileID, r2.tempUrl)
+        this._loadCollMktgHistory(collMktgTarget.id)
+      }).catch(() => this.setData({ collMktgState: 'error', collMktgError: '网络异常，请重试' }))
+    }).catch(() => this.setData({ collMktgState: 'error', collMktgError: '描述词生成失败，请重试' }))
+  },
 
-      this.setData({ posterLoadingStep: '正在渲染海报背景…' })
-
+  _genCollMktgPoster() {
+    const { collMktgTarget, collMktgPosterStyle, collMktgCustomPrompt } = this.data
+    if (!collMktgTarget) return
+    this.setData({ collMktgState: 'loading', collMktgLoadStep: '正在生成背景描述…', collMktgError: '' })
+    wx.cloud.callFunction({
+      name: 'imagegen',
+      data: { action: 'buildPosterPrompt', data: collMktgTarget, posterStyle: collMktgPosterStyle, customPrompt: collMktgCustomPrompt },
+    }).then(res => {
+      const r = res.result || {}
+      if (!r.success) { this.setData({ collMktgState: 'error', collMktgError: r.error || '描述生成失败' }); return }
+      this.setData({ collMktgLoadStep: '正在渲染海报背景…' })
       wx.cloud.callFunction({
         name: 'imagegen',
         data: {
           action:      'genPoster',
           prompt:      r.prompt,
-          negPrompt:   r.negPrompt || '',
-          size:        r.size || '1024x1344',
-          posterStyle,
-          targetId:    posterTarget.id,
-          nameHint:    posterTarget.name,
+          size:        r.size || '768x1024',
+          posterStyle: collMktgPosterStyle,
+          targetId:    collMktgTarget.id,
+          nameHint:    collMktgTarget.name.slice(0, 12),
         },
       }).then(res2 => {
         const r2 = res2.result || {}
-        if (!r2.success) {
-          this.setData({ posterState: 'error', posterErrorMsg: r2.error || '背景图生成失败' }); return
-        }
-        // 背景图已生成，进入 canvas 排版状态
-        this.setData({
-          posterState:  'canvas',
-          posterResult: { bgFileID: r2.fileID, bgTempUrl: r2.tempUrl },
-        })
-        // 延迟一帧等 canvas 节点挂载
-        wx.nextTick(() => this._drawPosterCanvas())
-      }).catch(err => {
-        console.error('[genPoster]', err)
-        this.setData({ posterState: 'error', posterErrorMsg: '网络异常，请重试' })
-      })
-    }).catch(() => this.setData({ posterState: 'error', posterErrorMsg: '描述生成失败，请重试' }))
+        if (!r2.success) { this.setData({ collMktgState: 'error', collMktgError: r2.error || '背景图生成失败' }); return }
+        this.setData({ collMktgState: 'canvas', collMktgResult: { bgFileID: r2.fileID, bgTempUrl: r2.tempUrl } })
+        wx.nextTick(() => this._drawCollMktgCanvas())
+      }).catch(() => this.setData({ collMktgState: 'error', collMktgError: '网络异常，请重试' }))
+    }).catch(() => this.setData({ collMktgState: 'error', collMktgError: '描述生成失败，请重试' }))
   },
 
-  // Step C: Canvas 叠加文字排版
-  _drawPosterCanvas() {
-    const { posterResult, posterLayout } = this.data
-    if (!posterResult || !posterResult.bgTempUrl) return
-
-    const query  = wx.createSelectorQuery()
-    query.select('#posterCanvas').fields({ node: true, size: true })
+  _drawCollMktgCanvas() {
+    const { collMktgResult, collMktgLayout, collMktgTarget } = this.data
+    if (!collMktgResult || !collMktgResult.bgTempUrl) return
+    const query = wx.createSelectorQuery()
+    query.select('#collMktgCanvas').fields({ node: true, size: true })
     query.exec((res) => {
-      if (!res[0] || !res[0].node) {
-        this.setData({ posterState: 'done' }); return
-      }
+      if (!res[0] || !res[0].node) { this.setData({ collMktgState: 'done' }); return }
       const canvas = res[0].node
       const ctx    = canvas.getContext('2d')
       const W      = res[0].width  || 360
       const H      = res[0].height || 480
       canvas.width  = W
       canvas.height = H
-
-      // 加载背景图
       const img = canvas.createImage()
       img.onload = () => {
-        // 背景图
         ctx.drawImage(img, 0, 0, W, H)
-
-        // 半透明黑色遮罩（顶 + 底）
         const topGrad = ctx.createLinearGradient(0, 0, 0, H * 0.45)
-        topGrad.addColorStop(0,   'rgba(0,0,0,0.72)')
-        topGrad.addColorStop(1,   'rgba(0,0,0,0)')
+        topGrad.addColorStop(0, 'rgba(0,0,0,0.72)')
+        topGrad.addColorStop(1, 'rgba(0,0,0,0)')
         ctx.fillStyle = topGrad; ctx.fillRect(0, 0, W, H * 0.45)
-
         const botGrad = ctx.createLinearGradient(0, H * 0.55, 0, H)
-        botGrad.addColorStop(0,   'rgba(0,0,0,0)')
-        botGrad.addColorStop(1,   'rgba(0,0,0,0.82)')
+        botGrad.addColorStop(0, 'rgba(0,0,0,0)')
+        botGrad.addColorStop(1, 'rgba(0,0,0,0.82)')
         ctx.fillStyle = botGrad; ctx.fillRect(0, H * 0.55, W, H * 0.45)
-
-        const dpr  = wx.getSystemInfoSync().pixelRatio || 2
-        const pad  = W * 0.08
-
-        // 顶部：店铺名
+        const pad = W * 0.08
         ctx.fillStyle    = 'rgba(201,169,110,0.9)'
         ctx.font         = `bold ${Math.round(W * 0.04)}px sans-serif`
         ctx.textAlign    = 'left'
         ctx.textBaseline = 'top'
-        ctx.fillText(posterLayout.shopName || '', pad, H * 0.07)
-
-        // 顶部分隔线
+        ctx.fillText(collMktgLayout.shopName || '', pad, H * 0.07)
         ctx.strokeStyle = 'rgba(201,169,110,0.5)'
         ctx.lineWidth   = 1
         ctx.beginPath(); ctx.moveTo(pad, H * 0.12); ctx.lineTo(W - pad, H * 0.12); ctx.stroke()
-
-        // 底部：合集名（大标题）
         ctx.fillStyle    = '#ffffff'
         ctx.font         = `bold ${Math.round(W * 0.065)}px sans-serif`
-        ctx.textAlign    = 'left'
         ctx.textBaseline = 'bottom'
-        ctx.fillText(posterLayout.headline || '', pad, H * 0.76)
-
-        // 副标题
-        if (posterLayout.subline) {
+        ctx.fillText(collMktgLayout.headline || '', pad, H * 0.76)
+        if (collMktgLayout.subline) {
           ctx.font      = `${Math.round(W * 0.035)}px sans-serif`
           ctx.fillStyle = 'rgba(255,255,255,0.7)'
-          ctx.fillText(posterLayout.subline, pad, H * 0.82)
+          ctx.fillText(collMktgLayout.subline, pad, H * 0.82)
         }
-
-        // 底部：酒款列表（每款一行，最多 4 行）
-        const cocktails = posterLayout.cocktails || []
+        const names = (collMktgTarget.recipes || []).slice(0, 4).map(r => r.name)
         ctx.font      = `${Math.round(W * 0.032)}px sans-serif`
         ctx.fillStyle = 'rgba(255,255,255,0.85)'
-        cocktails.slice(0, 4).forEach((name, i) => {
-          ctx.fillText(`• ${name}`, pad, H * 0.87 + i * (H * 0.032))
-        })
-
-        // 导出为图片
-        const fs = wx.getFileSystemManager()
-        const tmpPath = `${wx.env.USER_DATA_PATH}/poster_${Date.now()}.jpg`
+        names.forEach((name, i) => { ctx.fillText(`• ${name}`, pad, H * 0.87 + i * (H * 0.032)) })
+        const fs      = wx.getFileSystemManager()
+        const tmpPath = `${wx.env.USER_DATA_PATH}/collmktg_${Date.now()}.jpg`
         canvas.toDataURL('image/jpeg', 0.92, (dataUrl) => {
-          // 小程序 canvas 用 toDataURL
           const base64 = dataUrl.replace(/^data:image\/\w+;base64,/, '')
           fs.writeFile({
-            filePath: tmpPath,
-            data:     base64,
-            encoding: 'base64',
-            success: () => {
-              this.setData({
-                posterState:  'done',
-                posterResult: { ...this.data.posterResult, localPath: tmpPath },
-              })
-            },
-            fail: () => this.setData({ posterState: 'done' }),
+            filePath: tmpPath, data: base64, encoding: 'base64',
+            success: () => this.setData({ collMktgState: 'done', collMktgResult: { ...this.data.collMktgResult, localPath: tmpPath } }),
+            fail:    () => this.setData({ collMktgState: 'done' }),
           })
         })
       }
-      img.onerror = () => this.setData({ posterState: 'done' })
-      img.src = posterResult.bgTempUrl
+      img.onerror = () => this.setData({ collMktgState: 'done' })
+      img.src = collMktgResult.bgTempUrl
     })
   },
 
-  onSavePosterToAlbum() {
-    const { posterResult } = this.data
-    const path = posterResult && (posterResult.localPath || posterResult.bgTempUrl)
+  onCollMktgSave() {
+    const { collMktgResult, collMktgType } = this.data
+    const path = collMktgType === 'cover'
+      ? (collMktgResult && collMktgResult.tempUrl)
+      : (collMktgResult && (collMktgResult.localPath || collMktgResult.bgTempUrl))
     if (!path) { wx.showToast({ title: '图片未就绪', icon: 'none' }); return }
     wx.showLoading({ title: '保存中…' })
     wx.saveImageToPhotosAlbum({
@@ -1486,7 +1866,7 @@ Page({
       fail: (err) => {
         wx.hideLoading()
         if (err.errMsg && err.errMsg.includes('auth deny')) {
-          wx.showModal({ title:'需要相册权限', content:'请前往设置开启', showCancel:false })
+          wx.showModal({ title: '需要相册权限', content: '请前往设置开启', showCancel: false })
         } else {
           wx.showToast({ title: '长按图片可保存', icon: 'none', duration: 2500 })
         }
@@ -1494,8 +1874,36 @@ Page({
     })
   },
 
-  onRegeneratePoster() {
-    this.setData({ posterState: 'config', posterResult: null, posterErrorMsg: '' })
+  onCollMktgRegenerate() {
+    this.setData({ collMktgState: 'idle', collMktgResult: null, collMktgError: '' })
+  },
+
+  onSetCollMktgCover(e) {
+    const { imageid, targetid } = e.currentTarget.dataset
+    wx.cloud.callFunction({
+      name: 'recipes',
+      data: { action: 'imageSetCover', imageId: imageid, targetId: targetid, targetType: 'collection' },
+    }).then(res => {
+      if (!(res.result && res.result.success)) { wx.showToast({ title: '操作失败', icon: 'none' }); return }
+      wx.showToast({ title: '已设为封面 ✓', icon: 'success' })
+      const img = (this.data.collMktgImages || []).find(i => i._id === imageid)
+      if (img) this._onImageGenDone('collection', targetid, img.fileID, img.tempUrl)
+      this._loadCollMktgHistory(targetid)
+    })
+  },
+
+  onDeleteCollMktgImg(e) {
+    const { imageid, targetid } = e.currentTarget.dataset
+    wx.showModal({ title: '删除图片', content: '确定删除这张图片？', success: (res) => {
+      if (!res.confirm) return
+      wx.cloud.callFunction({
+        name: 'recipes',
+        data: { action: 'imageDelete', imageId: imageid },
+      }).then(() => {
+        wx.showToast({ title: '已删除', icon: 'success' })
+        this._loadCollMktgHistory(targetid)
+      })
+    }})
   },
 
   // ══ 合集发布到发现 ════════════════════════════════════════
@@ -1575,8 +1983,8 @@ Page({
       RDB.invalidateCache()
       RDB.preload().then(() => this._renderColls())
       if (this.data.activeTab === 'discover') {
-        this._loadDiscoverRecipes(this.data.discoverTag, this.data.discoverKeyword, true)
-        this._loadDiscoverColls(this.data.discoverTag, this.data.discoverKeyword, true)
+        this._loadDiscoverRecipes(true)
+        this._loadDiscoverColls(true)
       }
     }).catch(() => { wx.hideLoading(); wx.showToast({ title: '网络异常', icon: 'none' }) })
   },
@@ -1642,24 +2050,27 @@ Page({
     const val     = e.currentTarget.dataset.val
     const flavors = [...this.data.aiForm.flavors]
     const idx     = flavors.indexOf(val)
-    if (idx >= 0){
+    if (idx >= 0) {
       flavors.splice(idx, 1)
     } else {
       flavors.push(val)
     }
-    this.setData({ 'aiForm.flavors': flavors })
+    // 同步更新扁平 map，供 WXML 直接读取（避免 indexOf 响应式问题）
+    const map = {}
+    flavors.forEach(f => { map[f] = true })
+    this.setData({ 'aiForm.flavors': flavors, flavorSelectedMap: map })
   },
   onSelectBase(e) { this.setData({ 'aiForm.base': e.currentTarget.dataset.val }) },
-  onAINote(e)     { this.setData({ 'aiForm.note': e.detail.value }) },
+  onAICustomPrompt(e) { this.setData({ 'aiForm.customPrompt': e.detail.value }) },
   onAIRetry()     { this.setData({ aiState:'input' }) },
 
   onAIGenerate() {
-    const { flavors, base, note } = this.data.aiForm
+    const { flavors, base, customPrompt } = this.data.aiForm
     this.setData({ aiState:'loading', aiResult:null, aiErrorMsg:'' })
 
     wx.cloud.callFunction({
       name: 'recipes',
-      data: { action:'aiGenerate', flavors, base: base||'随机', note: note||'' },
+      data: { action:'aiGenerate', flavors, base: base||'随机', customPrompt: customPrompt||'' },
     }).then(res => {
       const r = res.result || {}
       if (r.success && r.recipe) {
@@ -1676,13 +2087,21 @@ Page({
 
   onAISave() {
     const r = this.data.aiResult
-    if (!r) return
+    if (!r || this.data.aiSaving) return
+    this.setData({ aiSaving: true })
+    wx.showLoading({ title: '保存中…', mask: true })
     RDB.addMyRecipe({ ...r, isAI: true })
       .then(() => RDB.preload())
       .then(() => {
-        wx.showToast({ title:'已保存到我的配方 ✓', icon:'success' })
-        this.setData({ showAIDrawer:false, activeTab:'mine' })
+        wx.hideLoading()
+        wx.showToast({ title: '已保存到我的配方 ✓', icon: 'success' })
+        this.setData({ showAIDrawer: false, activeTab: 'mine', aiSaving: false })
         this._refresh()
+      })
+      .catch(() => {
+        wx.hideLoading()
+        wx.showToast({ title: '保存失败，请重试', icon: 'none' })
+        this.setData({ aiSaving: false })
       })
   },
 })

@@ -8,6 +8,7 @@
 
 const cloud = require('wx-server-sdk')
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV })
+const CFG  = require('./config')
 const db   = cloud.database()
 const _    = db.command
 const logs = db.collection('stock_logs')
@@ -352,18 +353,14 @@ function _weekStart(ts) {
   const dow = d.getDay() === 0 ? 6 : d.getDay() - 1
   return new Date(d.getFullYear(), d.getMonth(), d.getDate() - dow).getTime()
 }
-// ── actionAIAdvice：调用 Dify 生成 AI 经营建议 ────────────
-// 专供 Pro 用户使用，每日最多调用 3 次（避免滥用）
-// 环境变量：DIFY_ANALYTICS_API_KEY（可与 ai-menu 用同一个 Key 的不同应用）
+// ── actionAIAdvice：百炼 qwen-plus 生成 AI 经营建议 ──────
 async function actionAIAdvice(openid, event) {
   const { period = 'week', forceRefresh = false } = event
   try {
-    // 鉴权：仅 Pro 用户
     const { data: [shop] } = await db.collection('shops').where({ _openid: openid }).limit(1).get()
     if (!shop) return { success: false, error: 'shop_not_found' }
     if ((shop.plan || '').toLowerCase() !== 'pro') return { success: false, error: 'pro_required' }
 
-    // 每日次数限制（3次）
     const now       = Date.now()
     const todayStr  = _dateStr(now)
     const advCache  = shop.aiAdviceCache || {}
@@ -375,46 +372,35 @@ async function actionAIAdvice(openid, event) {
     if (cached && !forceRefresh && (now - (cached.ts || 0)) < 30 * 60 * 1000) {
       return { success: true, fromCache: true, advice: cached.advice }
     }
-
     if (todayUsed >= 3 && !forceRefresh) {
       return { success: false, error: 'daily_limit', limit: 3, used: todayUsed }
     }
 
-    // 拉取经营数据做摘要
+    // 拉取经营数据
     const summaryResult = await actionSummary(openid, period)
     if (!summaryResult.success) return { success: false, error: 'summary_failed' }
-
     const { kpi, topIngredients, stockDist, isEmpty } = summaryResult
-    const contextStr = JSON.stringify({
-      period,
-      kpi: {
-        revenue: kpi.revenueNum, profit: kpi.profitNum,
-        margin: kpi.margin, cups: kpi.cups,
-        costRate: kpi.costRate, trend: kpi.revenueTrend,
-      },
-      topIngredients: topIngredients.slice(0, 3).map(i => ({ name: i.name, cost: i.cost })),
-      stockStatus: stockDist ? stockDist.raw : {},
-    })
 
-    // 优先调用 Dify chatflow（DIFY_ANALYTICS_API_KEY 优先，降级用 DIFY_API_KEY）
     let advice = null
-    const DIFY_KEY = process.env.DIFY_ANALYTICS_API_KEY || process.env.DIFY_API_KEY || ''
-    if (DIFY_KEY) {
-      advice = await _callDifyAdvice(DIFY_KEY, contextStr, shop.name || '酒吧')
+    if (!isEmpty && kpi.revenueNum > 0) {
+      // 有数据：调用百炼 qwen-plus
+      const periodLabel = period === 'week' ? '周' : '月'
+      const prompt = CFG.buildAdvicePrompt({ shopName: shop.name || '酒吧', periodLabel, kpi, topIngredients, stockDist })
+      advice = await _callBailianAdvice(prompt)
     }
-    // 降级：规则生成建议（不依赖外部 API）
+    // 降级：规则建议
     if (!advice) {
-      advice = _generateRuleAdvice(kpi, topIngredients, stockDist, period, isEmpty)
+      advice = isEmpty ? CFG.ONBOARDING_ADVICE : _generateRuleAdvice(kpi, topIngredients, stockDist, period, isEmpty)
     }
     if (!advice) return { success: false, error: 'ai_failed' }
 
     // 写缓存 + 计数
-    const patch = {
-      [`aiAdviceCache.${cacheKey}`]:           { ts: now, advice },
-      [`aiAdviceCache.count_${todayStr}`]:     todayUsed + 1,
-    }
-    await db.collection('shops').doc(shop._id).update({ data: patch })
-
+    await db.collection('shops').doc(shop._id).update({
+      data: {
+        [`aiAdviceCache.${cacheKey}`]:       { ts: now, advice },
+        [`aiAdviceCache.count_${todayStr}`]: todayUsed + 1,
+      }
+    })
     return { success: true, fromCache: false, advice }
 
   } catch (e) {
@@ -423,29 +409,29 @@ async function actionAIAdvice(openid, event) {
   }
 }
 
-// ── _callDifyAdvice：调用 Dify Chatflow 生成经营建议 ──────
-async function _callDifyAdvice(apiKey, contextStr, shopName) {
-  const BASE_URL = (process.env.DIFY_API_URL || 'https://api.dify.ai/v1').replace(/\/$/, '')
-  const query = `你是一名小酒馆经营顾问。请根据以下经营数据，给出3条简短实用的经营建议。` +
-    `每条建议格式：{"icon":"emoji","title":"标题（10字内）","text":"正文（60字内）"}。` +
-    `请只返回JSON数组，不要其他内容。\n\n店名：${shopName}\n经营数据：${contextStr}`
-  const bodyStr = JSON.stringify({
-    inputs:          {},
-    query,
-    response_mode:   'blocking',
-    conversation_id: '',
-    user:            'bacchus-analytics',
+// ── _callBailianAdvice：百炼 chat completions 生成建议 ────
+async function _callBailianAdvice(prompt) {
+  const API_KEY  = process.env.BAILIAN_API_KEY || ''
+  const BASE_URL = (process.env.BAILIAN_API_URL || 'https://dashscope.aliyuncs.com/compatible-mode/v1').replace(/\/$/, '')
+  const MODEL    = process.env.BAILIAN_TEXT_MODEL || CFG.DEFAULT_MODEL
+
+  if (!API_KEY) return null
+  const body = JSON.stringify({
+    model:       MODEL,
+    messages:    [{ role: 'user', content: prompt }],
+    max_tokens:  600,
+    temperature: 0.5,
   })
   try {
-    const raw = await _httpsPost(`${BASE_URL}/chat-messages`, {
-      'Authorization': `Bearer ${apiKey}`,
+    const raw  = await _httpsPost(`${BASE_URL}/chat/completions`, {
+      'Authorization': `Bearer ${API_KEY}`,
       'Content-Type':  'application/json',
-    }, bodyStr)
+    }, body)
     const res  = JSON.parse(raw)
-    const text = res.answer || ''
+    const text = res.choices && res.choices[0] && res.choices[0].message && res.choices[0].message.content || ''
     return _parseAdvice(text)
   } catch (e) {
-    console.error('[_callDifyAdvice]', e)
+    console.error('[_callBailianAdvice]', e)
     return null
   }
 }
