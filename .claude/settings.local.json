@@ -3,7 +3,8 @@
     "allow": [
       "Bash(sed -n '436,480p' \"E:\\\\Desktop\\\\Work\\\\Company\\\\Demo\\\\Bacchus\\\\pages\\\\my-recipes\\\\my-recipes.wxss\")",
       "Bash(sed -n '960,1000p' \"E:\\\\Desktop\\\\Work\\\\Company\\\\Demo\\\\Bacchus\\\\pages\\\\my-recipes\\\\my-recipes.wxss\")",
-      "Bash(sed -n '1640,1680p' \"E:\\\\Desktop\\\\Work\\\\Company\\\\Demo\\\\Bacchus\\\\pages\\\\my-recipes\\\\my-recipes.wxss\")"
+      "Bash(sed -n '1640,1680p' \"E:\\\\Desktop\\\\Work\\\\Company\\\\Demo\\\\Bacchus\\\\pages\\\\my-recipes\\\\my-recipes.wxss\")",
+      "Bash(node -e ':*)"
     ]
   }
 }

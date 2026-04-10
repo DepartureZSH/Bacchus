@@ -1,85 +1,257 @@
 /* pages/profile/profile.wxss */
 
-.profile-scroll { height: 100vh; background: #0d0e12; }
+.profile-scroll {
+  height: 100vh;
+  background: var(--bg-base);
+}
 
-/* ── User card ── */
-.user-card {
+/* ════════════════════════════
+   用户英雄卡
+   ════════════════════════════ */
+.pf-hero {
+  margin: 28rpx var(--page-x) 0;
+  background: var(--bg-surface);
+  border: 1.5rpx solid var(--border-sub);
+  border-radius: var(--r-2xl);
+  overflow: hidden;
+  box-shadow: var(--shadow-card);
+  position: relative;
+}
+
+/* 金色顶部装饰线 */
+.pf-hero::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3rpx;
+  background: linear-gradient(90deg, transparent, var(--gold-bright), var(--gold-dim), transparent);
+}
+
+.pf-user-row {
   display: flex;
   flex-direction: row;
   align-items: center;
   gap: 28rpx;
-  margin: 24rpx 32rpx 20rpx;
-  padding: 32rpx;
+  padding: 40rpx 32rpx 28rpx;
 }
 
-.user-avatar {
-  width: 112rpx; height: 112rpx;
-  background: linear-gradient(135deg, #c9a96e, #a67c3e);
-  border-radius: 32rpx;
+.pf-avatar {
+  width: 108rpx; height: 108rpx;
+  background: linear-gradient(135deg, var(--gold-bright), var(--gold-dim));
+  border-radius: var(--r-xl);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: var(--shadow-gold);
+}
+.pf-avatar-emoji { font-size: 52rpx; line-height: 1; }
+
+.pf-user-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+  flex: 1;
+  overflow: hidden;
+}
+.pf-shop-name {
+  font-size: 34rpx;
+  font-weight: 700;
+  color: var(--text-primary);
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pf-shop-addr {
+  font-size: 24rpx;
+  color: var(--text-muted);
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pf-plan-badge { margin-top: 4rpx; }
+
+/* 库存预警条 */
+.pf-alert-strip {
   display: flex;
   flex-direction: row;
   align-items: center;
-  justify-content: center;
-  font-size: 56rpx;
+  gap: 12rpx;
+  margin: 0 24rpx 24rpx;
+  padding: 16rpx 20rpx;
+  background: rgba(224,154,58,0.08);
+  border: 1.5rpx solid rgba(224,154,58,0.22);
+  border-radius: var(--r-md);
+}
+.pf-alert-icon { font-size: 28rpx; flex-shrink: 0; }
+.pf-alert-txt {
+  flex: 1;
+  font-size: 24rpx;
+  color: var(--clr-warn);
+}
+.pf-alert-go {
+  font-size: 24rpx;
+  color: var(--clr-warn);
+  font-weight: 600;
   flex-shrink: 0;
 }
 
-.user-info { display: flex; flex-direction: column; gap: 8rpx; }
+/* ════════════════════════════
+   Section label
+   ════════════════════════════ */
+.pf-section-label {
+  font-size: 20rpx;
+  font-weight: 700;
+  color: var(--text-disabled);
+  letter-spacing: 3rpx;
+  text-transform: uppercase;
+  padding: 28rpx var(--page-x) 10rpx;
+  display: block;
+}
+.pf-section-label-admin {
+  color: rgba(143,168,248,0.45);
+}
 
-.user-name  { font-size: 32rpx; font-weight: 700; color: #f0ede8; display: block; }
-.user-email { font-size: 24rpx; color: #9a98a0; display: block; }
-.user-plan  { margin-top: 4rpx; display: inline-block; }
+/* ════════════════════════════
+   Card
+   ════════════════════════════ */
+.pf-card {
+  margin: 0 var(--page-x);
+  background: var(--bg-surface);
+  border: 1.5rpx solid var(--border-sub);
+  border-radius: var(--r-xl);
+  overflow: hidden;
+  box-shadow: var(--shadow-card);
+}
+.pf-card-admin {
+  border-color: rgba(143,168,248,0.12);
+}
 
-/* ── Settings ── */
-.settings-card { margin: 0 32rpx 20rpx; overflow: hidden; }
-
-.settings-row {
+/* ════════════════════════════
+   Row
+   ════════════════════════════ */
+.pf-row {
   display: flex;
   flex-direction: row;
   align-items: center;
-  padding: 28rpx 32rpx;
+  padding: 24rpx 28rpx;
   gap: 20rpx;
 }
 
-.settings-divider { height: 2rpx; background: #2a2d38; margin: 0 32rpx; }
+/* Free 用户的订阅升级行 — 淡金色渐变 */
+.pf-row-upgrade {
+  background: linear-gradient(90deg, rgba(201,164,90,0.07) 0%, transparent 100%);
+}
 
-.settings-icon  { font-size: 32rpx; flex-shrink: 0; }
-.settings-label { font-size: 28rpx; color: #f0ede8; flex: 1; }
+.pf-divider {
+  height: 1.5rpx;
+  background: var(--border-sub);
+  margin: 0 28rpx;
+}
 
-.settings-right {
+/* ── Icon wrapper ── */
+.pf-row-icon-wrap {
+  width: 72rpx; height: 72rpx;
+  border-radius: var(--r-md);
+  background: var(--bg-raised);
+  border: 1.5rpx solid var(--border-sub);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.pf-icon-gold   { background: var(--gold-tint);              border-color: var(--gold-border); }
+.pf-icon-orange { background: rgba(224,154,58,0.10);          border-color: rgba(224,154,58,0.22); }
+.pf-icon-ai     { background: rgba(143,168,248,0.10);         border-color: rgba(143,168,248,0.20); }
+.pf-icon-green  { background: rgba(76,175,132,0.10);          border-color: rgba(76,175,132,0.20); }
+
+.pf-row-icon { font-size: 36rpx; line-height: 1; }
+
+/* ── Row body ── */
+.pf-row-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4rpx;
+  overflow: hidden;
+  min-width: 0;
+}
+.pf-row-label {
+  font-size: 28rpx;
+  font-weight: 500;
+  color: var(--text-primary);
+  display: block;
+}
+.pf-row-value {
+  font-size: 22rpx;
+  color: var(--text-muted);
+  display: block;
+}
+.pf-upgrade-hint { color: var(--gold-main); }
+
+/* ── Row right cluster ── */
+.pf-row-right {
   display: flex;
   flex-direction: row;
   align-items: center;
   gap: 10rpx;
+  flex-shrink: 0;
 }
 
-.settings-value { font-size: 24rpx; color: #9a98a0; }
-.settings-arrow { font-size: 32rpx; color: #5c5b65; }
+.pf-arrow {
+  font-size: 30rpx;
+  color: var(--text-disabled);
+  flex-shrink: 0;
+}
 
-/* ── Version ── */
-.version-hint {
+/* ── Pro badge & upgrade pill ── */
+.pf-pro-badge {
+  background: linear-gradient(135deg, var(--gold-bright), var(--gold-dim));
+  color: var(--bg-base);
+  border-radius: var(--r-full);
+  padding: 4rpx 16rpx;
+  font-size: 20rpx;
+  font-weight: 700;
+  letter-spacing: 1rpx;
+}
+
+.pf-upgrade-cta {
+  font-size: 22rpx;
+  color: var(--gold-main);
+  font-weight: 600;
+  background: var(--gold-tint);
+  border: 1rpx solid var(--gold-border);
+  border-radius: var(--r-full);
+  padding: 5rpx 16rpx;
+}
+
+/* ── 库存告警徽章 ── */
+.pf-warn-badge {
+  background: var(--clr-warn);
+  color: #fff;
+  border-radius: var(--r-full);
+  padding: 2rpx 12rpx;
+  font-size: 20rpx;
+  font-weight: 700;
+  min-width: 36rpx;
+  text-align: center;
+}
+
+/* ════════════════════════════
+   版本 & 退出
+   ════════════════════════════ */
+.pf-version {
+  display: block;
   text-align: center;
   font-size: 22rpx;
-  color: #5c5b65;
-  padding: 0 32rpx 28rpx;
-  display: block;
+  color: var(--text-disabled);
+  padding: 36rpx var(--page-x) 20rpx;
 }
 
-/* ── Logout ── */
-.logout-btn { margin: 0 32rpx; }
-
-/* ── 补充样式 ── */
-.section-label {
-  font-size: 22rpx; font-weight: 700; color: #5c5b65;
-  letter-spacing: 2rpx; padding: 16rpx 32rpx 12rpx; display: block;
+.pf-logout-btn {
+  margin: 0 var(--page-x);
+  color: var(--clr-danger) !important;
+  border-color: rgba(224,92,92,0.20) !important;
 }
-
-.warn-text { color: #e09a3a; }
-
-/* ── 补充 ── */
-.settings-pro-badge {
-  background: linear-gradient(135deg,#c9a96e,#a67c3e);
-  color: #0d0e12; border-radius: 10rpx;
-  padding: 4rpx 16rpx; font-size: 20rpx; font-weight: 700;
-}
-.accent-text { color: #c9a96e; font-size: 24rpx; }

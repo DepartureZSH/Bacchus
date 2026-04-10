@@ -1,0 +1,23 @@
+{
+  "name": "bacchus-miniprogram",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "test": "jest",
+    "test:smoke": "jest test/smoke.test.js",
+    "test:page": "jest --testPathPattern=test/pages/"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "miniprogram-automator": "^0.12.1"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "testTimeout": 60000,
+    "maxWorkers": 1,
+    "globalSetup": "./test/setup/global-setup.js",
+    "globalTeardown": "./test/setup/global-teardown.js",
+    "testPathPattern": "test/.*\\.test\\.js$",
+    "verbose": true
+  }
+}

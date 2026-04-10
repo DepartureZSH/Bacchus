@@ -1,45 +1,63 @@
 /* pages/shop-info/shop-info.wxss */
-.page-scroll { height: 100vh; background: #0d0e12; }
+.page-scroll { height: 100vh; background: var(--bg-base); }
 
+/* ── 头像区 ── */
 .shop-avatar-area {
   display: flex; flex-direction: column; align-items: center;
-  padding: 48rpx 0 32rpx;
+  padding: 48rpx 0 36rpx;
 }
 .shop-avatar {
-  width: 160rpx; height: 160rpx; border-radius: 40rpx;
-  background: linear-gradient(135deg,#c9a96e,#a67c3e);
+  width: 160rpx; height: 160rpx;
+  border-radius: var(--r-2xl);
+  background: linear-gradient(135deg, var(--gold-bright), var(--gold-dim));
   display: flex; flex-direction: row; align-items: center; justify-content: center;
   font-size: 80rpx; margin-bottom: 16rpx;
+  box-shadow: var(--shadow-gold);
 }
-.shop-avatar-hint { font-size: 22rpx; color: #5c5b65; }
+.shop-avatar-hint { font-size: 22rpx; color: var(--text-disabled); }
 
-.form-section { margin: 0 32rpx 20rpx; overflow: hidden; }
+/* ── 表单 ── */
+.form-section { margin: 0 var(--page-x) 20rpx; overflow: hidden; }
 .form-row {
   display: flex; flex-direction: row; align-items: center;
-  padding: 28rpx 32rpx; gap: 16rpx; min-height: 96rpx;
+  padding: 28rpx 28rpx; gap: 16rpx; min-height: 96rpx;
 }
-.form-divider { height: 2rpx; background: #2a2d38; margin: 0 32rpx; }
-.form-label { font-size: 26rpx; color: #9a98a0; min-width: 140rpx; flex-shrink: 0; display: block; }
-.form-label-required::before { content: '* '; color: #e05c5c; }
-.form-input { flex: 1; font-size: 28rpx; color: #f0ede8; text-align: right; background: none; }
-.form-placeholder { color: #5c5b65; }
+.form-divider { height: 1.5rpx; background: var(--border-sub); margin: 0 28rpx; }
+.form-label {
+  font-size: 26rpx; color: var(--text-secondary);
+  min-width: 140rpx; flex-shrink: 0; display: block;
+}
+.form-label-required::before { content: '* '; color: var(--clr-danger); }
+.form-input {
+  flex: 1; font-size: 28rpx; color: var(--text-primary);
+  text-align: right; background: none;
+}
+.form-placeholder { color: var(--text-disabled); }
 
-.section-label { font-size: 22rpx; color: #5c5b65; font-weight: 700;
-  letter-spacing: 2rpx; padding: 0 32rpx 16rpx; display: block; }
+/* ── Section label ── */
+.section-label {
+  font-size: 20rpx; font-weight: 700; color: var(--text-disabled);
+  letter-spacing: 3rpx; text-transform: uppercase;
+  padding: 24rpx var(--page-x) 12rpx; display: block;
+}
 
-.info-section { margin: 0 32rpx 20rpx; overflow: hidden; }
+/* ── 信息只读区 ── */
+.info-section { margin: 0 var(--page-x) 20rpx; overflow: hidden; }
 .info-row {
   display: flex; flex-direction: row; align-items: center;
-  justify-content: space-between; padding: 28rpx 32rpx;
+  justify-content: space-between; padding: 28rpx 28rpx;
 }
-.info-divider { height: 2rpx; background: #2a2d38; margin: 0 32rpx; }
-.info-key  { font-size: 28rpx; color: #9a98a0; }
-.info-val  { font-size: 28rpx; color: #f0ede8; font-weight: 600; }
-.info-link { font-size: 26rpx; color: #c9a96e; }
+.info-divider { height: 1.5rpx; background: var(--border-sub); margin: 0 28rpx; }
+.info-key  { font-size: 28rpx; color: var(--text-secondary); }
+.info-val  { font-size: 28rpx; color: var(--text-primary); font-weight: 600; }
+.info-link { font-size: 26rpx; color: var(--gold-main); }
 
+/* ── 错误提示 ── */
 .error-bar {
-  margin: 0 32rpx 16rpx; padding: 16rpx 24rpx; border-radius: 16rpx;
-  background: rgba(224,92,92,0.08); border: 2rpx solid rgba(224,92,92,0.25);
-  font-size: 26rpx; color: #e05c5c;
+  margin: 0 var(--page-x) 16rpx; padding: 16rpx 24rpx;
+  border-radius: var(--r-md);
+  background: rgba(224,92,92,0.08); border: 1.5rpx solid rgba(224,92,92,0.25);
+  font-size: 26rpx; color: var(--clr-danger);
 }
-.submit-area { padding: 8rpx 32rpx 0; }
+
+.submit-area { padding: 8rpx var(--page-x) 0; }

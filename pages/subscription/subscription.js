@@ -55,6 +55,7 @@ Page({
     isSubscribing:  false,   // 防止重复点击
     isCancelling:   false,
     isOffline:      false,
+    isRenewing:     false,   // Pro 用户展开续费套餐列表，不改变 isPro
   },
 
   onLoad() { this._init() },
@@ -64,7 +65,7 @@ Page({
     const s      = app.globalData.shopInfo
     const isOff  = app.globalData.isOffline
     const isPro  = s.plan === 'pro' || s.plan === 'Pro'
-    this.setData({ isOffline: isOff })
+    this.setData({ isOffline: isOff, isRenewing: false })
 
     // 计算有效期进度（本地缓存先显示）
     let expiryPct = 0, usedDays = 0, totalDays = 30, daysLeft = 0
@@ -180,17 +181,8 @@ Page({
   // ── 续费（Pro 用户续期）─────────────────────────────────
   onRenew() {
     if (this.data.isOffline) { wx.showToast({ title:'请联网后再操作', icon:'none' }); return }
-    // 跳转到套餐选择（复用订阅流程）
-    this.setData({ isPro: false })  // 临时展示套餐列表，renew 完再 _init
-    wx.showModal({
-      title:   '选择续费套餐',
-      content: `当前套餐剩余 ${this.data.daysLeft} 天，续费可叠加有效期。`,
-      confirmText: '去选择',
-      success: (res) => {
-        if (!res.confirm) this.setData({ isPro: true })
-        // 直接停留在当前页选套餐
-      }
-    })
+    // 用独立 flag 切换套餐列表，不改变 isPro，避免状态卡跳成 Free
+    this.setData({ isRenewing: !this.data.isRenewing })
   },
 
   // ── 取消自动续订 ─────────────────────────────────────────

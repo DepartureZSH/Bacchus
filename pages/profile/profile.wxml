@@ -1,123 +1,161 @@
 <!-- pages/profile/profile.wxml -->
 <scroll-view class="profile-scroll" scroll-y enhanced show-scrollbar="{{false}}">
 
-  <!-- 用户卡片 -->
-  <view class="user-card card">
-    <view class="user-avatar">🍸</view>
-    <view class="user-info">
-      <text class="user-name">{{shopInfo.name}}</text>
-      <text class="user-email">{{shopInfo.address}}</text>
-      <view class="badge badge-accent user-plan">{{isPro ? '✦ Pro 版' : '○ Free 版'}}</view>
+  <!-- 用户英雄卡 -->
+  <view class="pf-hero">
+    <view class="pf-user-row">
+      <view class="pf-avatar">
+        <text class="pf-avatar-emoji">🍸</text>
+      </view>
+      <view class="pf-user-info">
+        <text class="pf-shop-name">{{shopInfo.name || 'My Bar'}}</text>
+        <text class="pf-shop-addr">{{shopInfo.address || shopInfo.city}}</text>
+        <view class="badge badge-accent pf-plan-badge">{{isPro ? '✦ Pro 版' : '○ Free 版'}}</view>
+      </view>
+    </view>
+    <!-- 库存预警条 -->
+    <view wx:if="{{alertCount > 0}}" class="pf-alert-strip" bindtap="goInventory">
+      <text class="pf-alert-icon">⚠️</text>
+      <text class="pf-alert-txt">{{alertCount}} 种库存需关注</text>
+      <text class="pf-alert-go">立即查看 ›</text>
     </view>
   </view>
 
   <!-- 工具 -->
-  <view class="section-label">工具</view>
-  <view class="settings-card card">
-    <view class="settings-row" bindtap="goInventory">
-      <text class="settings-icon">📦</text>
-      <text class="settings-label">库存管理</text>
-      <view class="settings-right">
-        <text class="settings-value">录入 · 出入库 · 预警</text>
-        <text class="settings-arrow">›</text>
+  <view class="pf-section-label">工具</view>
+  <view class="pf-card">
+    <view class="pf-row" bindtap="goInventory">
+      <view class="pf-row-icon-wrap pf-icon-orange">
+        <text class="pf-row-icon">📦</text>
+      </view>
+      <view class="pf-row-body">
+        <text class="pf-row-label">库存管理</text>
+        <text class="pf-row-value">录入 · 出入库 · 预警</text>
+      </view>
+      <view class="pf-row-right">
+        <view wx:if="{{alertCount > 0}}" class="pf-warn-badge">{{alertCount}}</view>
+        <text class="pf-arrow">›</text>
       </view>
     </view>
-    <view class="settings-divider"></view>
-    <view class="settings-row" bindtap="goAiMenu">
-      <text class="settings-icon">🤖</text>
-      <text class="settings-label">AI 运营</text>
-      <view class="settings-right">
-        <text class="settings-value">酒单 · 营销 · 采购</text>
-        <text class="settings-arrow">›</text>
+    <view class="pf-divider"></view>
+    <view class="pf-row" bindtap="goAiMenu">
+      <view class="pf-row-icon-wrap pf-icon-ai">
+        <text class="pf-row-icon">🤖</text>
       </view>
+      <view class="pf-row-body">
+        <text class="pf-row-label">AI 运营</text>
+        <text class="pf-row-value">酒单 · 营销 · 采购</text>
+      </view>
+      <text class="pf-arrow">›</text>
     </view>
-    <view class="settings-divider"></view>
-    <view class="settings-row" bindtap="goMyRecipes">
-      <text class="settings-icon">📖</text>
-      <text class="settings-label">配方 · 合集</text>
-      <view class="settings-right">
-        <text class="settings-value">创作 · 发布 · 发现</text>
-        <text class="settings-arrow">›</text>
+    <view class="pf-divider"></view>
+    <view class="pf-row" bindtap="goMyRecipes">
+      <view class="pf-row-icon-wrap pf-icon-gold">
+        <text class="pf-row-icon">📖</text>
       </view>
+      <view class="pf-row-body">
+        <text class="pf-row-label">配方 · 合集</text>
+        <text class="pf-row-value">创作 · 发布 · 发现</text>
+      </view>
+      <text class="pf-arrow">›</text>
     </view>
-    <view class="settings-divider"></view>
-    <view class="settings-row" bindtap="goShoppingList">
-      <text class="settings-icon">🛍</text>
-      <text class="settings-label">采购清单</text>
-      <view class="settings-right">
-        <text class="settings-value">选品 · 调量 · 一键入库</text>
-        <text class="settings-arrow">›</text>
+    <view class="pf-divider"></view>
+    <view class="pf-row" bindtap="goShoppingList">
+      <view class="pf-row-icon-wrap pf-icon-green">
+        <text class="pf-row-icon">🛍</text>
       </view>
+      <view class="pf-row-body">
+        <text class="pf-row-label">采购清单</text>
+        <text class="pf-row-value">选品 · 调量 · 一键入库</text>
+      </view>
+      <text class="pf-arrow">›</text>
     </view>
   </view>
 
   <!-- 设置 -->
-  <view class="section-label">设置</view>
-  <view class="settings-card card">
-    <view class="settings-row" bindtap="goShopInfo">
-      <text class="settings-icon">🏮</text>
-      <text class="settings-label">店铺信息</text>
-      <view class="settings-right">
-        <text class="settings-value">{{shopInfo.city}}</text>
-        <text class="settings-arrow">›</text>
+  <view class="pf-section-label">设置</view>
+  <view class="pf-card">
+    <view class="pf-row" bindtap="goShopInfo">
+      <view class="pf-row-icon-wrap">
+        <text class="pf-row-icon">🏮</text>
+      </view>
+      <view class="pf-row-body">
+        <text class="pf-row-label">店铺信息</text>
+        <text class="pf-row-value">{{shopInfo.city}}</text>
+      </view>
+      <text class="pf-arrow">›</text>
+    </view>
+    <view class="pf-divider"></view>
+    <!-- 订阅：Free 用户高亮引导 -->
+    <view class="pf-row {{!isPro ? 'pf-row-upgrade' : ''}}" bindtap="goSubscription">
+      <view class="pf-row-icon-wrap {{!isPro ? 'pf-icon-gold' : ''}}">
+        <text class="pf-row-icon">⭐</text>
+      </view>
+      <view class="pf-row-body">
+        <text class="pf-row-label">订阅管理</text>
+        <text wx:if="{{!isPro}}" class="pf-row-value pf-upgrade-hint">解锁 AI 生图、无限配方等 Pro 功能</text>
+        <text wx:else class="pf-row-value">Pro 计划已激活</text>
+      </view>
+      <view class="pf-row-right">
+        <view wx:if="{{isPro}}" class="pf-pro-badge">Pro</view>
+        <text wx:else class="pf-upgrade-cta">升级</text>
+        <text class="pf-arrow">›</text>
       </view>
     </view>
-    <view class="settings-divider"></view>
-    <view class="settings-row" bindtap="goSubscription">
-      <text class="settings-icon">⭐</text>
-      <text class="settings-label">订阅管理</text>
-      <view class="settings-right">
-        <view wx:if="{{isPro}}" class="settings-pro-badge">Pro</view>
-        <text wx:else class="settings-value accent-text">升级 Pro →</text>
-        <text class="settings-arrow">›</text>
+    <view class="pf-divider"></view>
+    <view class="pf-row" bindtap="goUnitSettings">
+      <view class="pf-row-icon-wrap">
+        <text class="pf-row-icon">⚙️</text>
       </view>
+      <view class="pf-row-body">
+        <text class="pf-row-label">单位 / 货币</text>
+        <text class="pf-row-value">{{unitLabel}}</text>
+      </view>
+      <text class="pf-arrow">›</text>
     </view>
-    <view class="settings-divider"></view>
-    <view class="settings-row" bindtap="goUnitSettings">
-      <text class="settings-icon">⚙️</text>
-      <text class="settings-label">单位 / 货币</text>
-      <view class="settings-right">
-        <text class="settings-value">{{unitLabel}}</text>
-        <text class="settings-arrow">›</text>
+    <view class="pf-divider"></view>
+    <view class="pf-row" bindtap="goExport">
+      <view class="pf-row-icon-wrap">
+        <text class="pf-row-icon">📤</text>
       </view>
+      <view class="pf-row-body">
+        <text class="pf-row-label">数据导出</text>
+        <text class="pf-row-value">CSV · Markdown · 文本</text>
+      </view>
+      <text class="pf-arrow">›</text>
     </view>
-    <view class="settings-divider"></view>
-    <view class="settings-row" bindtap="goExport">
-      <text class="settings-icon">📤</text>
-      <text class="settings-label">数据导出</text>
-      <view class="settings-right">
-        <text class="settings-value">CSV · Markdown · 文本</text>
-        <text class="settings-arrow">›</text>
+    <view class="pf-divider"></view>
+    <view class="pf-row" bindtap="goHelp">
+      <view class="pf-row-icon-wrap">
+        <text class="pf-row-icon">💬</text>
       </view>
-    </view>
-    <view class="settings-divider"></view>
-    <view class="settings-row" bindtap="goHelp">
-      <text class="settings-icon">💬</text>
-      <text class="settings-label">帮助与反馈</text>
-      <view class="settings-right">
-        <text class="settings-arrow">›</text>
+      <view class="pf-row-body">
+        <text class="pf-row-label">帮助与反馈</text>
       </view>
+      <text class="pf-arrow">›</text>
     </view>
   </view>
 
   <!-- 管理（仅管理员可见） -->
   <block wx:if="{{isAdmin}}">
-    <view class="section-label">管理</view>
-    <view class="settings-card card">
-      <view class="settings-row" bindtap="onAdminImport">
-        <text class="settings-icon">📥</text>
-        <text class="settings-label">批量导入配方</text>
-        <view class="settings-right">
-          <text class="settings-value">JSONL 文件</text>
-          <text class="settings-arrow">›</text>
+    <view class="pf-section-label pf-section-label-admin">管理</view>
+    <view class="pf-card pf-card-admin">
+      <view class="pf-row" bindtap="onAdminImport">
+        <view class="pf-row-icon-wrap pf-icon-ai">
+          <text class="pf-row-icon">📥</text>
         </view>
+        <view class="pf-row-body">
+          <text class="pf-row-label">批量导入配方</text>
+          <text class="pf-row-value">JSONL 文件</text>
+        </view>
+        <text class="pf-arrow">›</text>
       </view>
     </view>
   </block>
 
-  <view class="version-hint">Bacchus Demo v0.1.0 · MVP 演示版</view>
+  <text class="pf-version">Bacchus Demo v0.1.0 · MVP 演示版</text>
 
-  <button class="btn-ghost logout-btn" bindtap="onLogout">退出登录</button>
+  <button class="btn-ghost pf-logout-btn" bindtap="onLogout">退出登录</button>
 
   <view style="height:60rpx"></view>
 </scroll-view>

@@ -19,5 +19,18 @@
     "checkInvalidKey": true,
     "ignoreDevUnusedFiles": true
   },
-  "libVersion": "3.14.2"
+  "libVersion": "3.14.2",
+  "condition": {
+    "miniprogram": {
+      "list": [
+        {
+          "name": "pages/subscription/subscription",
+          "pathName": "pages/subscription/subscription",
+          "query": "",
+          "scene": null,
+          "launchMode": "default"
+        }
+      ]
+    }
+  }
 }

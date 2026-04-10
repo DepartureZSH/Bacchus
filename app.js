@@ -117,10 +117,14 @@ DB.getAll().then(list => {
   if (dl.length) content += `🔴 告急（${dl.length}项）：${dl.map(i=>i.name).join('、')}\n`
   if (wl.length) content += `🟡 偏低（${wl.length}项）：${wl.map(i=>i.name).join('、')}`
   wx.showModal({
-    title: `⚠ 库存预警（${alerts.length}项）`,
+    title: `库存预警（${alerts.length}项）`,
     content: content.trim(),
     confirmText: '去采购', cancelText: '稍后处理',
-    success(res) { if (res.confirm) wx.navigateTo({ url: '/pages/ai-menu/ai-menu?tab=purchase' }) }
+    success(res) { 
+      if (res.confirm){
+        wx.navigateTo({ url: '/pages/shopping-list/shopping-list' })
+      }
+    }
   })
 }).catch(() => {})
 },

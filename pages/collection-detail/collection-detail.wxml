@@ -108,7 +108,7 @@
             <view wx:for="{{r.ingredients}}" wx:key="name" wx:for-item="ing" class="cd-ing-row">
               <view class="cd-ing-dot"></view>
               <text class="cd-ing-name">{{ing.name}}</text>
-              <text class="cd-ing-amt">{{ing.amount}}</text>
+              <text class="cd-ing-amt">{{ing.amount}}{{ing.unit}}</text>
             </view>
 
             <!-- 步骤 -->

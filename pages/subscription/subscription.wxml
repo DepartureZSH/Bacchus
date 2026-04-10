@@ -8,12 +8,13 @@
   </view>
 
   <!-- 当前状态卡 -->
-  <view class="current-card card">
+  <view class="current-card card sub-hero-card">
     <view class="current-badge badge-{{isPro ? 'pro' : 'free'}}">
       <text class="current-badge-icon">{{isPro ? '✦' : '○'}}</text>
       <text class="current-badge-text">{{isPro ? 'Pro 版' : 'Free 版'}}</text>
     </view>
     <view class="current-info">
+
       <!-- Pro 状态 -->
       <view wx:if="{{isPro}}">
         <view class="expiry-row">
@@ -24,15 +25,29 @@
           <view class="expiry-bar" style="width:{{expiryPct}}%"></view>
         </view>
         <view class="renew-status-row">
-          <text class="current-sub">本期已使用 {{usedDays}} 天 / 共 {{totalDays}} 天</text>
-          <text class="auto-renew-chip {{isAutoRenew ? 'chip-on' : 'chip-off'}}">
-            {{isAutoRenew ? '● 续订中' : '○ 已取消续订'}}
-          </text>
+          <text class="current-sub">本期已用 {{usedDays}} / 共 {{totalDays}} 天</text>
+          <text class="auto-renew-chip {{isAutoRenew ? 'chip-on' : 'chip-off'}}">{{isAutoRenew ? '● 续订中' : '○ 已取消续订'}}</text>
         </view>
       </view>
+
       <!-- Free 状态 -->
       <view wx:else>
-        <text class="current-expiry free-hint">升级 Pro 解锁无限 AI 生成 · AI 经营建议 · 云端同步</text>
+        <text class="current-expiry free-hint">升级 Pro，解锁更多专业功能</text>
+        <!-- 三大亮点 -->
+        <view class="sub-benefits-row">
+          <view class="sub-benefit-item">
+            <text class="sub-benefit-icon">∞</text>
+            <text class="sub-benefit-txt">无限 AI 生成</text>
+          </view>
+          <view class="sub-benefit-item">
+            <text class="sub-benefit-icon">☁</text>
+            <text class="sub-benefit-txt">云端备份同步</text>
+          </view>
+          <view class="sub-benefit-item">
+            <text class="sub-benefit-icon">📊</text>
+            <text class="sub-benefit-txt">完整经营分析</text>
+          </view>
+        </view>
         <view class="ai-quota-bar">
           <view class="ai-quota-label">
             <text>本月 AI 配额</text>
@@ -43,6 +58,7 @@
           </view>
         </view>
       </view>
+
     </view>
   </view>
 
@@ -75,8 +91,8 @@
     </view>
   </view>
 
-  <!-- 套餐选择（Free 用户 / 续费状态）-->
-  <view wx:if="{{!isPro || !isAutoRenew}}">
+  <!-- 套餐选择（Free 用户 / 续费状态 / 手动点续费）-->
+  <view wx:if="{{!isPro || !isAutoRenew || isRenewing}}">
     <view class="section-label">{{isPro ? '续费套餐' : '选择套餐'}}</view>
     <view class="plan-list">
       <view
@@ -85,6 +101,10 @@
         data-id="{{item.id}}" bindtap="onSelectPlan"
       >
         <view class="plan-card-header">
+          <!-- radio 移至行首 -->
+          <view class="plan-radio {{selectedPlan === item.id ? 'plan-radio-on' : ''}}">
+            <view wx:if="{{selectedPlan === item.id}}" class="plan-radio-dot"></view>
+          </view>
           <view class="plan-card-left">
             <text class="plan-card-name">{{item.name}}</text>
             <view wx:if="{{item.tag}}" class="plan-tag">{{item.tag}}</view>
@@ -97,9 +117,6 @@
         </view>
         <view wx:if="{{item.saving}}" class="plan-saving">
           <text>较月付节省 ¥{{item.saving}}</text>
-        </view>
-        <view class="plan-radio {{selectedPlan === item.id ? 'plan-radio-on' : ''}}">
-          <view wx:if="{{selectedPlan === item.id}}" class="plan-radio-dot"></view>
         </view>
       </view>
     </view>
@@ -117,10 +134,13 @@
         <text wx:if="{{isSubscribing}}" class="subscribe-btn-text">处理中…</text>
         <block wx:else>
           <text class="subscribe-btn-text">{{isPro ? '立即续费' : '立即订阅 Pro'}}</text>
-          <text class="subscribe-btn-sub">¥{{selectedPlanObj.price}}/{{selectedPlanObj.period}}</text>
+          <text class="subscribe-btn-sub">¥{{selectedPlanObj.price}}/{{selectedPlanObj.period}} · 随时可取消</text>
         </block>
       </view>
-      <text class="subscribe-hint">{{isOffline ? '⚠ 请联网后操作' : '订阅后可在此页面管理，随时取消'}}</text>
+      <text class="subscribe-hint">{{isOffline ? '⚠ 请联网后操作' : '订阅后可在此页面随时管理'}}</text>
+      <view wx:if="{{isRenewing}}" class="sub-cancel-renew" bindtap="onRenew">
+        <text class="sub-cancel-renew-txt">取消</text>
+      </view>
     </view>
   </view>
 
@@ -136,7 +156,7 @@
       <view class="manage-divider"></view>
       <view class="manage-row {{isCancelling ? 'manage-row-loading' : ''}}" bindtap="onCancelSub">
         <text class="manage-icon">⏸</text>
-        <text class="manage-label">{{isCancelling ? '处理中…' : '取消续订'}}</text>
+        <text class="manage-label cancel-text">{{isCancelling ? '处理中…' : '取消续订'}}</text>
         <text class="manage-arrow cancel-text">›</text>
       </view>
     </view>

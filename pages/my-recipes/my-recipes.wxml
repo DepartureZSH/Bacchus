@@ -185,7 +185,7 @@
             <view wx:for="{{item.ingredients}}" wx:key="name" wx:for-item="ing" class="detail-ing-row">
               <view class="ing-dot"></view>
               <text class="detail-ing-name">{{ing.name}}</text>
-              <text class="detail-ing-amt">{{ing.amount}}</text>
+              <text class="detail-ing-amt">{{ing.amount}}{{ing.unit}}</text>
             </view>
             <text class="detail-sec" style="margin-top:20rpx">📋 步骤</text>
             <view wx:for="{{item.steps}}" wx:key="index" wx:for-item="step" class="step-row">
@@ -198,7 +198,7 @@
                 catchtap="onLike" data-publishid="{{item._id}}">
                 <text>{{item.isLiked ? '♥ 已点赞' : '♡ 点赞'}} {{item.likeCount || 0}}</text>
               </view>
-              <view class="detail-action-btn" catchtap="onNavToDetail" data-type="public" data-id="{{item._id}}">
+              <view class="detail-action-btn detail-action-nav" catchtap="onNavToDetail" data-type="public" data-id="{{item._id}}">
                 <text>📖 详情</text>
               </view>
             </view>
@@ -269,9 +269,7 @@
             </view>
             <view class="discover-right-actions">
               <view class="discover-fav-coll {{item.isFavColl ? 'discover-fav-coll-on' : ''}}"
-                catchtap="onToggleFavColl" data-publishid="{{item._id}}">
-                {{item.isFavColl ? '★' : '☆'}}
-              </view>
+                catchtap="onToggleFavColl" data-publishid="{{item._id}}">{{item.isFavColl ? '★' : '☆'}}</view>
               <view class="discover-like {{item.isLiked ? 'discover-like-on' : ''}}"
                 catchtap="onLike" data-publishid="{{item._id}}">
                 <text class="discover-like-icon">{{item.isLiked ? '♥' : '♡'}}</text>
@@ -311,11 +309,11 @@
                 catchtap="onLike" data-publishid="{{item._id}}">
                 <text>{{item.isLiked ? '♥ 已点赞' : '♡ 点赞'}} {{item.likeCount || 0}}</text>
               </view>
-              <view class="detail-action-btn"
+              <view class="detail-action-btn {{item.isFavColl ? 'detail-action-coll-on' : ''}}"
                 catchtap="onToggleFavColl" data-publishid="{{item._id}}">
                 <text>{{item.isFavColl ? '★ 已收藏合集' : '☆ 收藏合集'}}</text>
               </view>
-              <view class="detail-action-btn" catchtap="onNavToCollDetail" data-type="public" data-id="{{item._id}}">
+              <view class="detail-action-btn detail-action-nav" catchtap="onNavToCollDetail" data-type="public" data-id="{{item._id}}">
                 <text>📖 详情</text>
               </view>
             </view>
@@ -459,7 +457,7 @@
             </view>
           </view>
           <view class="rc-right">
-            <view class="fav-btn {{item.isFav ? 'fav-on' : ''}}" catchtap="onToggleFav" data-id="{{item.id}}" data-source="user">{{item.isFav ? '♥' : '♡'}}</view>
+            <!-- <view class="fav-btn {{item.isFav ? 'fav-on' : ''}}" catchtap="onToggleFav" data-id="{{item.id}}" data-source="user">{{item.isFav ? '♥' : '♡'}}</view> -->
             <view class="edit-btn" catchtap="onEditRecipe" data-id="{{item.id}}">✏️</view>
           </view>
         </view>
@@ -474,7 +472,7 @@
           <view wx:for="{{item.ingredients}}" wx:key="name" wx:for-item="ing" class="detail-ing-row">
             <view class="ing-dot"></view>
             <text class="detail-ing-name">{{ing.name}}</text>
-            <text class="detail-ing-amt">{{ing.amount}}</text>
+            <text class="detail-ing-amt">{{ing.amount}}{{ing.unit}}</text>
           </view>
           <text class="detail-sec" style="margin-top:20rpx">📋 步骤</text>
           <view wx:for="{{item.steps}}" wx:key="index" wx:for-item="step" class="step-row">
@@ -483,10 +481,20 @@
           </view>
           <view wx:if="{{item.notes}}" class="notes-box"><text class="notes-text">📌 {{item.notes}}</text></view>
           <view class="detail-actions">
-            <view class="detail-action-btn" catchtap="onToggleFav" data-id="{{item.id}}" data-source="user"><text>{{item.isFav ? '♥ 已收藏' : '♡ 收藏'}}</text></view>
-            <view class="detail-action-btn" catchtap="onAddToCollection" data-id="{{item.id}}" data-source="user"><text>📂 加入合集</text></view>
+            <!-- <view class="detail-action-btn {{item.isFav ? 'detail-action-social-on' : ''}}" catchtap="onToggleFav" data-id="{{item.id}}" data-source="user"><text>{{item.isFav ? '♥ 已收藏' : '♡ 收藏'}}</text></view> -->
+            <view class="detail-action-btn detail-action-coll" catchtap="onAddToCollection" data-id="{{item.id}}" data-source="user"><text>📂 加入合集</text></view>
             <view class="detail-action-btn detail-action-img" catchtap="onOpenImgDrawer" data-type="recipe" data-id="{{item.id}}" data-source="user">
               <text>🎨 生成图片</text>
+            </view>
+            <view wx:if="{{item.isPublic}}"
+              class="detail-action-btn detail-action-nav"
+              catchtap="onNavToDetail" data-type="public" data-id="{{item.publishId}}">
+              <text>📖 详情</text>
+            </view>
+            <view wx:else
+              class="detail-action-btn detail-action-nav"
+              catchtap="onNavToDetail" data-type="mine" data-mode="preview" data-id="{{item.id}}">
+              <text>👁 预览</text>
             </view>
             <view wx:if="{{!item.isPublic}}"
               class="detail-action-btn detail-action-publish"
@@ -497,16 +505,6 @@
               class="detail-action-btn detail-action-published"
               catchtap="onUnpublish" data-id="{{item.id}}" data-publishid="{{item.publishId}}">
               <text>✓ 已公开（撤回）</text>
-            </view>
-            <view wx:if="{{item.isPublic}}"
-              class="detail-action-btn"
-              catchtap="onNavToDetail" data-type="public" data-id="{{item.publishId}}">
-              <text>📖 详情</text>
-            </view>
-            <view wx:else
-              class="detail-action-btn"
-              catchtap="onNavToDetail" data-type="mine" data-mode="preview" data-id="{{item.id}}">
-              <text>👁 预览</text>
             </view>
             <view class="detail-action-btn danger-btn" catchtap="onDeleteRecipe" data-id="{{item.id}}"><text>🗑 删除</text></view>
           </view>
@@ -745,7 +743,7 @@
             <view wx:for="{{item.ingredients}}" wx:key="name" wx:for-item="ing" class="detail-ing-row">
               <view class="ing-dot"></view>
               <text class="detail-ing-name">{{ing.name}}</text>
-              <text class="detail-ing-amt">{{ing.amount}}</text>
+              <text class="detail-ing-amt">{{ing.amount}}{{ing.unit}}</text>
             </view>
             <text class="detail-sec" style="margin-top:20rpx">📋 步骤</text>
             <view wx:for="{{item.steps}}" wx:key="index" wx:for-item="step" class="step-row">
@@ -754,17 +752,17 @@
             </view>
             <view wx:if="{{item.notes}}" class="notes-box"><text class="notes-text">📌 {{item.notes}}</text></view>
             <view class="detail-actions">
-              <view class="detail-action-btn" catchtap="onToggleFav" data-id="{{item.id}}" data-source="{{item.source}}"><text>♥ 取消收藏</text></view>
-              <view class="detail-action-btn" catchtap="onAddToCollection" data-id="{{item.id}}" data-source="{{item.source}}"><text>📂 加入合集</text></view>
+              <view class="detail-action-btn detail-action-social-on" catchtap="onToggleFav" data-id="{{item.id}}" data-source="{{item.source}}"><text>♥ 取消收藏</text></view>
+              <view class="detail-action-btn detail-action-coll" catchtap="onAddToCollection" data-id="{{item.id}}" data-source="{{item.source}}"><text>📂 加入合集</text></view>
               <view class="detail-action-btn detail-action-img" catchtap="onOpenImgDrawer" data-type="recipe" data-id="{{item.id}}" data-source="{{item.source}}">
                 <text>🎨 生成图片</text>
               </view>
               <view wx:if="{{item.isPublic && item.publishId}}"
-                class="detail-action-btn" catchtap="onNavToDetail" data-type="public" data-id="{{item.publishId}}">
+                class="detail-action-btn detail-action-nav" catchtap="onNavToDetail" data-type="public" data-id="{{item.publishId}}">
                 <text>📖 详情</text>
               </view>
               <view wx:else
-                class="detail-action-btn" catchtap="onNavToDetail" data-type="mine" data-mode="preview" data-id="{{item.id}}">
+                class="detail-action-btn detail-action-nav" catchtap="onNavToDetail" data-type="mine" data-mode="preview" data-id="{{item.id}}">
                 <text>👁 预览</text>
               </view>
             </view>
@@ -801,7 +799,7 @@
               <text class="coll-fav-name">{{item.name}}</text>
               <text class="coll-fav-sub">{{item.recipeCount || 0}} 款配方 · {{item.authorName}}</text>
             </view>
-            <view class="fav-btn fav-on" catchtap="onToggleFavColl" data-publishid="{{item._id}}">★</view>
+            <view class="fav-btn fav-coll-on" catchtap="onToggleFavColl" data-publishid="{{item._id}}">★</view>
           </view>
           <view wx:if="{{item.tags && item.tags.length}}" class="discover-tags-row" style="padding:0 0 8rpx">
             <view wx:for="{{item.tags}}" wx:key="*this" wx:for-item="tag" class="discover-tag-chip">{{tag}}</view>
@@ -816,7 +814,7 @@
             </view>
           </view>
           <view class="detail-actions" style="margin-top:8rpx">
-            <view class="detail-action-btn" catchtap="onNavToCollDetail" data-type="public" data-id="{{item._id}}">
+            <view class="detail-action-btn detail-action-nav" catchtap="onNavToCollDetail" data-type="public" data-id="{{item._id}}">
               <text>📖 详情</text>
             </view>
           </view>
